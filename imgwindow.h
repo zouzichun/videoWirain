@@ -16,6 +16,11 @@ public:
     explicit imgWindow(QWidget *parent = nullptr);
     ~imgWindow();
     QLabel * getImgPic();
+    bool cal_enabled;
+
+private slots:
+    void on_sel1_clicked();
+    void mousePressEvent(QMouseEvent *event);
 
 private:
     Ui::imgWindow *ui;

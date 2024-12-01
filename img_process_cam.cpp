@@ -238,7 +238,7 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
                   configData.line1_sel_low,
                   configData.line2_sel_low);
     for(;;) {
-        if(frame_cnt > 100) {
+        if(frame_cnt > 300) {
             break;
         } else {
             // qDebug("frame pos %d", frame_cnt);
