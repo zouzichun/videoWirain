@@ -91,7 +91,7 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->line1_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line1_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line2_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->line2_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 
     qDebug()<< "MainDialog thd id: " << QThread::currentThreadId();

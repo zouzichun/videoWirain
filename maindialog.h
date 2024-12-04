@@ -15,7 +15,6 @@
 #include "img_process.h"
 #include "MvCamera.h"
 
-
 namespace Ui {
 class MainDialog;
 }

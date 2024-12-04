@@ -72,7 +72,7 @@ bool ImgProcess::CameraDemo(bool & enable, QImage & qimg, QLineEdit * x, QLineEd
          std::vector<float> thetas(2);
          std::vector<Point2i> points;
 
-         if (!AdaptLines(contours_img, lines_found, rhos, thetas)) {
+         if (!AdaptLines(edge, lines_found, rhos, thetas)) {
              spdlog::debug("adapt lines failed!");
              // p_cam->StopGrabbing();
              continue;
@@ -231,14 +231,16 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 
     qDebug("canny %d %d %d", configData.canny_1, configData.canny_2, configData.canny_3);
     qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
-    const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
-    const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
+    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang_abs = configData.line_abs * 180;
+    const float roh_abs = 200;
     spdlog::debug("ang1 {}.C:{:.2f}, ang2 {}.C:{:.2f}, abs {:.2f} sel_low {} {}",
                   configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
                   configData.line1_sel_low,
                   configData.line2_sel_low);
     for(;;) {
-        if(frame_cnt > 300) {
+        if(frame_cnt > 100) {
             break;
         } else {
             // qDebug("frame pos %d", frame_cnt);
@@ -268,7 +270,7 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
         std::vector<float> thetas = {0, 0};
         std::vector<Point2i> points;
 
-        if (!FilterLines(contours_img, lines_found, rhos, thetas, points)) {
+        if (!FilterLines(edge, lines_found, rhos, thetas, points)) {
             p_cam->FreeImageBuffer(&frame);
             //p_cam->StopGrabbing();
             //return false;
@@ -290,10 +292,10 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
         y->setText(QString(QString::number(points[1].y)));
         cv::drawMarker(color_img, points[1], cv::Scalar(255,255,255), 3, 20, 4);
 
-        QImage qimg = QImage((const unsigned char*)(contours_img.data),
-                                        contours_img.cols,
-                                        contours_img.rows,
-                                        contours_img.step,
+        QImage qimg = QImage((const unsigned char*)(edge.data),
+                                        edge.cols,
+                                        edge.rows,
+                                        edge.step,
                                         // QImage::Format_BGR888).copy();
                                         QImage::Format_Grayscale8).copy();
         pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt->size(), Qt::KeepAspectRatio));
@@ -350,34 +352,38 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) {
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
-    cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
-    cv::threshold(img, img, 50, 255, THRESH_BINARY);
+    Mat img_tt;
+    cv::bilateralFilter(img, img_tt, 0, 200, 10);
+    // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
+    // cv::threshold(img, img, 50, 255, THRESH_BINARY);
     // cv::medianBlur(grayimg, grayimg, configData.blur_kernel);
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
-    cv::Canny(img, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+    cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
 
-    std::vector<vector<Point>> contours;
-    std::vector<Point> hull_points;
-    std::vector<Vec4i> hierarchy;
+//    std::vector<vector<Point>> contours;
+//    std::vector<Point> hull_points;
+//    std::vector<Vec4i> hierarchy;
 
-    cv::findContours(edge_img, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_NONE);
-    // spdlog::debug("findContours num {}", contours.size());
-    // Mat contour_img(edge_img.size(), CV_8UC1, Scalar(0));
-    for (size_t i = 0; i < contours.size(); i++)
-    {
-        // spdlog::debug("  findContours {} {}", i, contours[i].size());
-        if(contours[i].size() > 3000) {
-            // cv::drawContours(contours_img, contours, static_cast<int>(i), Scalar(255), 2, LINE_8, hierarchy, 0);
-            // spdlog::debug("  findContours {} {}", i, contours[i].size());
-            cv::convexHull(contours[i], hull_points, false, true);
-            // spdlog::debug("convhull points {}", hull_points.size());
-            std::vector<vector<Point>> hullv;
-            hullv.push_back((hull_points));
-            cv::drawContours(contour_img, hullv, 0, Scalar(255), 2, LINE_8, hierarchy, 0);
-        }
-    }
+//    cv::findContours(edge_img, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+//    // spdlog::debug("findContours num {}", contours.size());
+//    // Mat contour_img(edge_img.size(), CV_8UC1, Scalar(0));
+//    for (size_t i = 0; i < contours.size(); i++)
+//    {
+//        // spdlog::debug("  findContours {} {}", i, contours[i].size());
+//        if(contours[i].size() > 3000) {
+//            // cv::drawContours(contours_img, contours, static_cast<int>(i), Scalar(255), 2, LINE_8, hierarchy, 0);
+//            // spdlog::debug("  findContours {} {}", i, contours[i].size());
+//            cv::convexHull(contours[i], hull_points, false, true);
+//            // spdlog::debug("convhull points {}", hull_points.size());
+//            std::vector<vector<Point>> hullv;
+//            hullv.push_back((hull_points));
+//            cv::drawContours(contour_img, hullv, 0, Scalar(255), 2, LINE_8, hierarchy, 0);
+//        }
+//    }
 }
+
+extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
 
 bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     std::vector<float> & rhos, std::vector<float> & thetas, std::vector<Point2i> & points) {
@@ -387,8 +393,13 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     }
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
-    const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
-    const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
+    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang_abs = configData.line_abs * 180 / CV_PI;
+    const float roh_abs = 200;
+
+    // const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
+    // const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
     // spdlog::debug("ang1 {}C:{:.2f}, ang2 {}C:{:.2f}, abs {:.2f} sel_low {} {}",
     //               configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
     //               configData.line1_sel_low,
@@ -398,13 +409,32 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
         configData.hgline_1,
         configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
         configData.hgline_3);
-    // spdlog::debug("lines num {}", lines_found.size());
+
+//    std::vector<cv::Vec4f> linep;
+//    cv::HoughLinesP(img, linep,
+//                    configData.hgline_1,
+//                    configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
+//                    configData.hgline_3, 30, 50);
+
+//    if (linep.size() == 0) {
+//        spdlog::debug("found lines num 0");
+//        return false;
+//    } else {
+//        // pdlog::debug("lines num {}", linep.size());
+//        for (auto v : linep) {
+//            cv::Vec2f pp;
+//            pp[0] = getDist_P2L(Point(0,0), Point(v[0], v[1]), Point(v[2], v[3]));
+//            pp[1] = atan((v[3] - v[1]) / (v[2] - v[0]));
+//            lines_found.push_back(pp);
+//        }
+//    }
 
     if (lines_found.size() == 0) {
         spdlog::debug("found lines num 0");
         return false;
     }
-    
+    // spdlog::debug("found lines num {}", lines_found.size());
+
     std::vector<int> cnts;
     for (const auto v : thetas) {
         cnts.push_back(0);
@@ -416,17 +446,22 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
         if (thetatt > CV_PI)
             theta = thetatt - CV_PI;
         // spdlog::debug("rho {:.2f}, theta {:.2f}, {:.2f}", rho, thetatt, theta * 180 / CV_PI);
-    
-        if (abs(theta - ang1) > configData.line_abs && abs(theta - ang2) > configData.line_abs) {
+
+        auto valid_line_check = [&] () -> bool {
+            return (abs(theta - ang1) <= ang_abs && abs(abs(rho) - configData.line1_roh) <= roh_abs) ||
+                    (abs(theta - ang2) <= ang_abs && abs(abs(rho) - configData.line2_roh) <= roh_abs);
+        };
+
+        if (!valid_line_check()) {
             lines_found.erase(it);
             continue;
         } else {
             it++;
-            if (abs(theta - ang1) <= configData.line_abs) {
+            if (abs(theta - ang1) <= ang_abs && abs(abs(rho) - configData.line1_roh) <= roh_abs) {
                 thetas[0] += theta;
                 rhos[0] += rho;
                 cnts[0]++;
-            } else if (abs(theta - ang2) <= configData.line_abs) {
+            } else if (abs(theta - ang2) <= ang_abs && abs(abs(rho) - configData.line2_roh) <= roh_abs) {
                 thetas[1] += theta;
                 rhos[1] += rho;
                 cnts[1]++;
@@ -448,12 +483,12 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     {
         float rho = rhos[pos];
         float theta = thetas[pos];
-        // qDebug("line %d rho %f, theta %f, cnt %d", pos, rho, theta, cnts[pos]);
+        // spdlog::debug("line {} rho {:.2f}, theta {:.2f}, cnt {}", pos, rho, theta, cnts[pos]);
             //直线与第一行的交叉点
             Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
             //直线与最后一行的交叉点
             Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
-            //cv::line(color_img, pt1, pt2, cv::Scalar(0,0,255), 2);
+            cv::line(img, pt1, pt2, cv::Scalar(255), 2);
             if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
                 if (pt1.y > pt2.y) {
                     lines.push_back(Vec4i(pt2.x, pt2.y, pt1.x, pt1.y));
@@ -523,8 +558,11 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         spdlog::debug("invalid find lines param size!");
         return false;
     }
-    const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
-    const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
+
+    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
+    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang_abs = configData.line_abs * CV_PI;
+    const float roh_abs = 200;
 
     // spdlog::debug("ang1 {}C:{:.2f}, ang2 {}C:{:.2f}, abs {:.2f} sel_low {} {}",
     //               configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
@@ -536,15 +574,19 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
         configData.hgline_3);
     // spdlog::debug("lines num {}", lines_found.size());
+
+    if (lines_found.size() > 1000 || lines_found.size() < configData.lines_num) {
+        spdlog::debug("lines found {} invalid!", lines_found.size());
+        return false;
+    } else {
+//        for (auto &v: lines_found) {
+//            spdlog::debug("roh {:.2f}, theta {:.2f}", v[0], v[1]);
+//        }
+    }
     
     std::vector<int> cnts;
     for (const auto v : thetas) {
         cnts.push_back(0);
-    }
-
-    if (lines_found.size() > 1000) {
-        spdlog::debug("too many lines found!");
-        return false;
     }
 
     Mat kmeans(lines_found.size(), 2, CV_32F, Scalar(0));
@@ -576,14 +618,14 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
 
     for (int pos=0; pos < centers.rows; pos++) {
         Mat roww = centers.row(pos);
-        if (abs(roww.at<float>(1) - ang1) < 0.3) {
+        if (abs(roww.at<float>(1) - ang1) < ang_abs) {
             rhos[0] = roww.at<float>(0);
             thetas[0] = roww.at<float>(1);
-            // spdlog::debug("center {}, {:.2f}:{:.2f}", pos, rhos[0], thetas[0]);
-        } else if (abs(roww.at<float>(1) - ang2) < 0.3) {
+//            spdlog::debug("center {}, {:.2f}:{:.2f}", pos, rhos[0], thetas[0]);
+        } else if (abs(roww.at<float>(1) - ang2) < ang_abs) {
             rhos[1] = roww.at<float>(0);
             thetas[1] = roww.at<float>(1);
-            // spdlog::debug("center {}, {:.2f}:{:.2f}", pos, rhos[1], thetas[1]);
+//            spdlog::debug("center {}, {:.2f}:{:.2f}", pos, rhos[1], thetas[1]);
         } else {
             continue;
         }
