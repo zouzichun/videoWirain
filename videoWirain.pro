@@ -12,10 +12,10 @@ CONFIG += console
 TARGET = videoWirain
 TEMPLATE = app
 
-INCLUDEPATH += /home/leon/opencv/opencv-3.4.20/install/include
+INCLUDEPATH += /home/wirain/opencv/opencv-3.4.20/install/include
 INCLUDEPATH += /opt/MVS/include
-LIBS += /home/leon/opencv/opencv-3.4.20/install/lib/libopencv*.so
-LIBS += /opt/MVS/lib/64/libMvCameraControl.so
+LIBS += /home/wirain/opencv/opencv-3.4.20/install/lib/libopencv*.so
+LIBS += /opt/MVS/lib/aarch64/libMvCameraControl.so
 
 SOURCES += main.cpp\
     MvCamera.cpp \

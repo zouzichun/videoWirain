@@ -272,10 +272,20 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 
         if (!FilterLines(edge, lines_found, rhos, thetas, points)) {
             p_cam->FreeImageBuffer(&frame);
-            //p_cam->StopGrabbing();
-            //return false;
+            // p_cam->StopGrabbing();
+            // return false;
+            frame_cnt++;
+            waitKey(1);
             continue;
         }
+
+        QImage qimg = QImage((const unsigned char*)(edge.data),
+                                        edge.cols,
+                                        edge.rows,
+                                        edge.step,
+                                        // QImage::Format_BGR888).copy();
+                                        QImage::Format_Grayscale8).copy();
+        pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt->size(), Qt::KeepAspectRatio));
 
         ret = p_cam->FreeImageBuffer(&frame);
         if (ret != MV_OK) {
@@ -291,14 +301,6 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
         x->setText(QString(QString::number(points[1].x)));
         y->setText(QString(QString::number(points[1].y)));
         cv::drawMarker(color_img, points[1], cv::Scalar(255,255,255), 3, 20, 4);
-
-        QImage qimg = QImage((const unsigned char*)(edge.data),
-                                        edge.cols,
-                                        edge.rows,
-                                        edge.step,
-                                        // QImage::Format_BGR888).copy();
-                                        QImage::Format_Grayscale8).copy();
-        pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt->size(), Qt::KeepAspectRatio));
 
         QImage oimg = QImage((const unsigned char*)(color_img.data),
                             color_img.cols,
@@ -352,14 +354,14 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) {
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
-    // Mat img_tt;
+    Mat img_tt;
     // cv::bilateralFilter(img, img_tt, 0, 200, 10);
     // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
-    cv::threshold(img, img, 100, 255, THRESH_BINARY);
-    cv::medianBlur(img, img, configData.blur_kernel);
+    cv::threshold(img, img_tt, 100, 255, THRESH_BINARY);
+    cv::medianBlur(img_tt, img_tt, configData.blur_kernel);
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
-    cv::Canny(img, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+    cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
 
 //    std::vector<vector<Point>> contours;
 //    std::vector<Point> hull_points;
@@ -430,7 +432,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
 //    }
 
     if (lines_found.size() == 0) {
-        spdlog::debug("found lines num 0");
+        // spdlog::debug("found lines num 0");
         return false;
     }
     // spdlog::debug("found lines num {}", lines_found.size());
@@ -445,7 +447,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
         float theta = thetatt;
         if (thetatt > CV_PI)
             theta = thetatt - CV_PI;
-        // spdlog::debug("rho {:.2f}, theta {:.2f}, {:.2f}", rho, thetatt, theta * 180 / CV_PI);
+        spdlog::debug("rho {:.2f}, theta {:.2f}, {:.2f}", rho, thetatt, theta * 180 / CV_PI);
 
         auto valid_line_check = [&] () -> bool {
             return (abs(theta - ang1) <= ang_abs && abs(abs(rho) - configData.line1_roh) <= roh_abs) ||
