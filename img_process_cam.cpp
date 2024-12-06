@@ -352,14 +352,14 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) {
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
-    Mat img_tt;
-    cv::bilateralFilter(img, img_tt, 0, 200, 10);
+    // Mat img_tt;
+    // cv::bilateralFilter(img, img_tt, 0, 200, 10);
     // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
-    // cv::threshold(img, img, 50, 255, THRESH_BINARY);
-    // cv::medianBlur(grayimg, grayimg, configData.blur_kernel);
+    cv::threshold(img, img, 100, 255, THRESH_BINARY);
+    cv::medianBlur(img, img, configData.blur_kernel);
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
-    cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+    cv::Canny(img, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
 
 //    std::vector<vector<Point>> contours;
 //    std::vector<Point> hull_points;

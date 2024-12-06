@@ -90,8 +90,10 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->blur_kernel,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line1_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line1_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->line1_ang_delta,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->line2_ang_delta,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 
     qDebug()<< "MainDialog thd id: " << QThread::currentThreadId();
@@ -156,8 +158,10 @@ void MainDialog::saveImgParam()
     // target lines info
     sets.setValue("line1_ang",configData.line1_ang);
     sets.setValue("line1_roh",configData.line1_roh);
+    sets.setValue("line1_ang_delta",QString::number(configData.line1_ang_delta, 'f', 2));
     sets.setValue("line2_ang",configData.line2_ang);
     sets.setValue("line2_roh",configData.line2_roh);
+    sets.setValue("line2_ang_delta",QString::number(configData.line2_ang_delta, 'f', 2));
     sets.setValue("line_abs",QString::number(configData.line_abs, 'f', 2));
     sets.sync();
 }
@@ -194,9 +198,11 @@ void MainDialog::loadConfigFile()
 
     configData.line1_ang = sets.value("line1_ang",defaultSetting.line1_ang).toInt();
     configData.line1_roh = sets.value("line1_roh",defaultSetting.line1_roh).toInt();
+    configData.line1_ang_delta = sets.value("line1_ang_delta",defaultSetting.line1_ang_delta).toFloat();
     configData.line1_sel_low = sets.value("line1_sel_low",defaultSetting.line1_sel_low).toInt();
     configData.line2_ang = sets.value("line2_ang",defaultSetting.line2_ang).toInt();
     configData.line2_roh = sets.value("line2_roh",defaultSetting.line2_roh).toInt();
+    configData.line2_ang_delta = sets.value("line2_ang_delta",defaultSetting.line2_ang_delta).toFloat();
     configData.line2_sel_low = sets.value("line2_sel_low",defaultSetting.line2_sel_low).toInt();
     configData.line_abs = sets.value("line_abs",defaultSetting.line_abs).toFloat();
     configData.lines_num = sets.value("lines_num",defaultSetting.lines_num).toInt();
@@ -224,8 +230,10 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
 
     m_ui->line1_ang->setText(QString::number(configData.line1_ang));
     m_ui->line1_roh->setText(QString::number(configData.line1_roh));
+    m_ui->line1_ang_delta->setText(QString::number(configData.line1_ang_delta));
     m_ui->line2_ang->setText(QString::number(configData.line2_ang));
     m_ui->line2_roh->setText(QString::number(configData.line2_roh));
+    m_ui->line2_ang_delta->setText(QString::number(configData.line2_ang_delta));
     m_ui->line_abs->setText(QString::number(configData.line_abs));
 }
 
@@ -519,9 +527,11 @@ void MainDialog::ImageCallBackInner(unsigned char * pData, MV_FRAME_OUT_INFO_EX*
 
 void MainDialog::on_saveImg_clicked()
 {
-    m_ui->saveImg->setText("saving...");
+    // m_ui->saveImg->setText("saving...");
+    m_ui->saveImg->setDisabled(true);
     saveImgParam();
-    m_ui->saveImg->setText("save param");
+    m_ui->saveImg->setDisabled(false);
+    // m_ui->saveImg->setText("save param");
 }
 
 
@@ -536,8 +546,10 @@ void MainDialog::on_cal_editingFinished()
     configData.blur_kernel = m_ui->blur_kernel->text().toInt();
     configData.line1_ang = m_ui->line1_ang->text().toInt();
     configData.line1_roh = m_ui->line1_roh->text().toInt();
+    configData.line1_ang_delta = m_ui->line1_ang_delta->text().toFloat();
     configData.line2_ang = m_ui->line2_ang->text().toInt();
     configData.line2_roh = m_ui->line2_roh->text().toInt();
+    configData.line2_ang_delta = m_ui->line2_ang_delta->text().toFloat();
     configData.line_abs = m_ui->line_abs->text().toFloat();
 }
 

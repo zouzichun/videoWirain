@@ -22,163 +22,102 @@
   <property name="windowTitle">
    <string>MainDialog</string>
   </property>
-  <widget class="QTextBrowser" name="txbRecv">
+  <widget class="QLabel" name="painter">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>440</y>
-     <width>441</width>
-     <height>251</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-  </widget>
-  <widget class="QLabel" name="LSerialName_2">
-   <property name="geometry">
-    <rect>
-     <x>800</x>
-     <y>710</y>
-     <width>381</width>
-     <height>41</height>
+     <x>10</x>
+     <y>160</y>
+     <width>721</width>
+     <height>591</height>
     </rect>
    </property>
    <property name="text">
-    <string>DeYu-tech TEL: 138-8888-8888</string>
-   </property>
-   <property name="textFormat">
-    <enum>Qt::PlainText</enum>
+    <string/>
    </property>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>800</x>
+     <x>740</x>
      <y>10</y>
-     <width>536</width>
-     <height>421</height>
+     <width>531</width>
+     <height>761</height>
     </rect>
    </property>
-   <layout class="QFormLayout" name="formLayout">
-    <item row="0" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_5">
-      <item>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
        <widget class="QLabel" name="LSerialName">
         <property name="text">
          <string>串口</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="1" colspan="2">
        <widget class="QLineEdit" name="serialName"/>
       </item>
-      <item>
+      <item row="0" column="3">
        <widget class="QLabel" name="LTx">
         <property name="text">
          <string>发送数</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="4" colspan="2">
        <widget class="QLineEdit" name="uartTx"/>
       </item>
-      <item>
+      <item row="0" column="6">
        <widget class="QLabel" name="LRx">
         <property name="text">
          <string>接受数</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="0" column="7" colspan="2">
        <widget class="QLineEdit" name="uartRx"/>
       </item>
-     </layout>
-    </item>
-    <item row="1" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_6">
-      <item>
+      <item row="1" column="0" colspan="2">
        <widget class="QLabel" name="LBuadRate">
         <property name="text">
          <string>波特率</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="1" column="2" colspan="3">
        <widget class="QLineEdit" name="baudRate"/>
       </item>
-      <item>
+      <item row="1" column="5">
        <widget class="QPushButton" name="SerialOpen">
         <property name="text">
          <string>打开串口</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="1" column="6" colspan="2">
        <widget class="QPushButton" name="SerialSend">
         <property name="text">
          <string>发送</string>
         </property>
        </widget>
       </item>
+      <item row="1" column="8">
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
      </layout>
     </item>
-    <item row="2" column="0">
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="1" column="0">
-       <widget class="QLabel" name="Encoder_2">
-        <property name="text">
-         <string>HL</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="hgline2"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="canny1"/>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="line1_ang"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="Encoder_3">
-        <property name="text">
-         <string>Blur</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="blur_kernel"/>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="canny2"/>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="hgline1"/>
-      </item>
-      <item row="0" column="4">
-       <widget class="QLineEdit" name="canny3"/>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLineEdit" name="line1_roh"/>
-      </item>
-      <item row="1" column="4">
-       <widget class="QLineEdit" name="hgline3"/>
-      </item>
-      <item row="3" column="3">
-       <widget class="QLineEdit" name="currPosition_4"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="Encoder_4">
-        <property name="text">
-         <string>line1</string>
-        </property>
-       </widget>
-      </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
        <widget class="QLabel" name="PulseNum_2">
         <property name="text">
@@ -186,23 +125,94 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="2">
-       <widget class="QLineEdit" name="line2_ang"/>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="canny1"/>
       </item>
-      <item row="5" column="3">
-       <widget class="QLineEdit" name="line2_roh"/>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="canny2"/>
       </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="Encoder_5">
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="canny3"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="Encoder_2">
         <property name="text">
-         <string>line2</string>
+         <string>线条参数</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="4">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="hgline1"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="hgline2"/>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="hgline3"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="Encoder_3">
+        <property name="text">
+         <string>模糊</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="blur_kernel"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="currPosition_4"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="Encoder_4">
+        <property name="text">
+         <string>线条1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="line1_ang"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="line1_roh"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="Encoder_5">
+        <property name="text">
+         <string>线条2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="line2_ang"/>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="line2_roh"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>角度误差</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
        <widget class="QLineEdit" name="line_abs"/>
       </item>
-      <item row="5" column="4">
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>角度修正</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="line1_ang_delta"/>
+      </item>
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="line2_ang_delta"/>
+      </item>
+      <item row="6" column="3">
        <widget class="QPushButton" name="saveImg">
         <property name="text">
          <string>保存</string>
@@ -211,50 +221,8 @@
       </item>
      </layout>
     </item>
-    <item row="3" column="0">
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="2" column="0">
-       <widget class="QLabel" name="ServoId">
-        <property name="text">
-         <string>RW</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="ceil">
-        <property name="text">
-         <string>2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="7">
-       <widget class="QPushButton" name="modbusSend">
-        <property name="text">
-         <string>modbusSend</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="optype">
-        <property name="text">
-         <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="addr">
-        <property name="text">
-         <string>1000</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="val"/>
-      </item>
-     </layout>
-    </item>
-    <item row="4" column="0">
-     <spacer name="verticalSpacer">
+    <item>
+     <spacer name="verticalSpacer_2">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
@@ -266,181 +234,192 @@
       </property>
      </spacer>
     </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLineEdit" name="addr">
+        <property name="text">
+         <string>1000</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="optype">
+        <property name="text">
+         <string>1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="ceil">
+        <property name="text">
+         <string>2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="val"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QPushButton" name="modbusSend">
+      <property name="text">
+       <string>modbus发送</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer_3">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <widget class="QTextBrowser" name="txbRecv">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
    </layout>
-  </widget>
-  <widget class="QLabel" name="TigerLogo">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>590</y>
-     <width>81</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap>../../Pictures/tiger-logo.jpeg</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="painter">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>140</y>
-     <width>751</width>
-     <height>541</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
   </widget>
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>771</width>
-     <height>101</height>
+     <width>721</width>
+     <height>134</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QComboBox" name="ComboDevices"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>摄像头参数:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="ComboDevices"/>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bnOpen">
+          <property name="text">
+           <string>打开</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="Calibration">
+          <property name="text">
+           <string>校准</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="bnOpen">
-        <property name="text">
-         <string>打开</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="Calibration">
-        <property name="text">
-         <string>校准</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>摄像头参数:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="tbExposure"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="tbFrameRate"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="tbGain"/>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLineEdit" name="tbExposure"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="tbFrameRate"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="tbGain"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="fps"/>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>X:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="X"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Y:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="Y"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>误差:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="delta"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="delta_mm"/>
-      </item>
-      <item>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="1" column="3">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>mm</string>
+         <string>毫米</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QLineEdit" name="delta_c"/>
-      </item>
-      <item>
+      <item row="1" column="5">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>度</string>
+         <string>角度</string>
         </property>
        </widget>
       </item>
-      <item>
-       <spacer name="horizontalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="1" column="6">
+       <widget class="QLineEdit" name="delta_c"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>坐标偏差</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QLineEdit" name="delta"/>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLineEdit" name="delta_mm"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>坐标 X</string>
         </property>
-       </spacer>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="X"/>
+      </item>
+      <item row="0" column="3">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Y</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="4">
+       <widget class="QLineEdit" name="Y"/>
       </item>
      </layout>
     </item>

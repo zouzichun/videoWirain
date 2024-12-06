@@ -37,9 +37,11 @@ typedef struct {
 
     int line1_ang;
     int line1_roh;
+    float line1_ang_delta;
     int line1_sel_low;
     int line2_ang;
     int line2_roh;
+    float line2_ang_delta;
     int line2_sel_low;
     float line_abs;
     int lines_num;
