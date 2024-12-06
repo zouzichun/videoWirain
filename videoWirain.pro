@@ -12,10 +12,17 @@ CONFIG += console
 TARGET = videoWirain
 TEMPLATE = app
 
-INCLUDEPATH += /home/wirain/opencv/opencv-3.4.20/install/include
+INCLUDEPATH += /opt/opencv/include
 INCLUDEPATH += /opt/MVS/include
-LIBS += /home/wirain/opencv/opencv-3.4.20/install/lib/libopencv*.so
+LIBS += /opt/opencv/lib/libopencv*.so
+
+contains(QT_ARCH, arm64){
+message("arm64") #在这里处理arm64所需
 LIBS += /opt/MVS/lib/aarch64/libMvCameraControl.so
+}else{
+message("x86")
+LIBS += /opt/MVS/lib/64/libMvCameraControl.so
+}
 
 SOURCES += main.cpp\
     MvCamera.cpp \
