@@ -346,13 +346,22 @@ void MainDialog::on_Calibration_clicked()
         imgWindow * imgw = new imgWindow();
         imgw->show();
         m_camera_opened = true;
-        m_imgproc->CameraCal(m_ui->painter,imgw->getImgPic(), m_ui->X, m_ui->Y, m_pcMyCamera);
-        if (m_pcMyCamera)
-        {
-            m_pcMyCamera->Close();
-        }
-        m_camera_opened = false;
-        delete imgw;
+        m_imgproc->CameraCal(m_ui->painter, imgw->getImgPic(), m_ui->X, m_ui->Y, m_pcMyCamera);
+
+        QEventLoop loop;
+        QTimer::singleShot(1000, &loop, &QEventLoop::quit);
+        loop.exec();
+
+        // 改为异步关闭
+        QTimer::singleShot(1000, [this]() { // 延迟1秒确保处理完成
+            if (m_pcMyCamera)
+            {
+                m_pcMyCamera->Close();
+            }
+            m_camera_opened = false;
+        });
+
+        imgw->deleteLater();
         m_ui->Calibration->setEnabled(true);
         m_ui->Calibration->setText("校准");
         saveImgParam();

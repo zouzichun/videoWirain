@@ -24,6 +24,7 @@ private slots:
 
 private:
     Ui::imgWindow *ui;
+    QPixmap m_pixmap;
 };
 
 #endif // IMGWINDOW_H

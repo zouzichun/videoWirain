@@ -19,6 +19,7 @@ LIBS += /opt/opencv/lib/libopencv*.so
 contains(QT_ARCH, arm64){
 message("arm64") #在这里处理arm64所需
 LIBS += /opt/MVS/lib/aarch64/libMvCameraControl.so
+LIBS += /usr/lib/librknnrt.so
 }else{
 message("x86")
 LIBS += /opt/MVS/lib/64/libMvCameraControl.so
@@ -33,7 +34,8 @@ SOURCES += main.cpp\
     port/modbus.cpp \
     port/port.cpp \
     img_process.cpp \
-    img_process_cam.cpp
+    img_process_cam.cpp \
+    rknn_process.cpp
 
 HEADERS  += maindialog.h \
     MvCamera.h \
@@ -43,6 +45,7 @@ HEADERS  += maindialog.h \
     port/serial_port.h \
     port/modbus.h \
     port/port.h \
+    rknn_process.h \
     spdlog/async.h \
     spdlog/async_logger.h \
     spdlog/common.h \

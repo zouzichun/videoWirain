@@ -14,6 +14,8 @@ imgWindow::imgWindow(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::imgWindow)
 {
+    m_pixmap = QPixmap(640, 480); // 默认尺寸
+    m_pixmap.fill(Qt::gray);      // 填充灰色背景
     ui->setupUi(this);
     cal_enabled = false;
 }

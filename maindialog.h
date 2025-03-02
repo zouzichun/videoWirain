@@ -113,7 +113,6 @@ private:
     ImgProcess * m_imgproc = nullptr;
     QTimer * m_monitor_timer = nullptr;
     Port *       m_port = nullptr;
-
     void *m_hWnd;                          // ch:显示窗口句柄 | en:The Handle of Display Window
     MV_CC_DEVICE_INFO_LIST  m_stDevList;   // ch:设备信息链表 | en:The list of device info
     CMvCamera*              m_pcMyCamera;  // ch:相机类设备实例 | en:The instance of CMvCamera

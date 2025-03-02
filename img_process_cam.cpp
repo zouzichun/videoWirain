@@ -13,7 +13,6 @@
 using namespace std;
 using namespace cv;
 
-Point2f getCrossPoint(Vec4i LineA, Vec4i LineB);
 extern std::mutex disp_lock;
 
 bool ImgProcess::CameraDemo(bool & enable, QImage & qimg, QLineEdit * x, QLineEdit * y, float * delta, float * delta_ang, CMvCamera* p_cam) {
@@ -239,8 +238,9 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
                   configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
                   configData.line1_sel_low,
                   configData.line2_sel_low);
+
     for(;;) {
-        if(frame_cnt > 100) {
+        if(frame_cnt > 1000) {
             break;
         } else {
             // qDebug("frame pos %d", frame_cnt);
@@ -255,22 +255,31 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 
         const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
         const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+        // qDebug("grab %d x %d, type 0x%x, len %d", IMG_HEIGHT, IMG_WIDTH, frame.stFrameInfo.enPixelType, frame.stFrameInfo.nFrameLen);
         Mat grayimg, color_img;
         Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
         Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
         Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
 
-        img.copyTo(grayimg);
-        cv::cvtColor(img, color_img, COLOR_GRAY2BGR);
-
-        Process(grayimg, edge, contours_img);
+        cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
+        cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
 
         std::vector<cv::Vec2f> lines_found;
         std::vector<float> rhos = {0, 0};
         std::vector<float> thetas = {0, 0};
         std::vector<Point2i> points;
 
-        if (!FilterLines(edge, lines_found, rhos, thetas, points)) {
+        // Process(grayimg, edge, contours_img);
+        // if (!FilterLines(edge, lines_found, rhos, thetas, points)) {
+        //     p_cam->FreeImageBuffer(&frame);
+        //     // p_cam->StopGrabbing();
+        //     // return false;+
+        //     frame_cnt++;
+        //     waitKey(1);
+        //     continue;
+        // }
+        cv::Mat obf(200, 200, CV_8UC1, Scalar(0));
+        if (!RknnFilterLines(color_img, obf, lines_found, rhos, thetas, points)) {
             p_cam->FreeImageBuffer(&frame);
             // p_cam->StopGrabbing();
             // return false;
@@ -278,14 +287,33 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
             waitKey(1);
             continue;
         }
-
-        QImage qimg = QImage((const unsigned char*)(edge.data),
-                                        edge.cols,
-                                        edge.rows,
-                                        edge.step,
-                                        // QImage::Format_BGR888).copy();
+        for (int pos = 0; pos < points.size(); pos++) {
+             cv::line(color_img, points[pos], points[pos+1], cv::Scalar(255,0,255), 3, CV_AA);
+             pos += 2;
+        }
+    
+        QImage qimg = QImage((const unsigned char*)(obf.data),
+                                        obf.cols,
+                                        obf.rows,
+                                        obf.step,
+                                        // QImage::Format_RGB888).copy();
                                         QImage::Format_Grayscale8).copy();
-        pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt->size(), Qt::KeepAspectRatio));
+        pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt3->size(), Qt::KeepAspectRatio));
+        // pgp.push_back(points);
+        // // spdlog::debug("top {},{}, p {}:{}, bottom {},{}", points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+         // cv::line(color_img, Point2i(0,0), Point2i(2047,2047), cv::Scalar(0,0,255), 2, CV_AA);
+//         cv::line(color_img, points[1], points[2], cv::Scalar(0,255,255), 2, CV_AA);
+        // x->setText(QString(QString::number(points[1].x)));
+        // y->setText(QString(QString::number(points[1].y)));
+        // cv::drawMarker(color_img, points[1], cv::Scalar(255,255,255), 3, 20, 4);
+
+        QImage oimg = QImage((const unsigned char*)(color_img.data),
+                            color_img.cols,
+                            color_img.rows,
+                            color_img.step,
+                            // QImage::Format_Grayscale8).copy();
+                            QImage::Format_RGB888).copy();
+        pt->setPixmap(QPixmap::fromImage(oimg).scaled(pt->size(), Qt::KeepAspectRatio));
 
         ret = p_cam->FreeImageBuffer(&frame);
         if (ret != MV_OK) {
@@ -294,22 +322,6 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
             return false;
         }
 
-        pgp.push_back(points);
-        // spdlog::debug("top {},{}, p {}:{}, bottom {},{}", points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
-        cv::line(color_img, points[0], points[1], cv::Scalar(0,255,255), 2, CV_AA);
-        cv::line(color_img, points[1], points[2], cv::Scalar(0,255,255), 2, CV_AA);
-        x->setText(QString(QString::number(points[1].x)));
-        y->setText(QString(QString::number(points[1].y)));
-        cv::drawMarker(color_img, points[1], cv::Scalar(255,255,255), 3, 20, 4);
-
-        QImage oimg = QImage((const unsigned char*)(color_img.data),
-                            color_img.cols,
-                            color_img.rows,
-                            color_img.step,
-                            // QImage::Format_Grayscale8).copy();
-                            QImage::Format_BGR888).copy();
-
-        pt->setPixmap(QPixmap::fromImage(oimg).scaled(pt->size(), Qt::KeepAspectRatio));
         frame_cnt++;
         waitKey(1);
     }
@@ -349,6 +361,128 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
     return true;
 }
 
+
+
+bool ImgProcess::CameraCalTT(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit * y, CMvCamera* p_cam) {
+    int frame_cnt = 0;
+    int ret = -1;
+    Mat img;
+//    cv::namedWindow("video", WINDOW_NORMAL);
+    std::vector<int> x_sta;
+    std::vector<int> y_sta;
+    std::vector<std::vector<Point2i> > pgp;
+
+    qDebug("canny %d %d %d", configData.canny_1, configData.canny_2, configData.canny_3);
+    qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
+    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
+    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang_abs = configData.line_abs * 180;
+    const float roh_abs = 200;
+    spdlog::debug("ang1 {}.C:{:.2f}, ang2 {}.C:{:.2f}, abs {:.2f} sel_low {} {}",
+                  configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
+                  configData.line1_sel_low,
+                  configData.line2_sel_low);
+
+    for(;;) {
+        if(frame_cnt > 1000) {
+            break;
+        } else {
+            // qDebug("frame pos %d", frame_cnt);
+        }
+
+        Mat img = cv::imread("/home/leon/test1.bmp");
+
+        const int IMG_HEIGHT = img.rows;
+        const int IMG_WIDTH = img.cols;
+        // qDebug("grab %d x %d, type 0x%x, len %d", IMG_HEIGHT, IMG_WIDTH, frame.stFrameInfo.enPixelType, frame.stFrameInfo.nFrameLen);
+        Mat grayimg, color_img;
+        Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        // Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
+
+//        cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
+//        cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
+
+        cv::cvtColor(img, color_img, COLOR_BGR2RGB);
+        cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
+
+        std::vector<cv::Vec2f> lines_found;
+        std::vector<float> rhos = {0, 0};
+        std::vector<float> thetas = {0, 0};
+        std::vector<Point2i> points;
+
+        cv::Mat obf(200, 200, CV_8UC1, Scalar(0));
+        if (!RknnFilterLines(color_img, obf, lines_found, rhos, thetas, points)) {
+            // p_cam->StopGrabbing();
+            // return false;
+            frame_cnt++;
+            waitKey(1);
+            continue;
+        }
+
+        for (int pos = 0; pos < points.size(); pos++) {
+             cv::line(color_img, points[pos], points[pos+1], cv::Scalar(0,0,255), 3, CV_AA);
+             pos += 2;
+        }
+    
+        QImage qimg = QImage((const unsigned char*)(obf.data),
+                                        obf.cols,
+                                        obf.rows,
+                                        obf.step,
+                                        // QImage::Format_RGB888).copy();
+                                        QImage::Format_Grayscale8).copy();
+        pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt3->size(), Qt::KeepAspectRatio));
+        // pgp.push_back(points);
+        // // spdlog::debug("top {},{}, p {}:{}, bottom {},{}", points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
+         // cv::line(color_img, Point2i(0,0), Point2i(2047,2047), cv::Scalar(0,0,255), 2, CV_AA);
+//         cv::line(color_img, points[1], points[2], cv::Scalar(0,255,255), 2, CV_AA);
+        // x->setText(QString(QString::number(points[1].x)));
+        // y->setText(QString(QString::number(points[1].y)));
+        // cv::drawMarker(color_img, points[1], cv::Scalar(255,255,255), 3, 20, 4);
+
+       QImage oimg = QImage((const unsigned char*)(color_img.data),
+                           color_img.cols,
+                           color_img.rows,
+                           color_img.step,
+                           // QImage::Format_Grayscale8).copy();
+                           QImage::Format_RGB888).copy();
+       pt->setPixmap(QPixmap::fromImage(oimg).scaled(pt->size(), Qt::KeepAspectRatio));
+
+        frame_cnt++;
+        waitKey(1);
+    }
+
+    std::vector<Point2i> linesp = {Point2i(0,0),Point2i(0,0),Point2i(0,0)};
+    const int SZ = pgp.size() == 0? 1 : pgp.size();
+    auto f = [&] () ->int {
+        for (const auto & v: pgp) {
+            linesp[0].x = linesp[0].x + v[0].x;
+            linesp[0].y = linesp[0].y + v[0].y;
+            linesp[1].x = linesp[1].x + v[1].x;
+            linesp[1].y = linesp[1].y + v[1].y;
+            linesp[2].x = linesp[2].x + v[2].x;
+            linesp[2].y = linesp[2].y + v[2].y;
+        }
+
+        for (auto & v: linesp) {
+            v.x = v.x / SZ;
+            v.y = v.y / SZ;
+        }
+    };
+
+    f();
+
+    qDebug("cal x:y to %d:%d", linesp[1].x, linesp[1].y);
+    configData.camera_abs_x = linesp[1].x;
+    configData.camera_abs_y = linesp[1].y;
+
+    configData.point1_x = linesp[0].x;
+    configData.point1_y = linesp[0].y;
+    configData.point2_x = linesp[2].x;
+    configData.point2_y = linesp[2].y;
+
+    return true;
+}
 
 
 bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) {
@@ -551,6 +685,76 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     points.push_back(line1p);
     points.push_back(p_int);
     points.push_back(line2p);
+    return true;
+}
+
+bool ImgProcess::RknnFilterLines(cv::Mat &img, cv::Mat &o_img, std::vector<cv::Vec2f> & lines_found,
+    std::vector<float> & rhos, std::vector<float> & thetas, std::vector<Point2i> & points) {
+    if (rhos.size() != thetas.size() || thetas.size() == 0) {
+        spdlog::debug("invalid find lines param size!");
+        return false;
+    }
+    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
+    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
+    const float ang_abs = configData.line_abs * 180 / CV_PI;
+    const float roh_abs = 200;
+
+    Mat img_bk(img);
+    cv::resize(img_bk, img_bk, cv::Size(400, 400));
+
+    int height  = m_rknn->input_attrs.dims[1];
+    int channel = m_rknn->input_attrs.dims[3];
+    int width  = m_rknn->input_attrs.dims[2];
+    int stride = m_rknn->input_attrs.w_stride;
+    // copy from src to dst with stride
+    uint8_t* src_ptr = img_bk.data;
+    uint8_t* dst_ptr = (uint8_t*)m_rknn->input_mem->virt_addr;
+    // width-channel elements
+    int src_wc_elems = width * channel;
+    int dst_wc_elems = stride * channel;
+    for (int h = 0; h < height; ++h) {
+      memcpy(dst_ptr, src_ptr, src_wc_elems);
+      src_ptr += src_wc_elems;
+      dst_ptr += dst_wc_elems;
+    }
+
+    m_rknn->Run();
+
+    cv::Mat rknn_o_img(m_rknn->output_attrs.dims[2], m_rknn->output_attrs.dims[3], CV_8SC1, m_rknn->output_mem->virt_addr);
+    rknn_o_img.convertTo(rknn_o_img, CV_32FC1);
+
+    for (int y = 0; y < rknn_o_img.rows; y++) {
+        for (int x = 0; x < rknn_o_img.cols; x++) {
+            float tt = 1.0 / (1 + std::exp(-rknn_o_img.at<float>(y, x)));
+            if (tt > 0.7) {
+                o_img.at<uchar>(y, x) = 255;
+            } else {
+                o_img.at<uchar>(y, x) = 0;
+            }
+        }
+    }
+
+    // 计算区域属性
+    std::vector<RegionProps> props = regionprops(o_img);
+    std::vector<cv::Point2f> pps;
+    // 输出每个区域的属性
+    for (size_t i = 0; i < props.size(); ++i) {
+        // if (props[i].area >= 0) {
+            qDebug("region %d, area: %d, cent: (%.2f,%.2f)",
+            i + 1, props[i].area, props[i].centroid.x, props[i].centroid.y);
+            pps.push_back(cv::Point2f(props[i].centroid.y, props[i].centroid.x));
+        // }
+    }
+
+    std::vector<std::vector<int>> pp = {};
+    pp = reverse_mapping(pps, 200,200,{2048,2048});
+
+    for (const auto v : pp) {
+        points.push_back(Point2i(v[1], v[0]));
+        points.push_back(Point2i(v[3], v[2]));
+        qDebug("points (%d,%d), (%d,%d)", v[1], v[0], v[3], v[2]);
+    }
+
     return true;
 }
 
