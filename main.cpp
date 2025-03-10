@@ -13,12 +13,16 @@ QTextBrowser *logOut = nullptr;
 void LogMsgOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 void spdLogInit();
 
+std::mutex g_mtx;
+std::vector<Lines> g_lines;
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     spdLogInit();
     qInstallMessageHandler(LogMsgOutput);
     qRegisterMetaType<QTextCursor>("QTextCursor");
+    qRegisterMetaType<cv::Mat>("cv::Mat");
     MainDialog w;
     w.show();
 

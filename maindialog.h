@@ -61,6 +61,16 @@ const ConfigData defaultSetting {
     .lines_num=3,
 };
 
+typedef struct {
+    std::string name = {};
+    int index = 0;
+    bool is_opened = false;
+    CMvCamera *handler = nullptr;
+    QTimer * timer = nullptr;
+    MVCC_FLOATVALUE stFloatValue1;
+    MVCC_FLOATVALUE stFloatValue2;
+    MVCC_FLOATVALUE stFloatValue3;
+} CameraInfo;
 
 class MainDialog : public QDialog
 {
@@ -89,8 +99,13 @@ public:
 
     void on_bnGetParam_clicked();
 
+    void CameraInit();
+    void CameraRelease();
+
 signals:
     void sendMsgWait(const QByteArray &val);
+    void cameraStart(CMvCamera* handler);
+    void cameraCalStart(CMvCamera* handler);
 
 private slots:
 
@@ -103,9 +118,8 @@ private slots:
     void on_bnOpen_clicked();
 
     void on_saveImg_clicked();
-
     void on_modbusSend_clicked();
-    void cam_refresh();
+    void camera_img_refresh(cv::Mat img);
 
 private:
     Ui::MainDialog *m_ui;
@@ -113,18 +127,18 @@ private:
     ImgProcess * m_imgproc = nullptr;
     QTimer * m_monitor_timer = nullptr;
     Port *       m_port = nullptr;
+    imgWindow * imgw = nullptr;
 
     void *m_hWnd;                          // ch:显示窗口句柄 | en:The Handle of Display Window
     MV_CC_DEVICE_INFO_LIST  m_stDevList;   // ch:设备信息链表 | en:The list of device info
-    CMvCamera*              m_pcMyCamera;  // ch:相机类设备实例 | en:The instance of CMvCamera
-    bool       m_camera_opened = false;
-    QTimer * m_cam_timer = nullptr;
+    // CMvCamera*              m_pcMyCamera;  // ch:相机类设备实例 | en:The instance of CMvCamera
     std::mutex m_disp_mtx;
     QImage   m_img;
     float m_delta = 0.0;
     float m_delta_ang = 0.0;
-    std::thread m_video_thd;
-    int m_cam_idx=0;
+    std::vector<CameraInfo> m_cameras;
+
+    QThread mWorkerThread; //定义处理线程
 };
 
 #endif // MAINDIALOG_H

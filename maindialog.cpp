@@ -31,6 +31,23 @@ ConfigData configData = defaultSetting;
 extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
 
+/**
+ * @brief Constructor for MainDialog class
+ * @param parent Parent widget pointer
+ * 
+ * Initializes the main dialog window with UI components, camera settings,
+ * and communication interfaces. Sets up:
+ * - Window flags and UI configuration
+ * - Modbus/Serial port communication
+ * - Image processing components
+ * - Camera initialization
+ * - Timer for monitoring
+ * - Signal/slot connections for UI controls
+ * - Configuration data loading
+ * 
+ * The dialog handles camera image display, parameter adjustments for image 
+ * processing, and communication with external devices.
+ */
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::MainDialog),
@@ -41,6 +58,9 @@ MainDialog::MainDialog(QWidget *parent) :
     m_ui->setupUi(this);
     logOut = m_ui->txbRecv;
 
+    //mvs camera
+    memset(&m_stDevList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
+
     Qt::WindowFlags flags=Qt::Dialog;
     flags |=Qt::WindowMinMaxButtonsHint;
     flags |=Qt::WindowCloseButtonHint;
@@ -50,8 +70,10 @@ MainDialog::MainDialog(QWidget *parent) :
     loadConfigFile();
     showUIConfigData(configData);
 
+
+
     // if (configData.netType == 3) {
-        m_port = new ModbusPort(parent);
+    m_port = new ModbusPort(parent);
     // } else if (configData.netType == 3) {
     //     m_serial = new SerialPort();
     // }
@@ -64,23 +86,21 @@ MainDialog::MainDialog(QWidget *parent) :
     m_monitor_timer->stop();
 
 
-    m_cam_timer = new QTimer(this);
-    connect(this->m_cam_timer,SIGNAL(timeout()),this,SLOT(cam_refresh()));
-    m_cam_timer->stop();
-
     m_imgproc = new ImgProcess("image");
-    //mvs camera
-    memset(&m_stDevList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
-    m_pcMyCamera = new (std::nothrow) CMvCamera;
-    if (NULL == m_pcMyCamera)
-    {
-        qDebug()<< "new CMvCamera Instance failed" << QThread::currentThreadId();
-    }
+    m_imgproc->moveToThread(&mWorkerThread); //把数据处理类移到线程
+    connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
+
+    connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
+    connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection); // 或 QueuedConnection
+
+
+
+    imgw = new imgWindow();
+    connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::CameraCalTest, Qt::QueuedConnection);
+    connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
+
+
     m_hWnd = (void*)m_ui->painter->winId();
-
-    // pretend to enum cam device
-    EnumCamDevice();
-
     connect(m_ui->canny1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->canny2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->canny3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
@@ -96,30 +116,41 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->line2_ang_delta,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 
+    CameraInit();
+
+    mWorkerThread.start();
+
     qDebug()<< "MainDialog thd id: " << QThread::currentThreadId();
 }
 
 MainDialog::~MainDialog()
 {
     delete m_ui;
+    if (imgw)
+        delete imgw;
+
     if (m_serial)
         delete m_serial;
     if (configData.netType == 3) {
         delete m_port;
     }
 
-    if (m_pcMyCamera)
-    {
-        // m_pcMyCamera->Close();
-        delete m_pcMyCamera;
-        m_pcMyCamera = NULL;
+    for (auto v : m_cameras) {
+        v.timer->stop();
+        delete v.timer;
+
+        if (v.handler) {
+            v.handler->Close();
+            delete v.handler;
+            v.handler = nullptr;
+        }
     }
+
+    mWorkerThread.quit();
+    mWorkerThread.wait();
 
     m_monitor_timer->stop();
     delete m_monitor_timer;
-
-    m_cam_timer->stop();
-    delete m_cam_timer;
 }
 
 void MainDialog::saveCommParam()
@@ -237,24 +268,26 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->line_abs->setText(QString::number(configData.line_abs));
 }
 
-
-std::mutex disp_lock;
-
-void MainDialog::cam_refresh() {
-     m_cam_timer->stop();
+void MainDialog::camera_img_refresh(cv::Mat img) {
     // qDebug("cam refreshed..");
-    QImage   img;
-    {
-        std::unique_lock<std::mutex> lg(disp_lock);
-        img = m_img;
-        QPixmap piximg = QPixmap::fromImage(img);
-        if (!piximg.isNull())
-            m_ui->painter->setPixmap(piximg.scaled(m_ui->painter->size(), Qt::KeepAspectRatio));
+    QImage qimg = QImage((const unsigned char*)(img.data),
+        img.cols,
+        img.rows,
+        img.step,
+        // QImage::Format_Grayscale8).copy();
+        QImage::Format_RGB888).copy();
+
+    QPixmap piximg = QPixmap::fromImage(qimg);
+
+
+    if (!piximg.isNull()) {
+        m_ui->painter->setPixmap(piximg.scaled(m_ui->painter->size(), Qt::KeepAspectRatio));
+        m_ui->painter_2->setPixmap(piximg.scaled(m_ui->painter_2->size(), Qt::KeepAspectRatio));
     }
-    m_ui->delta->setText(QString("%1").arg(m_delta));
-    m_ui->delta_mm->setText(QString("%1").arg(m_delta * 0.1));
-    m_ui->delta_c->setText(QString("%1").arg(m_delta_ang * 180 / CV_PI));
-    m_cam_timer->start(100);
+
+    // m_ui->delta->setText(QString("%1").arg(m_delta));
+    // m_ui->delta_mm->setText(QString("%1").arg(m_delta * 0.1));
+    // m_ui->delta_c->setText(QString("%1").arg(m_delta_ang * 180 / CV_PI));
 }
 
 void MainDialog::on_SerialOpen_clicked()
@@ -280,92 +313,104 @@ QString MainDialog::toString(unsigned char*buf, unsigned int bufLen)
     return str;
 }
 
-void MainDialog::on_bnOpen_clicked()
-{
-    if (!m_camera_opened) {
-        m_ui->bnOpen->setText("关闭");
-        m_ui->tbExposure->setEnabled(true);
-        m_ui->tbGain->setEnabled(true);
-        m_ui->tbFrameRate->setEnabled(true);
-        m_camera_opened = true;
+void MainDialog::CameraInit() {
+    // pretend to enum cam device
+    m_ui->ComboDevices->clear();
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
+    m_ui->ComboDevices->setStyle(QStyleFactory::create("Windows"));
+    EnumCamDevice();
+    for (auto & v : m_cameras) {
+        m_ui->ComboDevices->addItem(QString::fromStdString(v.name));
+        qDebug() << QString::fromStdString(v.name);
+        v.handler = new (std::nothrow) CMvCamera();
+        v.timer = new QTimer(this);
+        v.timer->stop();
+    }
+    m_ui->ComboDevices->setCurrentIndex(0);
+    // m_cam_idx = m_ui->ComboDevices->currentIndex();
 
-        int nRet = m_pcMyCamera->Open(m_stDevList.pDeviceInfo[m_cam_idx]);
+    for (int idx=0; idx < m_cameras.size(); ++idx) {
+        int nRet = m_cameras[idx].handler->Open(m_stDevList.pDeviceInfo[idx]);
         if (MV_OK != nRet) {
-            spdlog::error("Open Fail {}", nRet);
+            spdlog::error("Open camera {} Fail {}", idx, nRet);
             return;
         }
-        on_bnGetParam_clicked(); // ch:获取参数 | en:Get Parameter
-        nRet = m_pcMyCamera->SetEnumValue("AcquisitionMode", MV_ACQ_MODE_CONTINUOUS);
+        nRet = m_cameras[idx].handler->SetEnumValue("AcquisitionMode", MV_ACQ_MODE_CONTINUOUS);
         if (nRet) {
             spdlog::error("set AcquisitionMode mode failed!");
         }
-        nRet = m_pcMyCamera->SetEnumValue("TriggerMode", MV_TRIGGER_MODE_OFF);
+        nRet = m_cameras[idx].handler->SetEnumValue("TriggerMode", MV_TRIGGER_MODE_OFF);
         if (nRet) {
             spdlog::error("set TriggerMode mode failed!");
         }
 
-        m_imgproc->Init();
-        m_cam_timer->start(100);
-        m_video_thd = std::thread(&ImgProcess::CameraDemo, std::ref(m_camera_opened), std::ref(m_img), m_ui->X, m_ui->Y, &m_delta, &m_delta_ang, m_pcMyCamera);
-    } else {
-        m_camera_opened = false;
-        m_cam_timer->stop();
-        m_video_thd.join();
-        
-        if (m_pcMyCamera)
-        {
-            m_pcMyCamera->Close();
-        }
-        m_ui->bnOpen->setText("打开");
+        // nRet = m_cameras[idx].handler->SetEnumValue("TriggerMode", MV_TRIGGER_MODE_OFF);
+        // if (nRet) {
+        //     qDebug("set trigger mode failed!");
+        //     return false;
+        // }
+    }
+}
 
-        m_ui->tbExposure->setEnabled(false);
-        m_ui->tbGain->setEnabled(false);
-        m_ui->tbFrameRate->setEnabled(false);
+void MainDialog::on_bnOpen_clicked()
+{
+    for (auto & v : m_cameras) {
+        if (v.is_opened) {
+            v.is_opened = false;
+
+            v.timer->stop();
+
+            m_ui->bnOpen->setText("打开");
+
+            m_ui->tbExposure->setEnabled(false);
+            m_ui->tbGain->setEnabled(false);
+            m_ui->tbFrameRate->setEnabled(false);
+            m_imgproc->camera_enable = false;
+            emit cameraStart(v.handler);
+        } else {
+            v.is_opened = true;
+            m_ui->bnOpen->setText("关闭");
+            m_ui->tbExposure->setEnabled(true);
+            m_ui->tbGain->setEnabled(true);
+            m_ui->tbFrameRate->setEnabled(true);
+
+            v.timer->stop();
+
+            m_imgproc->camera_enable = true;
+            emit cameraStart(v.handler);
+        }
     }
 }
 
 void MainDialog::on_Calibration_clicked()
 {
-    if (!m_camera_opened) {
-        m_ui->Calibration->setEnabled(false);
-        m_ui->Calibration->setText("校准中...");
-        int nRet = m_pcMyCamera->Open(m_stDevList.pDeviceInfo[m_cam_idx]);
-        if (MV_OK != nRet) {
-            spdlog::error("Open Fail {}", nRet);
-            return;
-        }
-        nRet = m_pcMyCamera->SetEnumValue("AcquisitionMode", MV_ACQ_MODE_CONTINUOUS);
-        if (nRet) {
-            spdlog::error("set AcquisitionMode mode failed!");
-        }
-        nRet = m_pcMyCamera->SetEnumValue("TriggerMode", MV_TRIGGER_MODE_OFF);
-        if (nRet) {
-            spdlog::error("set TriggerMode mode failed!");
-        }
+    // m_ui->Calibration->setEnabled(true);
+    for (auto & v : m_cameras) {
+        if (v.is_opened) {
+            v.is_opened = false;
+            m_ui->Calibration->setText("校准");
+            m_imgproc->camera_enable = false;
+            // emit cameraCalStart(v.handler);
+            imgw->hide();
+        } else {
+            v.is_opened = true;
+            m_ui->Calibration->setText("校准中...");
 
-        imgWindow * imgw = new imgWindow();
-        imgw->show();
-        m_camera_opened = true;
-        m_imgproc->CameraCal(m_ui->painter,imgw->getImgPic(), m_ui->X, m_ui->Y, m_pcMyCamera);
-        if (m_pcMyCamera)
-        {
-            m_pcMyCamera->Close();
+            imgw->show();
+            //        m_imgproc->CameraCal(m_ui->painter,imgw->getImgPic(), m_ui->X, m_ui->Y, m_pcMyCamera);
+            //        if (m_pcMyCamera)
+            //        {
+            //            m_pcMyCamera->Close();
+            //        }
+            m_imgproc->camera_enable = true;
+            emit cameraCalStart(v.handler);
+            // saveImgParam();
         }
-        m_camera_opened = false;
-        delete imgw;
-        m_ui->Calibration->setEnabled(true);
-        m_ui->Calibration->setText("校准");
-        saveImgParam();
-    } else {
-        spdlog::error("camera not enabled!");
     }
 }
 
 void MainDialog::EnumCamDevice()
 {
-    m_ui->ComboDevices->clear();
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("GBK"));
-    m_ui->ComboDevices->setStyle(QStyleFactory::create("Windows"));
     // ch:枚举子网内所有设备 | en:Enumerate all devices within subnet
     memset(&m_stDevList, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
     int nRet = CMvCamera::EnumDevices(MV_GIGE_DEVICE | MV_USB_DEVICE, &m_stDevList);
@@ -377,7 +422,7 @@ void MainDialog::EnumCamDevice()
     // ch:将值加入到信息列表框中并显示出来 | en:Add value to the information list box and display
     for (unsigned int i = 0; i < m_stDevList.nDeviceNum; i++)
     {
-
+        CameraInfo cam;
         MV_CC_DEVICE_INFO* pDeviceInfo = m_stDevList.pDeviceInfo[i];
         if (NULL == pDeviceInfo)
         {
@@ -419,16 +464,17 @@ void MainDialog::EnumCamDevice()
         {
             ShowErrorMsg("Unknown device enumerated", 0);
         }
-        m_ui->ComboDevices->addItem(QString::fromLocal8Bit(strUserName));
+        cam.name = std::string(strUserName);
+        cam.index = i;
+        cam.is_opened = false;
+        m_cameras.push_back(cam);
     }
 
-    if (0 == m_stDevList.nDeviceNum)
+    if (0 == m_cameras.size())
     {
-        ShowErrorMsg("No device", 0);
+        ShowErrorMsg("No camera device", 0);
         return;
     }
-    m_ui->ComboDevices->setCurrentIndex(0);
-    m_cam_idx = m_ui->ComboDevices->currentIndex();
 }
 
 // ch:显示错误信息 | en:Show error message
@@ -468,37 +514,39 @@ void MainDialog::ShowErrorMsg(QString csMessage, unsigned int nErrorNum)
 
 void MainDialog::on_bnGetParam_clicked()
 {
-    MVCC_FLOATVALUE stFloatValue;
-    memset(&stFloatValue, 0, sizeof(MVCC_FLOATVALUE));
+    for (auto v : m_cameras) {
+        if (v.handler) {    
+            memset(&v.stFloatValue1, 0, sizeof(MVCC_FLOATVALUE));
+            int nRet = v.handler->GetFloatValue("ExposureTime", &v.stFloatValue1);
+            if (MV_OK != nRet)
+            {
+                ShowErrorMsg("Get Exposure Time Fail", nRet);
+            }
+            else
+            {
+                m_ui->tbExposure->setText(QString("%1").arg(v.stFloatValue1.fCurValue));
+            }
 
-    int nRet = m_pcMyCamera->GetFloatValue("ExposureTime", &stFloatValue);
-    if (MV_OK != nRet)
-    {
-        ShowErrorMsg("Get Exposure Time Fail", nRet);
-    }
-    else
-    {
-        m_ui->tbExposure->setText(QString("%1").arg(stFloatValue.fCurValue));
-    }
+            nRet = v.handler->GetFloatValue("Gain", &v.stFloatValue2);
+            if (MV_OK != nRet)
+            {
+                ShowErrorMsg("Get Gain Fail", nRet);
+            }
+            else
+            {
+                m_ui->tbGain->setText(QString("%1").arg(v.stFloatValue2.fCurValue));
+            }
 
-    nRet = m_pcMyCamera->GetFloatValue("Gain", &stFloatValue);
-    if (MV_OK != nRet)
-    {
-        ShowErrorMsg("Get Gain Fail", nRet);
-    }
-    else
-    {
-        m_ui->tbGain->setText(QString("%1").arg(stFloatValue.fCurValue));
-    }
-
-    nRet = m_pcMyCamera->GetFloatValue("ResultingFrameRate", &stFloatValue);
-    if (MV_OK != nRet)
-    {
-        ShowErrorMsg("Get Frame Rate Fail", nRet);
-    }
-    else
-    {
-        m_ui->tbFrameRate->setText(QString("%1").arg(stFloatValue.fCurValue));
+            nRet = v.handler->GetFloatValue("ResultingFrameRate", &v.stFloatValue3);
+            if (MV_OK != nRet)
+            {
+                ShowErrorMsg("Get Frame Rate Fail", nRet);
+            }
+            else
+            {
+                m_ui->tbFrameRate->setText(QString("%1").arg(v.stFloatValue3.fCurValue));
+            }
+        }
     }
 }
 
@@ -522,7 +570,7 @@ void MainDialog::ImageCallBackInner(unsigned char * pData, MV_FRAME_OUT_INFO_EX*
     stDisplayInfo.nWidth = pFrameInfo->nWidth;
     stDisplayInfo.nHeight = pFrameInfo->nHeight;
     stDisplayInfo.enPixelType = pFrameInfo->enPixelType;
-    m_pcMyCamera->DisplayOneFrame(&stDisplayInfo);
+    // m_pcMyCamera->DisplayOneFrame(&stDisplayInfo);
 }
 
 void MainDialog::on_saveImg_clicked()

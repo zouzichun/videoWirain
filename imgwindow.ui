@@ -53,7 +53,7 @@
 </string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>630</x>
@@ -89,43 +89,12 @@
        <widget class="QLineEdit" name="l1_out"/>
       </item>
       <item>
+       <widget class="QLineEdit" name="total_lines"/>
+      </item>
+      <item>
        <widget class="QLabel" name="l1_res">
         <property name="text">
-         <string>点1-2</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLineEdit" name="l2_p1x"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="l2_p1y"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="QLineEdit" name="l2_p2x"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="l2_p2y"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="l2_out"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="l2res">
-        <property name="text">
-         <string>点3-4</string>
+         <string>点biaoji</string>
         </property>
        </widget>
       </item>

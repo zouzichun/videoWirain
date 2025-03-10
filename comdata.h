@@ -49,6 +49,15 @@ typedef struct {
 
 extern ConfigData configData;
 
+typedef struct {
+    float roh;
+    float angle;
+    int color;  // 0,1,2 RGB
+    int width;
+    std::vector<std::pair<float, float>> points;
+    std::vector<std::pair<float, float>> points_in_img;
+} Lines;
+
 ///!!!注意：由于下面的结构体会用于通信中
 ///所以需要按照1字节对齐（或者通信两端采用相同的字节对齐方式）
 ///以避免出现通信错误。

@@ -42,6 +42,16 @@ public:
     int max_hash_win_y = 0;
 
 
+    volatile bool camera_enable;
+
+signals:
+    void signal_refresh_img(cv::Mat img);
+    void signal_refresh_cal_img(cv::Mat img);
+
+public slots:
+    void CameraTest(CMvCamera* p_cam);
+    void CameraCalTest(CMvCamera* p_cam);
+
 private:
     QString m_dev_name;
 };
