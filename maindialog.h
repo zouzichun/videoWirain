@@ -12,6 +12,7 @@
 #include "port/port.h"
 #include "port/serial_port.h"
 #include "port/modbus.h"
+#include "port/modbus_tcp.h"
 #include "img_process.h"
 #include "MvCamera.h"
 
@@ -31,6 +32,8 @@ const ConfigData defaultSetting {
     // modbus can
     .modbusName="/dev/ttyS7",
     .modbusRate=19200,
+    .modbusTcpIp="192.168.20.32",
+    .modbusTcpPort=520,
     // camera
     .camera_height=0.0,
     .camera_angle=0.0,
@@ -41,6 +44,7 @@ const ConfigData defaultSetting {
     .point2_x=300,
     .point2_y=190,
     /*CV*/
+    .inv_thd=100,
     .canny_1=200,
     .canny_2=20,
     .canny_3=3,
@@ -51,14 +55,14 @@ const ConfigData defaultSetting {
     .blur_kernel=3,
     .line1_ang=35,
     .line1_roh=400,
-    .line1_ang_delta=0.00,
     .line1_sel_low=0,
     .line2_ang=135,
     .line2_roh=400,
-    .line2_ang_delta=0.00,
     .line2_sel_low=1,
     .line_abs=0.05,
     .lines_num=3,
+    .line_angs="0,0,0",
+    .line_rhos="0,0,0",
 };
 
 typedef struct {

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,89 +16,58 @@
   <widget class="QLabel" name="img_label">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
+     <x>2</x>
+     <y>2</y>
      <width>600</width>
-     <height>450</height>
+     <height>600</height>
     </rect>
    </property>
    <property name="text">
     <string/>
    </property>
   </widget>
-  <widget class="QPushButton" name="sel1">
-   <property name="geometry">
-    <rect>
-     <x>640</x>
-     <y>260</y>
-     <width>89</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>开始选择</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="l2res_2">
-   <property name="geometry">
-    <rect>
-     <x>640</x>
-     <y>300</y>
-     <width>121</width>
-     <height>81</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>选择2/4个点标记
-</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
      <x>630</x>
-     <y>10</y>
-     <width>171</width>
-     <height>252</height>
+     <y>90</y>
+     <width>161</width>
+     <height>161</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLineEdit" name="l1_p1x"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="l1_p1y"/>
-        </item>
-       </layout>
+       <widget class="QLineEdit" name="l1_p1x"/>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLineEdit" name="l1_p2x"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="l1_p2y"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="l1_out"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="total_lines"/>
-      </item>
-      <item>
-       <widget class="QLabel" name="l1_res">
-        <property name="text">
-         <string>点biaoji</string>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="l1_p1y"/>
       </item>
      </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLineEdit" name="l1_p2x"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="l1_p2y"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="l1_out"/>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="total_lines"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="sel1">
+      <property name="text">
+       <string>开始选择</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

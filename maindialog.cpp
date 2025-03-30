@@ -5,9 +5,6 @@
 #include <QSettings>
 #include <QTextCodec>
 #include <QStyleFactory>
-#include "port/serial_port.h"
-#include "port/tcp_server.h"
-#include "img_process.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -30,6 +27,7 @@ ConfigData configData = defaultSetting;
 
 extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
+extern std::vector<Lines> g_lines;
 
 /**
  * @brief Constructor for MainDialog class
@@ -70,10 +68,9 @@ MainDialog::MainDialog(QWidget *parent) :
     loadConfigFile();
     showUIConfigData(configData);
 
-
-
     // if (configData.netType == 3) {
-    m_port = new ModbusPort(parent);
+    // m_port = new ModbusPort(parent);
+    m_port = new ModbusTcp(parent);
     // } else if (configData.netType == 3) {
     //     m_serial = new SerialPort();
     // }
@@ -99,8 +96,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::CameraCalTest, Qt::QueuedConnection);
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
 
-
     m_hWnd = (void*)m_ui->painter->winId();
+    connect(m_ui->inv_thd,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->canny1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->canny2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->canny3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
@@ -110,10 +107,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->blur_kernel,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line1_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line1_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line1_ang_delta,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line2_ang_delta,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 
     CameraInit();
@@ -178,6 +173,7 @@ void MainDialog::saveImgParam()
     sets.setValue("point2_y",configData.point2_y);
 
     // Canny and hglines
+    sets.setValue("inv_thd",configData.inv_thd);
     sets.setValue("canny_1",configData.canny_1);
     sets.setValue("canny_2",configData.canny_2);
     sets.setValue("canny_3",configData.canny_3);
@@ -189,12 +185,26 @@ void MainDialog::saveImgParam()
     // target lines info
     sets.setValue("line1_ang",configData.line1_ang);
     sets.setValue("line1_roh",configData.line1_roh);
-    sets.setValue("line1_ang_delta",QString::number(configData.line1_ang_delta, 'f', 2));
+    // sets.setValue("line1_ang_delta",QString::number(configData.line1_ang_delta, 'f', 2));
     sets.setValue("line2_ang",configData.line2_ang);
     sets.setValue("line2_roh",configData.line2_roh);
-    sets.setValue("line2_ang_delta",QString::number(configData.line2_ang_delta, 'f', 2));
-    sets.setValue("line_abs",QString::number(configData.line_abs, 'f', 2));
+    // sets.setValue("line2_ang_delta",QString::number(configData.line2_ang_delta, 'f', 2));
+    sets.setValue("line_abs",QString::number(configData.line_abs, 'f', 3));
+
+    sets.setValue("line_angs",configData.line_angs);
+    sets.setValue("line_rhos",configData.line_rhos);
+
     sets.sync();
+}
+
+std::vector<std::string> split(const std::string & str, char dim) {
+   std::vector<std::string> tokens;
+   std::stringstream ss(str);
+   std::string token;
+   while(std::getline(ss, token, dim)) {
+       tokens.push_back(token);
+   }
+   return tokens;
 }
 
 void MainDialog::loadConfigFile()
@@ -210,6 +220,9 @@ void MainDialog::loadConfigFile()
     configData.modbusName = sets.value("modbusName",defaultSetting.modbusName).toString();
     configData.modbusRate = sets.value("modbusRate",defaultSetting.modbusRate).toInt();
 
+    configData.modbusTcpIp = sets.value("modbusTcpIp",defaultSetting.modbusTcpIp).toString();
+    configData.modbusTcpPort = sets.value("modbusTcpPort",defaultSetting.modbusTcpPort).toInt();
+
     configData.camera_height = sets.value("camera_height",defaultSetting.camera_height).toFloat();
     configData.camera_angle = sets.value("camera_angle",defaultSetting.camera_angle).toFloat();
     configData.camera_abs_x = sets.value("camera_abs_x",defaultSetting.camera_abs_x).toFloat();
@@ -219,6 +232,7 @@ void MainDialog::loadConfigFile()
     configData.point2_x = sets.value("point2_x",defaultSetting.point2_x).toInt();
     configData.point2_y = sets.value("point2_y",defaultSetting.point2_y).toInt();
 
+    configData.inv_thd = sets.value("inv_thd",defaultSetting.inv_thd).toInt();
     configData.canny_1 = sets.value("canny_1",defaultSetting.canny_1).toInt();
     configData.canny_2 = sets.value("canny_2",defaultSetting.canny_2).toInt();
     configData.canny_3 = sets.value("canny_3",defaultSetting.canny_3).toInt();
@@ -229,14 +243,26 @@ void MainDialog::loadConfigFile()
 
     configData.line1_ang = sets.value("line1_ang",defaultSetting.line1_ang).toInt();
     configData.line1_roh = sets.value("line1_roh",defaultSetting.line1_roh).toInt();
-    configData.line1_ang_delta = sets.value("line1_ang_delta",defaultSetting.line1_ang_delta).toFloat();
     configData.line1_sel_low = sets.value("line1_sel_low",defaultSetting.line1_sel_low).toInt();
     configData.line2_ang = sets.value("line2_ang",defaultSetting.line2_ang).toInt();
     configData.line2_roh = sets.value("line2_roh",defaultSetting.line2_roh).toInt();
-    configData.line2_ang_delta = sets.value("line2_ang_delta",defaultSetting.line2_ang_delta).toFloat();
     configData.line2_sel_low = sets.value("line2_sel_low",defaultSetting.line2_sel_low).toInt();
     configData.line_abs = sets.value("line_abs",defaultSetting.line_abs).toFloat();
     configData.lines_num = sets.value("lines_num",defaultSetting.lines_num).toInt();
+
+    configData.line_angs = sets.value("line_angs",defaultSetting.line_angs).toString();
+    configData.line_rhos = sets.value("line_rhos",defaultSetting.line_rhos).toString();
+
+    std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
+    std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
+    g_lines.clear();
+    for (int pos =0; pos < angs.size(); pos++) {
+        Lines l;
+        l.angle = std::atof(angs[pos].c_str());
+        l.rho = std::atof(rhos[pos].c_str());
+        g_lines.push_back(l);
+        spdlog::info("config ang {} rho {}", l.angle, l.rho);
+    }
     m_ui->txbRecv->append("config file loadded!");
 }
 
@@ -251,6 +277,9 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->baudRate->setText(QString::number(configData.baudRate));
     m_ui->serialName->setText(configData.serialName);
 
+    m_ui->modbus->setText(configData.modbusTcpIp+":"+QString::number(configData.modbusTcpPort));
+
+    m_ui->inv_thd->setText(QString::number(configData.inv_thd));
     m_ui->canny1->setText(QString::number(configData.canny_1));
     m_ui->canny2->setText(QString::number(configData.canny_2));
     m_ui->canny3->setText(QString::number(configData.canny_3));
@@ -261,10 +290,8 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
 
     m_ui->line1_ang->setText(QString::number(configData.line1_ang));
     m_ui->line1_roh->setText(QString::number(configData.line1_roh));
-    m_ui->line1_ang_delta->setText(QString::number(configData.line1_ang_delta));
     m_ui->line2_ang->setText(QString::number(configData.line2_ang));
     m_ui->line2_roh->setText(QString::number(configData.line2_roh));
-    m_ui->line2_ang_delta->setText(QString::number(configData.line2_ang_delta));
     m_ui->line_abs->setText(QString::number(configData.line_abs));
 }
 
@@ -392,10 +419,30 @@ void MainDialog::on_Calibration_clicked()
             m_imgproc->camera_enable = false;
             // emit cameraCalStart(v.handler);
             imgw->hide();
+            qDebug() << "g_lines size " << g_lines.size();
+            std::stringstream ss_rho, ss_ang;
+            for (const auto & v: g_lines) {
+                ss_rho << fmt::format("{:.2f}", v.rho);
+                ss_rho << fmt::format(",");
+
+                ss_ang << fmt::format("{:.2f}", v.angle);
+                ss_ang << fmt::format(",");
+            }
+            std::string line_angs = ss_ang.str();
+            std::string line_rhos = ss_rho.str();
+            if (!line_angs.empty()) {
+                line_angs.pop_back();
+            }
+            if (!line_rhos.empty()) {
+                line_rhos.pop_back();
+            }
+            configData.line_rhos = QString(line_rhos.c_str());
+            configData.line_angs = QString(line_angs.c_str());
+            spdlog::info("line angs {}, rhos {}", line_angs, line_rhos);
         } else {
             v.is_opened = true;
             m_ui->Calibration->setText("校准中...");
-
+            imgw->total_lines = 6;
             imgw->show();
             //        m_imgproc->CameraCal(m_ui->painter,imgw->getImgPic(), m_ui->X, m_ui->Y, m_pcMyCamera);
             //        if (m_pcMyCamera)
@@ -585,6 +632,7 @@ void MainDialog::on_saveImg_clicked()
 
 void MainDialog::on_cal_editingFinished()
 {
+    configData.inv_thd = m_ui->inv_thd->text().toInt();
     configData.canny_1 = m_ui->canny1->text().toInt();
     configData.canny_2 = m_ui->canny2->text().toInt();
     configData.canny_3 = m_ui->canny3->text().toInt();
@@ -594,10 +642,8 @@ void MainDialog::on_cal_editingFinished()
     configData.blur_kernel = m_ui->blur_kernel->text().toInt();
     configData.line1_ang = m_ui->line1_ang->text().toInt();
     configData.line1_roh = m_ui->line1_roh->text().toInt();
-    configData.line1_ang_delta = m_ui->line1_ang_delta->text().toFloat();
     configData.line2_ang = m_ui->line2_ang->text().toInt();
     configData.line2_roh = m_ui->line2_roh->text().toInt();
-    configData.line2_ang_delta = m_ui->line2_ang_delta->text().toFloat();
     configData.line_abs = m_ui->line_abs->text().toFloat();
 }
 

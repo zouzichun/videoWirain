@@ -29,6 +29,7 @@ SOURCES += main.cpp\
     imgwindow.cpp \
     maindialog.cpp \
     crcalgorithm.cpp \
+    port/modbus_tcp.cpp \
     port/serial_port.cpp \
     port/modbus.cpp \
     port/port.cpp \
@@ -40,6 +41,7 @@ HEADERS  += maindialog.h \
     comdata.h \
     crcalgorithm.h \
     imgwindow.h \
+    port/modbus_tcp.h \
     port/serial_port.h \
     port/modbus.h \
     port/port.h \

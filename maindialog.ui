@@ -147,9 +147,6 @@
       <item row="2" column="1">
        <widget class="QLineEdit" name="blur_kernel"/>
       </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="currPosition_4"/>
-      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="Encoder_4">
         <property name="text">
@@ -206,6 +203,16 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="3">
+       <widget class="QLineEdit" name="inv_thd"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="Inv_thd">
+        <property name="text">
+         <string>inv_thd</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
@@ -223,29 +230,36 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="val"/>
+      </item>
       <item row="0" column="0">
-       <widget class="QLineEdit" name="addr">
+       <widget class="QLineEdit" name="modbus">
         <property name="text">
          <string>1000</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLineEdit" name="optype">
         <property name="text">
          <string>1</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
+      <item row="2" column="1">
        <widget class="QLineEdit" name="ceil">
         <property name="text">
          <string>2</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="val"/>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="addr">
+        <property name="text">
+         <string>1000</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -412,7 +426,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>

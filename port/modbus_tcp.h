@@ -1,5 +1,5 @@
-#ifndef _MODBUS_H_
-#define _MODBUS_H_
+#ifndef _MODBUS_TCP_H_
+#define _MODBUS_TCP_H_
 
 #include <QObject>
 #include <QString>
@@ -7,35 +7,27 @@
 #include <QVector>
 #include <QByteArray>
 #include <QTimer>
-#include <QSerialPort>
-#include <QtSerialBus>
 #include <QModbusDataUnit>
-#include <QModbusClient>
-#include <QModbusDevice>
+#include <QModbusTcpClient>
  
 #include <iostream>
 #include <functional>
 #include "port.h"
 
-struct ModbusInfo
-{
-    quint32 buadrate;
-};
-
-class ModbusPort : public Port
+class ModbusTcp : public Port
 {
     Q_OBJECT
 public:
-    explicit ModbusPort(QWidget *parent = nullptr);
-    ~ModbusPort();
- 
+    explicit ModbusTcp(QWidget *parent = nullptr);
+    ~ModbusTcp();
+
     virtual int startPort(const ConfigData &configData);
     virtual void closePort();
     // virtual int sendMsg(int idx);
 
     virtual bool readModbusData(int typeNum,int startAdd,quint16 numbers);
     virtual bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum);
- 
+
  signals:
     void signal_stateChanged(bool flag);
     void signal_readCoils(QVector<quint16> vAllData);
@@ -47,10 +39,9 @@ private slots:
     void slot_readReadyRegisters();
 
 private:
-    QString m_server_name;
-    int buad_rate;
-    QSerialPort m_serial;
-    QModbusRtuSerialMaster m_master;
+    QString tcp_ip;
+    uint32_t tcp_port;
+    QModbusTcpClient * m_modbustcp;
 };
 
-#endif // _MODBUS_H_
+#endif // _MODBUS_TCP_H_

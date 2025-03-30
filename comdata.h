@@ -18,6 +18,9 @@ typedef struct {
     QString modbusName;
     qint32 modbusRate;
 
+    QString modbusTcpIp;
+    qint32 modbusTcpPort;
+
     float camera_height;
     float camera_angle;
     float camera_abs_x;
@@ -27,6 +30,7 @@ typedef struct {
     int point2_x;
     int point2_y;
 
+    int inv_thd;
     int canny_1;
     int canny_2;
     int canny_3;
@@ -37,25 +41,31 @@ typedef struct {
 
     int line1_ang;
     int line1_roh;
-    float line1_ang_delta;
     int line1_sel_low;
     int line2_ang;
     int line2_roh;
-    float line2_ang_delta;
     int line2_sel_low;
     float line_abs;
     int lines_num;
+
+    // configured store lines for img filter
+    // could be changed during calibration
+    QString line_angs;
+    QString line_rhos;
 } ConfigData;
 
 extern ConfigData configData;
 
 typedef struct {
-    float roh;
-    float angle;
-    int color;  // 0,1,2 RGB
-    int width;
-    std::vector<std::pair<float, float>> points;
-    std::vector<std::pair<float, float>> points_in_img;
+    // const domain
+    float rho = 0;
+    float angle = 0;
+    int color = 0;  // 0,1,2 RGB
+    int width = 2;
+    // volatile domain
+    std::vector<std::pair<float, float>> points = {};
+    std::vector<std::pair<int, int>> points_in_img = {};
+    std::vector<std::pair<float, float>> lines_filterd = {};
 } Lines;
 
 ///!!!注意：由于下面的结构体会用于通信中

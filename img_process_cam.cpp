@@ -12,6 +12,7 @@
 
 using namespace std;
 using namespace cv;
+extern std::vector<Lines> g_lines;
 
 Point2f getCrossPoint(Vec4i LineA, Vec4i LineB);
 
@@ -57,14 +58,14 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
 
             const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
             const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+            Mat grayimg, color_img;
+            Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+            Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
             Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
-            Mat color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1);
 
             cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-
-            cv::drawMarker(color_img, cv::Point(IMG_HEIGHT/2, IMG_WIDTH/2), cv::Scalar(0,255,0), 3, 20, 8);
-
-            emit signal_refresh_img(color_img);
+            cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
+            std::vector<cv::Vec2f> lines_found;
 
             ret = p_cam->FreeImageBuffer(&frame);
             if (ret != MV_OK) {
@@ -72,6 +73,43 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
                 p_cam->StopGrabbing();
                 return;
             }
+
+            Process(grayimg, edge, contours_img, lines_found);
+
+            if (!FilterLines(edge, lines_found)) {
+                // p_cam->StopGrabbing();
+                // return false;
+                // qDebug("FilterLines failed!");
+                frame_cnt++;
+                // waitKey(1);
+                continue;
+            }
+
+            Point2f p1 = getCrossPoint(
+                    Vec4i(g_lines[0].points_in_img[0].first, g_lines[0].points_in_img[0].second,
+                        g_lines[0].points_in_img[1].first, g_lines[0].points_in_img[1].second),
+                    Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
+                        g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
+            Point2f p2 = getCrossPoint(
+                    Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
+                        g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
+                    Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
+                        g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
+
+            Point2f p_mid = Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
+            // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
+            cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
+            cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
+            cv::drawMarker(color_img, p_mid, cv::Scalar(255,255,0), 3, 20, 8);
+
+            cv::line(color_img, p1, p_mid, cv::Scalar(0,255,255), 4);
+            cv::line(color_img, p_mid, p2, cv::Scalar(0,255,255), 4);
+//            cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
+//                        cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
+//            cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
+//                        cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
+
+            emit signal_refresh_img(color_img);
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;
@@ -134,9 +172,9 @@ bool ImgProcess::CameraDemo(bool & enable, QImage & qimg, QLineEdit * x, QLineEd
 
          cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
          cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
-         Process(grayimg, edge, contours_img);
-
          std::vector<cv::Vec2f> lines_found;
+         Process(grayimg, edge, contours_img, lines_found);
+         
          std::vector<float> rhos(2);
          std::vector<float> thetas(2);
          std::vector<Point2i> points;
@@ -266,9 +304,6 @@ bool ImgProcess::CameraDemo(bool & enable, QImage & qimg, QLineEdit * x, QLineEd
 void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
     int frame_cnt = 0;
     if (camera_enable) {
-    //    cv::namedWindow("video", WINDOW_NORMAL);
-        std::vector<int> x_sta;
-        std::vector<int> y_sta;
         std::vector<std::vector<Point2i> > pgp;
         qDebug("start CameraCalTest");
         int ret = p_cam->StartGrabbing();
@@ -292,6 +327,7 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
         MV_FRAME_OUT frame;
         memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
+        qDebug("inv_thd %d", configData.inv_thd);
         qDebug("canny %d %d %d", configData.canny_1, configData.canny_2, configData.canny_3);
         qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
         const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
@@ -334,20 +370,34 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
                 return;
             }
 
-            Process(grayimg, edge, contours_img);
-
             std::vector<cv::Vec2f> lines_found;
-            std::vector<float> rhos = {0, 0};
-            std::vector<float> thetas = {0, 0};
-            std::vector<Point2i> points;
-
-            if (!FilterLines(edge, lines_found, rhos, thetas, points)) {
+            Process(grayimg, edge, contours_img, lines_found);
+//            std::vector<Lines> lines_out;
+            if (!FilterLines(edge, lines_found)) {
                 // p_cam->StopGrabbing();
                 // return false;
-                qDebug("FilterLines failed!");
+                // qDebug("FilterLines failed!");
                 frame_cnt++;
                 // waitKey(1);
-                continue;
+                // continue;
+            }
+
+            for (const auto & v : lines_found) {
+                float rho = v[0];
+                float theta = v[1];
+                // spdlog::debug("line {} rho {:.2f}, theta {:.2f}, cnt {}", pos, rho, theta, cnts[pos]);
+                    //直线与第一行的交叉点
+                    Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
+                    //直线与最后一行的交叉点
+                    Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
+                    cv::line(color_img, pt1, pt2, cv::Scalar(255, 255, 255), 2);
+                    // if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
+                    //     if (pt1.y > pt2.y) {
+                    //         lines.push_back(Vec4i(pt2.x, pt2.y, pt1.x, pt1.y));
+                    //     } else {
+                    //         lines.push_back(Vec4i(pt1.x, pt1.y, pt2.x, pt2.y));
+                    //     }
+                    // }
             }
 
             // QImage qimg = QImage((const unsigned char*)(edge.data),
@@ -357,6 +407,8 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
             //                                 // QImage::Format_BGR888).copy();
             //                                 QImage::Format_Grayscale8).copy();
             // pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt->size(), Qt::KeepAspectRatio));
+
+            emit signal_refresh_img(color_img);
 
             emit signal_refresh_cal_img(edge);
 
@@ -444,6 +496,7 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
     MV_FRAME_OUT frame;
     memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
+    qDebug("inv_thd %d", configData.inv_thd);
     qDebug("canny %d %d %d", configData.canny_1, configData.canny_2, configData.canny_3);
     qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
     const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
@@ -478,9 +531,8 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
         cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
         cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
 
-        Process(grayimg, edge, contours_img);
-
         std::vector<cv::Vec2f> lines_found;
+        Process(grayimg, edge, contours_img, lines_found);
         std::vector<float> rhos = {0, 0};
         std::vector<float> thetas = {0, 0};
         std::vector<Point2i> points;
@@ -566,17 +618,22 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
 
 
 
-bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) {
+bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img, std::vector<cv::Vec2f> & lines_found) {
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
     Mat img_tt;
     // cv::bilateralFilter(img, img_tt, 0, 200, 10);
     // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
-    cv::threshold(img, img_tt, 100, 255, THRESH_BINARY);
+    cv::threshold(img, img_tt, configData.inv_thd, 255, THRESH_BINARY);
     cv::medianBlur(img_tt, img_tt, configData.blur_kernel);
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+
+    for (int i = 0; i < edge_img.rows / 2; i++)
+        for (int j = 0; j < edge_img.cols; j++)
+            if (edge_img.at<uchar>(i, j) > 0)
+                edge_img.at<uchar>(i, j) = 0;
 
 //    std::vector<vector<Point>> contours;
 //    std::vector<Point> hull_points;
@@ -598,6 +655,11 @@ bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) 
 //            cv::drawContours(contour_img, hullv, 0, Scalar(255), 2, LINE_8, hierarchy, 0);
 //        }
 //    }
+
+    cv::HoughLines(edge_img, lines_found,
+        configData.hgline_1,
+        configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
+        configData.hgline_3);
 }
 
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
@@ -610,42 +672,19 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     }
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
-    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
-    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
+
     const float ang_abs = configData.line_abs * 180 / CV_PI;
     const float roh_abs = 200;
 
-    // const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
-    // const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
-    // spdlog::debug("ang1 {}C:{:.2f}, ang2 {}C:{:.2f}, abs {:.2f} sel_low {} {}",
-    //               configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
-    //               configData.line1_sel_low,
-    //               configData.line2_sel_low);
-    // std::vector<cv::Vec2f> lines_found;
-    cv::HoughLines(img, lines_found,
-        configData.hgline_1,
-        configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
-        configData.hgline_3);
-
-//    std::vector<cv::Vec4f> linep;
-//    cv::HoughLinesP(img, linep,
-//                    configData.hgline_1,
-//                    configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
-//                    configData.hgline_3, 30, 50);
-
-//    if (linep.size() == 0) {
-//        spdlog::debug("found lines num 0");
-//        return false;
-//    } else {
-//        // pdlog::debug("lines num {}", linep.size());
-//        for (auto v : linep) {
-//            cv::Vec2f pp;
-//            pp[0] = getDist_P2L(Point(0,0), Point(v[0], v[1]), Point(v[2], v[3]));
-//            pp[1] = atan((v[3] - v[1]) / (v[2] - v[0]));
-//            lines_found.push_back(pp);
-//        }
-//    }
-
+    const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_abs;
+    const float ANG_ABS = configData.line_abs / CV_PI;
+    const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
+    const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
+    spdlog::debug("ang1 {}C:{:.2f}, ang2 {}C:{:.2f}, abs {:.2f} sel_low {} {}",
+                  configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
+                  configData.line1_sel_low,
+                  configData.line2_sel_low);
+    
     if (lines_found.size() == 0) {
         // spdlog::debug("found lines num 0");
         return false;
@@ -660,7 +699,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
         float rho = (*it)[0];
         float thetatt = (*it)[1];
         float theta = thetatt;
-        if (thetatt > CV_PI)
+        if (thetatt >= CV_PI)
             theta = thetatt - CV_PI;
         // spdlog::debug("rho {:.2f}, theta {:.2f}, {:.2f}", rho, thetatt, theta * 180 / CV_PI);
 
@@ -768,7 +807,148 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     points.push_back(line2p);
     return true;
 }
+        
 
+bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
+    const int IMG_HEIGHT = img.rows;
+    const int IMG_WIDTH = img.cols;
+    const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_abs;
+    const float ANG_ABS = CV_PI * configData.line_abs;
+
+    for (auto & v : g_lines) {
+        v.lines_filterd.clear();
+        v.points_in_img.clear();
+    }
+
+    for ( auto  it = lines_found.begin(); it != lines_found.end();) {
+        float rho = (*it)[0];
+        float thetatt = (*it)[1];
+        float theta = thetatt;
+        if (thetatt >= CV_PI)
+            theta = thetatt - CV_PI;
+        // spdlog::debug("rho {:.2f}, theta {:.2f}, {:.2f}", rho, thetatt, theta * 180 / CV_PI);
+
+        auto valid_line_check = [&] (float rho, float theta) -> bool {
+            bool ret = false;
+            for (auto & v : g_lines) {
+                float rho_norm = abs(abs(v.rho) - abs(rho));
+                float ang_norm = abs(abs(v.angle) - abs(theta));
+
+                // float delta = sqrtf(rho_norm * rho_norm + ang_norm * ang_norm);
+                // if (delta < configData.line_abs) {
+                if (rho_norm < ROH_ABS && ang_norm < ANG_ABS) {
+                    ret = true;
+                    v.lines_filterd.push_back(std::pair<float, float>(rho, theta));
+                    // spdlog::debug("{:.2f} -> {:.2f}, {:.2f} -> {:.2f}", rho, v.rho, theta, v.angle);
+                    break;
+                }
+            }
+            return ret;
+        };
+
+        if (!valid_line_check(rho, theta)) {
+            lines_found.erase(it);
+            continue;
+        } else {
+            // spdlog::debug("++++ valid line rho,ang {:.2f},{:.2f}", rho, theta);
+            it++;
+        }
+    }
+
+    for (auto & v : g_lines) {
+        if (v.lines_filterd.size() != 0) {
+            float rho = 0.0, ang = 0.0;
+            for (const auto &w : v.lines_filterd) {
+                rho += w.first;
+                ang += w.second;
+            }
+            rho = rho / v.lines_filterd.size();
+            ang = ang / v.lines_filterd.size();
+            v.lines_filterd.clear();
+            v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
+            Point2i pt1(static_cast<int>(rho / cos(ang)), 0);
+            Point2i pt2(static_cast<int>(rho / cos(ang) - IMG_HEIGHT * sin(ang) / cos(ang)), IMG_HEIGHT);
+            if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
+                if (pt1.y > pt2.y) {
+                    v.points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
+                    v.points_in_img.push_back(std::pair<int, int>(pt1.x, pt1.y));
+                } else {
+                    v.points_in_img.push_back(std::pair<int, int>(pt1.x, pt1.y));
+                    v.points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
+                }
+            }
+            v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
+            // spdlog::debug("lines after filter rho,ang {:.2f},{:.2f}", rho, ang);
+        }
+    }
+
+    // double ka, kb;
+    // ka = (double)(lines[0][3] - lines[0][1]) / (double)(lines[0][2] - lines[0][0]); //求出LineA斜率
+    // kb = (double)(lines[1][3] - lines[1][1]) / (double)(lines[1][2] - lines[1][0]); //求出LineB斜率
+
+    // Point2f p;
+    // p.x = (ka*lines[0][0] - lines[0][1] - kb*lines[1][0] + lines[1][1]) / (ka - kb);
+    // p.y = (ka*kb*(lines[0][0] - lines[1][0]) + ka*lines[1][1] - kb*lines[0][1]) / (ka - kb);
+    // // qDebug("ka %f, kb %f, p (%f, %f)", ka, kb, p.x, p.y);
+
+    // Point2i p_int(int(p.x), int(p.y));
+    // Point2i line1p, line2p;
+    // if (configData.line1_sel_low == 0) {
+    //     if (lines[0][1] < lines[0][3]) {
+    //         line1p.x = lines[0][2];
+    //         line1p.y = lines[0][3];
+    //     } else {
+    //         line1p.x = lines[0][0];
+    //         line1p.y = lines[0][1];
+    //     }
+    // } else {
+    //     if (lines[0][1] < lines[0][3]) {
+    //         line1p.x = lines[0][0];
+    //         line1p.y = lines[0][1];
+    //     } else {
+    //         line1p.x = lines[0][2];
+    //         line1p.y = lines[0][3];
+    //     }
+    // }
+
+    // if (configData.line2_sel_low == 0) {
+    //     if (lines[1][1] < lines[1][3]) {
+    //         line2p.x = lines[1][2];
+    //         line2p.y = lines[1][3];
+    //     } else {
+    //         line2p.x = lines[1][0];
+    //         line2p.y = lines[1][1];
+    //     }
+    // } else {
+    //     if (lines[1][1] < lines[1][3]) {
+    //         line2p.x = lines[1][0];
+    //         line2p.y = lines[1][1];
+    //     } else {
+    //         line2p.x = lines[1][2];
+    //         line2p.y = lines[1][3];
+    //     }
+    // }   
+
+    // points.clear();
+    // points.push_back(line1p);
+    // points.push_back(p_int);
+    // points.push_back(line2p);
+    return true;
+}
+
+/**
+ * @brief Adapts and filters detected lines using k-means clustering
+ * 
+ * Processes lines detected by Hough transform and groups them into clusters using k-means algorithm.
+ * Filters lines based on configured angles and thresholds.
+ * 
+ * @param img Input binary image for line detection
+ * @param lines_found Vector to store detected lines in (rho, theta) format
+ * @param rhos Vector to store filtered rho values for selected lines
+ * @param thetas Vector to store filtered theta values for selected lines
+ * 
+ * @return true if valid lines are found and processed successfully, false otherwise
+ */
 bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
     std::vector<float> & rhos, std::vector<float> & thetas) {
     if (rhos.size() != thetas.size() || thetas.size() == 0) {
@@ -786,10 +966,6 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
     //               configData.line1_sel_low,
     //               configData.line2_sel_low);
     // std::vector<cv::Vec2f> lines_found;
-    cv::HoughLines(img, lines_found,
-        configData.hgline_1,
-        configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
-        configData.hgline_3);
     // spdlog::debug("lines num {}", lines_found.size());
 
     if (lines_found.size() > 1000 || lines_found.size() < configData.lines_num) {
@@ -797,7 +973,7 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         return false;
     } else {
 //        for (auto &v: lines_found) {
-//            spdlog::debug("roh {:.2f}, theta {:.2f}", v[0], v[1]);
+//            spdlog::debug("rho {:.2f}, theta {:.2f}", v[0], v[1]);
 //        }
     }
     

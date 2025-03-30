@@ -18,6 +18,7 @@ public:
     ~imgWindow();
     QLabel * getImgPic();
     bool cal_enabled = false;
+    int total_lines = 3;
 
 public slots:
 void camera_img_refresh(cv::Mat img);
@@ -29,7 +30,7 @@ private slots:
 
 private:
     Ui::imgWindow *ui;
-    int total_lines = 2;
+    const float SCALE = (2048.0f / 600.0f);
 };
 
 #endif // IMGWINDOW_H

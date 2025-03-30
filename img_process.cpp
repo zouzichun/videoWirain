@@ -267,3 +267,39 @@ Point2f getCrossPoint(Vec4i LineA, Vec4i LineB)
     return crossPoint;
 }
 
+
+// 通过两个点计算霍夫参数 (rho, theta)
+void pointsToHoughParams(const cv::Point& p1, 
+        const cv::Point& p2,
+        float& rho, 
+        float& theta) {
+    // 计算直线方程参数
+    const float A = p2.y - p1.y;
+    const float B = p1.x - p2.x;
+    const float C = p2.x * p1.y - p1.x * p2.y;
+
+    // 计算霍夫参数
+    const float denominator = std::sqrt(A*A + B*B);
+    if (denominator == 0) { // 处理重合点的情况
+        rho = 0;
+        theta = 0;
+        return;
+    }
+
+    // 计算角度（弧度制）
+    theta = std::atan2(B, A);  // 法线方向角度
+
+    // 规范角度到 [0, π) 范围
+    if (theta < 0) {
+        theta += CV_PI;
+    }
+
+    // 计算距离
+    rho = std::abs(C) / denominator;
+
+    // 根据直线位置调整符号
+    const float check = A * p1.x + B * p1.y;
+    if (check < 0) {
+        rho = -rho;
+    }
+}
