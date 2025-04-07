@@ -21,7 +21,7 @@ int ModbusTcp::startPort(const ConfigData &configData) {
     if (m_modbustcp->state() != QModbusDevice::ConnectedState) {
         tcp_ip = configData.modbusTcpIp;
         tcp_port = configData.modbusTcpPort;
-        qDebug("try start modbus %s, %d", tcp_ip.toStdString().c_str(), tcp_port);
+        qDebug("try start modbus %s:%d", tcp_ip.toStdString().c_str(), tcp_port);
         m_modbustcp->setConnectionParameter(QModbusDevice::NetworkAddressParameter,tcp_ip);
         m_modbustcp->setConnectionParameter(QModbusDevice::NetworkPortParameter,tcp_port);
         if (!m_modbustcp->connectDevice()) {
@@ -30,6 +30,7 @@ int ModbusTcp::startPort(const ConfigData &configData) {
         }
         else {
             qDebug("成功连接到modbs设备%s:%d", tcp_ip.toStdString().c_str(), tcp_port);
+            qDebug("modbus status %d", m_modbustcp->state());
             return 0;
         }
     } else {
@@ -49,6 +50,7 @@ bool ModbusTcp::readModbusData(int typeNum,int startAdd, quint16 numbers) {
     //typeNum:1_线圈 2_离散输入 3_保持 4_输入
     if(m_modbustcp->state() != QModbusDevice::ConnectedState)
     {
+        qDebug("modbus status %d", m_modbustcp->state());
         return false;
     }
 
@@ -75,7 +77,7 @@ bool ModbusTcp::readModbusData(int typeNum,int startAdd, quint16 numbers) {
         qDebug("读取寄存器类型错误");
         return false;
     }
-    qDebug("readModbusData typeNum: %d, start addr 0x%x, numbers %d", typeNum, startAdd, numbers);
+    qDebug("readModbusData typeNum: %d, start addr %d, numbers %d", typeNum, startAdd, numbers);
 
     //多读
     if(auto *reply = m_modbustcp->sendReadRequest(ReadUnit,1)) {

@@ -71,6 +71,7 @@ MainDialog::MainDialog(QWidget *parent) :
     // if (configData.netType == 3) {
     // m_port = new ModbusPort(parent);
     m_port = new ModbusTcp(parent);
+    m_port->startPort(configData);
     // } else if (configData.netType == 3) {
     //     m_serial = new SerialPort();
     // }
@@ -127,6 +128,7 @@ MainDialog::~MainDialog()
     if (m_serial)
         delete m_serial;
     if (configData.netType == 3) {
+        m_port->closePort();
         delete m_port;
     }
 
@@ -659,7 +661,9 @@ void MainDialog::on_modbusSend_clicked()
         qDebug("port is not opened!");
     } else {
         if (m_ui->optype->text().toInt() == 0) {
-            m_port->readModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), 2);
+            m_port->readModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->length->text().toInt());
+        } if (m_ui->optype->text().toInt() == 1) {
+            m_port->writeModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->val->text().toInt());
         } else {
 
         }
