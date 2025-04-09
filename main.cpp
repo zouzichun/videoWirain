@@ -14,8 +14,7 @@ void LogMsgOutput(QtMsgType type, const QMessageLogContext &context, const QStri
 void spdLogInit();
 
 std::mutex g_mtx;
-std::vector<Lines> g_lines;
-
+std::vector<Lines> g_lines(3);
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

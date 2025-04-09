@@ -257,12 +257,13 @@ void MainDialog::loadConfigFile()
 
     std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
     std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
-    g_lines.clear();
+    // g_lines.clear();
     for (int pos =0; pos < angs.size(); pos++) {
         Lines l;
         l.angle = std::atof(angs[pos].c_str());
         l.rho = std::atof(rhos[pos].c_str());
-        g_lines.push_back(l);
+        // g_lines.push_back(l);
+        g_lines[pos] = l;
         spdlog::info("config ang {} rho {}", l.angle, l.rho);
     }
     m_ui->txbRecv->append("config file loadded!");
@@ -298,7 +299,7 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
 }
 
 void MainDialog::camera_img_refresh(cv::Mat img) {
-    // qDebug("cam refreshed..");
+//    qDebug("cam refreshed..");
     QImage qimg = QImage((const unsigned char*)(img.data),
         img.cols,
         img.rows,
@@ -311,7 +312,7 @@ void MainDialog::camera_img_refresh(cv::Mat img) {
 
     if (!piximg.isNull()) {
         m_ui->painter->setPixmap(piximg.scaled(m_ui->painter->size(), Qt::KeepAspectRatio));
-        m_ui->painter_2->setPixmap(piximg.scaled(m_ui->painter_2->size(), Qt::KeepAspectRatio));
+//        m_ui->painter_2->setPixmap(piximg.scaled(m_ui->painter_2->size(), Qt::KeepAspectRatio));
     }
 
     // m_ui->delta->setText(QString("%1").arg(m_delta));

@@ -56,16 +56,16 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
                 return;
             }
 
-            const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
-            const int IMG_WIDTH = frame.stFrameInfo.nWidth;
-            Mat grayimg, color_img;
-            Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
+             const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
+             const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+             Mat grayimg, color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3);
+             Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+             Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+             Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
 
-            cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-            cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
-            std::vector<cv::Vec2f> lines_found;
+             cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
+             cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
+             std::vector<cv::Vec2f> lines_found;
 
             ret = p_cam->FreeImageBuffer(&frame);
             if (ret != MV_OK) {
@@ -74,27 +74,32 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
                 return;
             }
 
-            Process(grayimg, edge, contours_img, lines_found);
+           Process(grayimg, edge, contours_img, lines_found);
 
-            if (!FilterLines(edge, lines_found)) {
-                // p_cam->StopGrabbing();
-                // return false;
-                // qDebug("FilterLines failed!");
-                frame_cnt++;
-                // waitKey(1);
-                continue;
-            }
+           if (!FilterLines(edge, lines_found)) {
+               // p_cam->StopGrabbing();
+               // return false;
+               // qDebug("FilterLines failed!");
+               frame_cnt++;
+               // waitKey(1);
+               continue;
+           }
 
-            Point2f p1 = getCrossPoint(
+            Point2f p1, p2;
+            if (g_lines[0].points_in_img.size() >= 2 &&
+                g_lines[1].points_in_img.size() >= 2 &&
+                g_lines[2].points_in_img.size() >= 2) {
+            p1 = getCrossPoint(
                     Vec4i(g_lines[0].points_in_img[0].first, g_lines[0].points_in_img[0].second,
                         g_lines[0].points_in_img[1].first, g_lines[0].points_in_img[1].second),
                     Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
                         g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
-            Point2f p2 = getCrossPoint(
+            p2 = getCrossPoint(
                     Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
                         g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
                     Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
                         g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
+            }
 
             Point2f p_mid = Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
             // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
@@ -104,16 +109,16 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
 
             cv::line(color_img, p1, p_mid, cv::Scalar(0,255,255), 4);
             cv::line(color_img, p_mid, p2, cv::Scalar(0,255,255), 4);
-//            cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
-//                        cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
-//            cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
-//                        cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
+            cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
+                       cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
+            cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
+                       cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
 
             emit signal_refresh_img(color_img);
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;
-            // waitKey(1);
+//            waitKey(10);
         }
     } else {
         p_cam->StopGrabbing();
