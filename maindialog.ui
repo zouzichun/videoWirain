@@ -105,21 +105,50 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_3">
+      <item row="7" column="0">
+       <widget class="QLabel" name="Encoder_5">
+        <property name="text">
+         <string>X2修正</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="hgline3"/>
+      </item>
+      <item row="9" column="2">
+       <widget class="QLineEdit" name="line2_ang_delta"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="hgline1"/>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>角度修正</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="canny2"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="canny1"/>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="line1_ang"/>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLineEdit" name="line1_ang_delta"/>
+      </item>
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="line1_roh"/>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="PulseNum_2">
         <property name="text">
          <string>Canny</string>
         </property>
        </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="canny1"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="canny2"/>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="canny3"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="Encoder_2">
@@ -128,14 +157,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="hgline1"/>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="hgline2"/>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="hgline3"/>
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="canny3"/>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="Encoder_3">
@@ -144,72 +167,59 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="blur_kernel"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="Encoder_4">
-        <property name="text">
-         <string>线条1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="line1_ang"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="line1_roh"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="Encoder_5">
-        <property name="text">
-         <string>线条2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="line2_ang"/>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="line2_roh"/>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>角度误差</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLineEdit" name="line_abs"/>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>角度修正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="line1_ang_delta"/>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLineEdit" name="line2_ang_delta"/>
-      </item>
-      <item row="6" column="3">
+      <item row="9" column="3">
        <widget class="QPushButton" name="saveImg">
         <property name="text">
          <string>保存</string>
         </property>
        </widget>
       </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="Encoder_4">
+        <property name="text">
+         <string>X1修正</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="hgline2"/>
+      </item>
       <item row="2" column="3">
        <widget class="QLineEdit" name="inv_thd"/>
       </item>
+      <item row="7" column="1">
+       <widget class="QLineEdit" name="line2_ang"/>
+      </item>
       <item row="2" column="2">
-       <widget class="QLabel" name="Inv_thd">
+       <widget class="QLabel" name="label_11">
         <property name="text">
-         <string>inv_thd</string>
+         <string>反转阀值</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="2">
+       <widget class="QLineEdit" name="line2_roh"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="blur_kernel"/>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>角度误差</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLineEdit" name="line_ang_abs"/>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="line_roh_abs"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>距离误差</string>
         </property>
        </widget>
       </item>
@@ -295,7 +305,7 @@
      <x>10</x>
      <y>10</y>
      <width>721</width>
-     <height>134</height>
+     <height>167</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -362,7 +372,7 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="1" column="3">
+      <item row="3" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>毫米</string>
@@ -370,51 +380,50 @@
        </widget>
       </item>
       <item row="1" column="5">
+       <layout class="QHBoxLayout" name="horizontalLayout"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>中心偏差</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>X1/X2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="delta_mm"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="p_x">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="p_y"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="x1"/>
+      </item>
+      <item row="2" column="3">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>角度</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="6">
-       <widget class="QLineEdit" name="delta_c"/>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="x2"/>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>坐标偏差</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QLineEdit" name="delta"/>
-      </item>
-      <item row="1" column="4">
-       <widget class="QLineEdit" name="delta_mm"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>坐标 X</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="X"/>
-      </item>
-      <item row="0" column="3">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>Y</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="0" column="4">
-       <widget class="QLineEdit" name="Y"/>
+      <item row="2" column="4">
+       <widget class="QLineEdit" name="d_ang"/>
       </item>
      </layout>
     </item>

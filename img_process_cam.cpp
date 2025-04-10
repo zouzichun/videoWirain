@@ -13,7 +13,6 @@
 using namespace std;
 using namespace cv;
 extern std::vector<Lines> g_lines;
-
 Point2f getCrossPoint(Vec4i LineA, Vec4i LineB);
 
 void ImgProcess::CameraTest(CMvCamera* p_cam) {
@@ -31,8 +30,7 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
         MVCC_INTVALUE_EX stParam;
         memset(&stParam, 0, sizeof(MVCC_INTVALUE_EX));
         ret = p_cam->GetIntValue("PayloadSize", &stParam);
-        if (MV_OK != ret)
-        {
+        if (MV_OK != ret) {
             spdlog::error("Get PayloadSize fail! {}", ret);
             p_cam->StopGrabbing();
             return;
@@ -41,6 +39,56 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
         }
         MV_FRAME_OUT frame;
         memset(&frame, 0, sizeof(MV_FRAME_OUT));
+
+        ret = p_cam->GetImageBuffer(&frame, 1000);
+        if (ret != MV_OK) {
+            spdlog::debug("No data {:#x}", ret);
+            p_cam->StopGrabbing();
+            return;
+        }
+
+        ret = p_cam->FreeImageBuffer(&frame);
+        if (ret != MV_OK) {
+            spdlog::debug("free img buffer failed!");
+            p_cam->StopGrabbing();
+            return;
+        }
+
+        const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
+        const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+        for (auto & v : g_lines) {
+            float rho = 0.0, ang = 0.0;
+            rho = v.rho;
+            ang = v.angle;
+            Point2i pt1(static_cast<int>(rho / cos(ang)), 0);
+            Point2i pt2(static_cast<int>(rho / cos(ang) - IMG_HEIGHT * sin(ang) / cos(ang)), IMG_HEIGHT);
+            if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
+                if (pt1.y > pt2.y) {
+                    v.golde_points.push_back(std::pair<int, int>(pt2.x, pt2.y));
+                    v.golde_points.push_back(std::pair<int, int>(pt1.x, pt1.y));
+                } else {
+                    v.golde_points.push_back(std::pair<int, int>(pt1.x, pt1.y));
+                    v.golde_points.push_back(std::pair<int, int>(pt2.x, pt2.y));
+                }
+            }
+        }
+
+        Point2f golden_p1, golden_p2;
+        if (g_lines[0].golde_points.size() >= 2 &&
+            g_lines[1].golde_points.size() >= 2 &&
+            g_lines[2].golde_points.size() >= 2) {
+            golden_p1 = getCrossPoint(
+                Vec4i(g_lines[0].golde_points[0].first, g_lines[0].golde_points[0].second,
+                    g_lines[0].golde_points[1].first, g_lines[0].golde_points[1].second),
+                Vec4i(g_lines[1].golde_points[0].first, g_lines[1].golde_points[0].second,
+                    g_lines[1].golde_points[1].first, g_lines[1].golde_points[1].second));
+            golden_p2 = getCrossPoint(
+                Vec4i(g_lines[1].golde_points[0].first, g_lines[1].golde_points[0].second,
+                    g_lines[1].golde_points[1].first, g_lines[1].golde_points[1].second),
+                Vec4i(g_lines[2].golde_points[0].first, g_lines[2].golde_points[0].second,
+                    g_lines[2].golde_points[1].first, g_lines[2].golde_points[1].second));
+        }
+
         for(;;) {
             if (!camera_enable) {
                 p_cam->StopGrabbing();
@@ -49,15 +97,11 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
             }
 
             ret = p_cam->GetImageBuffer(&frame, 1000);
-            if (ret != MV_OK)
-            {
+            if (ret != MV_OK) {
                 spdlog::debug("No data {:#x}", ret);
                 p_cam->StopGrabbing();
                 return;
             }
-
-             const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
-             const int IMG_WIDTH = frame.stFrameInfo.nWidth;
              Mat grayimg, color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3);
              Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
              Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
@@ -89,12 +133,12 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
             if (g_lines[0].points_in_img.size() >= 2 &&
                 g_lines[1].points_in_img.size() >= 2 &&
                 g_lines[2].points_in_img.size() >= 2) {
-            p1 = getCrossPoint(
+                p1 = getCrossPoint(
                     Vec4i(g_lines[0].points_in_img[0].first, g_lines[0].points_in_img[0].second,
                         g_lines[0].points_in_img[1].first, g_lines[0].points_in_img[1].second),
                     Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
                         g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
-            p2 = getCrossPoint(
+                p2 = getCrossPoint(
                     Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
                         g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
                     Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
@@ -109,12 +153,25 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
 
             cv::line(color_img, p1, p_mid, cv::Scalar(0,255,255), 4);
             cv::line(color_img, p_mid, p2, cv::Scalar(0,255,255), 4);
-            cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
-                       cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
-            cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
-                       cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
+
+            Point2f p_mid_golden = Point2f((golden_p1.x + golden_p2.x)/2, (golden_p1.y + golden_p2.y) /2);
+            cv::drawMarker(color_img, golden_p1, cv::Scalar(255,0,0), 3, 20, 8);
+            cv::drawMarker(color_img, golden_p2, cv::Scalar(255,0,0), 3, 20, 8);
+            cv::drawMarker(color_img, p_mid_golden, cv::Scalar(255,255,0), 3, 20, 8);
+
+            cv::line(color_img, golden_p1, p_mid_golden, cv::Scalar(0,255,255), 4);
+            cv::line(color_img, p_mid_golden, golden_p2, cv::Scalar(0,255,255), 4);
+
+            float golden_ang = std::atan((golden_p2.y - golden_p1.y) /  (golden_p2.x - golden_p1.x));
+    
+            // cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
+            //            cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
+            // cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
+            //            cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
 
             emit signal_refresh_img(color_img);
+
+            emit signal_refresh_delta(0.0f, 1.1f, golden_ang - g_lines[1].lines_filterd[0].second, p_mid_golden.x - p_mid.x, p_mid_golden.y - p_mid.y);
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;
@@ -337,12 +394,12 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
         qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
         const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
         const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
-        const float ang_abs = configData.line_abs * 180;
-        const float roh_abs = 200;
-        spdlog::debug("ang1 {}.C:{:.2f}, ang2 {}.C:{:.2f}, abs {:.2f} sel_low {} {}",
-                    configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
-                    configData.line1_sel_low,
-                    configData.line2_sel_low);
+        const float ang_abs = configData.line_ang_abs * 180;
+        const float roh_abs = configData.line_roh_abs * 2800;
+        // spdlog::debug("ang1 {}.C:{:.2f}, ang2 {}.C:{:.2f}, abs {:.2f} sel_low {} {}",
+        //             configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_roh_abs,
+        //             configData.line1_sel_low,
+        //             configData.line2_sel_low);
         for(;;) {
             if (!camera_enable) {
                 p_cam->StopGrabbing();
@@ -506,10 +563,10 @@ bool ImgProcess::CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit *
     qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
     const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
     const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
-    const float ang_abs = configData.line_abs * 180;
-    const float roh_abs = 200;
+    const float ang_abs = configData.line_ang_abs * 180;
+    const float roh_abs = configData.line_roh_abs * 2800;
     spdlog::debug("ang1 {}.C:{:.2f}, ang2 {}.C:{:.2f}, abs {:.2f} sel_low {} {}",
-                  configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
+                  configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_roh_abs,
                   configData.line1_sel_low,
                   configData.line2_sel_low);
     for(;;) {
@@ -678,15 +735,12 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
 
-    const float ang_abs = configData.line_abs * 180 / CV_PI;
-    const float roh_abs = 200;
-
-    const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_abs;
-    const float ANG_ABS = configData.line_abs / CV_PI;
+    const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_roh_abs;
+    const float ANG_ABS = configData.line_ang_abs / CV_PI;
     const float ang1 = ((180 - configData.line1_ang) % 180) * CV_PI / 180;
     const float ang2 = ((180 - configData.line2_ang) % 180) * CV_PI / 180;
     spdlog::debug("ang1 {}C:{:.2f}, ang2 {}C:{:.2f}, abs {:.2f} sel_low {} {}",
-                  configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
+                  configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_roh_abs,
                   configData.line1_sel_low,
                   configData.line2_sel_low);
     
@@ -709,8 +763,8 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
         // spdlog::debug("rho {:.2f}, theta {:.2f}, {:.2f}", rho, thetatt, theta * 180 / CV_PI);
 
         auto valid_line_check = [&] () -> bool {
-            return (abs(theta - ang1) <= ang_abs && abs(abs(rho) - configData.line1_roh) <= roh_abs) ||
-                    (abs(theta - ang2) <= ang_abs && abs(abs(rho) - configData.line2_roh) <= roh_abs);
+            return (abs(theta - ang1) <= ANG_ABS && abs(abs(rho) - configData.line1_roh) <= ROH_ABS) ||
+                    (abs(theta - ang2) <= ANG_ABS && abs(abs(rho) - configData.line2_roh) <= ROH_ABS);
         };
 
         if (!valid_line_check()) {
@@ -718,11 +772,11 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
             continue;
         } else {
             it++;
-            if (abs(theta - ang1) <= ang_abs && abs(abs(rho) - configData.line1_roh) <= roh_abs) {
+            if (abs(theta - ang1) <= ANG_ABS && abs(abs(rho) - configData.line1_roh) <= ROH_ABS) {
                 thetas[0] += theta;
                 rhos[0] += rho;
                 cnts[0]++;
-            } else if (abs(theta - ang2) <= ang_abs && abs(abs(rho) - configData.line2_roh) <= roh_abs) {
+            } else if (abs(theta - ang2) <= ANG_ABS && abs(abs(rho) - configData.line2_roh) <= ROH_ABS) {
                 thetas[1] += theta;
                 rhos[1] += rho;
                 cnts[1]++;
@@ -817,8 +871,8 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
 bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
-    const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_abs;
-    const float ANG_ABS = CV_PI * configData.line_abs;
+    const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_roh_abs;
+    const float ANG_ABS = CV_PI * configData.line_ang_abs;
 
     for (auto & v : g_lines) {
         v.lines_filterd.clear();
@@ -840,7 +894,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
                 float ang_norm = abs(abs(v.angle) - abs(theta));
 
                 // float delta = sqrtf(rho_norm * rho_norm + ang_norm * ang_norm);
-                // if (delta < configData.line_abs) {
+                // if (delta < configData.line_roh_abs) {
                 if (rho_norm < ROH_ABS && ang_norm < ANG_ABS) {
                     ret = true;
                     v.lines_filterd.push_back(std::pair<float, float>(rho, theta));
@@ -882,7 +936,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
                     v.points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
                 }
             }
-            v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
+            // v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
             // spdlog::debug("lines after filter rho,ang {:.2f},{:.2f}", rho, ang);
         }
     }
@@ -963,11 +1017,11 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
 
     const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
     const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
-    const float ang_abs = configData.line_abs * CV_PI;
-    const float roh_abs = 200;
+    const float ang_abs = configData.line_ang_abs * CV_PI;
+    const float roh_abs = configData.line_roh_abs * 2800;
 
     // spdlog::debug("ang1 {}C:{:.2f}, ang2 {}C:{:.2f}, abs {:.2f} sel_low {} {}",
-    //               configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_abs,
+    //               configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_roh_abs,
     //               configData.line1_sel_low,
     //               configData.line2_sel_low);
     // std::vector<cv::Vec2f> lines_found;

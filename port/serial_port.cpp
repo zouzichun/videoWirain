@@ -164,7 +164,6 @@ void SerialPort::sendMsgSync(const QByteArray &data)
 }
 
 void SerialPort::sendMsgWait(const QByteArray &data) {
-
     m_tx_thread->sendProcess(this, data);
 }
 

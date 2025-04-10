@@ -133,3 +133,4 @@ void imgWindow::camera_img_refresh(cv::Mat img) {
         ui->img_label->setPixmap(piximg.scaled(ui->img_label->size(), Qt::KeepAspectRatio));
     }
 }
+

@@ -48,6 +48,7 @@ public:
 
 signals:
     void signal_refresh_img(cv::Mat img);
+    void signal_refresh_delta(float delta_x1, float delta_x2, float delta_ang, float delta_p_x, float delta_p_y);
     void signal_refresh_cal_img(cv::Mat img);
 
 public slots:

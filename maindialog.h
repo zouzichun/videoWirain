@@ -59,7 +59,8 @@ const ConfigData defaultSetting {
     .line2_ang=135,
     .line2_roh=400,
     .line2_sel_low=1,
-    .line_abs=0.05,
+    .line_roh_abs=0.05,
+    .line_ang_abs=0.02,
     .lines_num=3,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
@@ -112,7 +113,6 @@ signals:
     void cameraCalStart(CMvCamera* handler);
 
 private slots:
-
     void on_SerialOpen_clicked();
     void on_SerialSend_clicked();
     void on_cal_editingFinished();
@@ -124,6 +124,7 @@ private slots:
     void on_saveImg_clicked();
     void on_modbusSend_clicked();
     void camera_img_refresh(cv::Mat img);
+    void camera_refresh_delta(float d_x1, float d_x2, float d_ang, float p_x, float p_y);
 
 private:
     Ui::MainDialog *m_ui;

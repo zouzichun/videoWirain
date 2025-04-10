@@ -45,7 +45,8 @@ typedef struct {
     int line2_ang;
     int line2_roh;
     int line2_sel_low;
-    float line_abs;
+    float line_roh_abs;
+    float line_ang_abs;
     int lines_num;
 
     // configured store lines for img filter
@@ -63,8 +64,8 @@ typedef struct {
     int color = 0;  // 0,1,2 RGB
     int width = 2;
     // volatile domain
-    std::vector<std::pair<float, float>> points = {};
     std::vector<std::pair<int, int>> points_in_img = {};
+    std::vector<std::pair<float, float>> golde_points = {};
     std::vector<std::pair<float, float>> lines_filterd = {};
 } Lines;
 

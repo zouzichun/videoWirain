@@ -88,6 +88,8 @@ MainDialog::MainDialog(QWidget *parent) :
     m_imgproc->moveToThread(&mWorkerThread); //把数据处理类移到线程
     connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
 
+    connect(m_imgproc, &ImgProcess::signal_refresh_delta,
+        this, &MainDialog::camera_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
     connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection); // 或 QueuedConnection
 
@@ -110,7 +112,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->line1_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line2_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->line_roh_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->line_ang_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 
     CameraInit();
 
@@ -191,7 +194,8 @@ void MainDialog::saveImgParam()
     sets.setValue("line2_ang",configData.line2_ang);
     sets.setValue("line2_roh",configData.line2_roh);
     // sets.setValue("line2_ang_delta",QString::number(configData.line2_ang_delta, 'f', 2));
-    sets.setValue("line_abs",QString::number(configData.line_abs, 'f', 3));
+    sets.setValue("line_roh_abs",QString::number(configData.line_roh_abs, 'f', 3));
+    sets.setValue("line_ang_abs",QString::number(configData.line_ang_abs, 'f', 3));
 
     sets.setValue("line_angs",configData.line_angs);
     sets.setValue("line_rhos",configData.line_rhos);
@@ -249,7 +253,8 @@ void MainDialog::loadConfigFile()
     configData.line2_ang = sets.value("line2_ang",defaultSetting.line2_ang).toInt();
     configData.line2_roh = sets.value("line2_roh",defaultSetting.line2_roh).toInt();
     configData.line2_sel_low = sets.value("line2_sel_low",defaultSetting.line2_sel_low).toInt();
-    configData.line_abs = sets.value("line_abs",defaultSetting.line_abs).toFloat();
+    configData.line_roh_abs = sets.value("line_roh_abs",defaultSetting.line_roh_abs).toFloat();
+    configData.line_ang_abs = sets.value("line_ang_abs",defaultSetting.line_ang_abs).toFloat();
     configData.lines_num = sets.value("lines_num",defaultSetting.lines_num).toInt();
 
     configData.line_angs = sets.value("line_angs",defaultSetting.line_angs).toString();
@@ -295,7 +300,8 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->line1_roh->setText(QString::number(configData.line1_roh));
     m_ui->line2_ang->setText(QString::number(configData.line2_ang));
     m_ui->line2_roh->setText(QString::number(configData.line2_roh));
-    m_ui->line_abs->setText(QString::number(configData.line_abs));
+    m_ui->line_roh_abs->setText(QString::number(configData.line_roh_abs));
+    m_ui->line_ang_abs->setText(QString::number(configData.line_ang_abs));
 }
 
 void MainDialog::camera_img_refresh(cv::Mat img) {
@@ -312,7 +318,7 @@ void MainDialog::camera_img_refresh(cv::Mat img) {
 
     if (!piximg.isNull()) {
         m_ui->painter->setPixmap(piximg.scaled(m_ui->painter->size(), Qt::KeepAspectRatio));
-//        m_ui->painter_2->setPixmap(piximg.scaled(m_ui->painter_2->size(), Qt::KeepAspectRatio));
+        m_ui->painter_2->setPixmap(piximg.scaled(m_ui->painter_2->size(), Qt::KeepAspectRatio));
     }
 
     // m_ui->delta->setText(QString("%1").arg(m_delta));
@@ -647,7 +653,8 @@ void MainDialog::on_cal_editingFinished()
     configData.line1_roh = m_ui->line1_roh->text().toInt();
     configData.line2_ang = m_ui->line2_ang->text().toInt();
     configData.line2_roh = m_ui->line2_roh->text().toInt();
-    configData.line_abs = m_ui->line_abs->text().toFloat();
+    configData.line_roh_abs = m_ui->line_roh_abs->text().toFloat();
+    configData.line_ang_abs = m_ui->line_ang_abs->text().toFloat();
 }
 
 void MainDialog::on_SerialSend_clicked()
@@ -671,4 +678,10 @@ void MainDialog::on_modbusSend_clicked()
     }
 }
 
-
+void MainDialog::camera_refresh_delta(float d_x1, float d_x2, float d_ang, float p_x, float p_y) {
+    m_ui->x1->setText(QString::number(d_x1));
+    m_ui->x2->setText(QString::number(d_x2));
+    m_ui->d_ang->setText(QString::number(d_ang));
+    m_ui->p_x->setText(QString::number(p_x));
+    m_ui->p_y->setText(QString::number(p_y));
+}
