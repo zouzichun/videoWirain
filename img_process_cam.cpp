@@ -163,7 +163,7 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
             cv::line(color_img, p_mid_golden, golden_p2, cv::Scalar(0,255,255), 4);
 
             float golden_ang = std::atan((golden_p2.y - golden_p1.y) /  (golden_p2.x - golden_p1.x));
-    
+            // spdlog::debug("golden p {},{},  {},{}, ang {}", golden_p1.x, golden_p1.y, golden_p2.x, golden_p2.y, golden_ang);
             // cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
             //            cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
             // cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),

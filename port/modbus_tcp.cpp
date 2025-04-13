@@ -30,7 +30,7 @@ int ModbusTcp::startPort(const ConfigData &configData) {
         }
         else {
             qDebug("成功连接到modbs设备%s:%d", tcp_ip.toStdString().c_str(), tcp_port);
-            qDebug("modbus status %d", m_modbustcp->state());
+            qDebug("get modbus status %d", m_modbustcp->state());
             return 0;
         }
     } else {
@@ -50,7 +50,7 @@ bool ModbusTcp::readModbusData(int typeNum,int startAdd, quint16 numbers) {
     //typeNum:1_线圈 2_离散输入 3_保持 4_输入
     if(m_modbustcp->state() != QModbusDevice::ConnectedState)
     {
-        qDebug("modbus status %d", m_modbustcp->state());
+        qDebug("read: modbus status not valid %d", m_modbustcp->state());
         return false;
     }
 
@@ -104,7 +104,7 @@ bool ModbusTcp::readModbusData(int typeNum,int startAdd, quint16 numbers) {
 
 //对modbus设备各寄存器写入数据
 //typeNum:1_线圈 2_保持 (这两类寄存器可读可写,其余的只读)
-bool ModbusTcp::writeModbusData(int typeNum,int startAdd, uint32_t writeNum)
+bool ModbusTcp::writeModbusData(int typeNum,int startAdd, float write_val)
 {
     if(m_modbustcp->state() != QModbusDevice::ConnectedState) {
         return false;
@@ -114,25 +114,27 @@ bool ModbusTcp::writeModbusData(int typeNum,int startAdd, uint32_t writeNum)
     QModbusDataUnit writeUnit;
     if(typeNum == 1) {
         writeUnit = QModbusDataUnit(QModbusDataUnit::Coils,startAdd,1);   //写入一个数据
-        writeUnit.setValue(0,writeNum);
-
+        uint32_t val;
+        memcpy(&val, &write_val, sizeof(float));
+        writeUnit.setValue(0,val);
         //单写
         //bool ok;
         //quint16 hexData = writeData.toInt(&ok,16);   //转16进制
     } else if(typeNum == 2) {
         writeUnit = QModbusDataUnit(QModbusDataUnit::HoldingRegisters,startAdd,2);   //写入两个数据
         quint16 uData16[2] = {0};
-        uData16[0] = writeNum & 0xffff;
-        uData16[1] = (writeNum >> 16) & 0xffff;
+        uint32_t val;
+        memcpy(&val, &write_val, sizeof(float));
+        uData16[0] = val & 0xffff;
+        uData16[1] = (val >> 16) & 0xffff;
         writeUnit.setValue(0,uData16[0]);
         writeUnit.setValue(1,uData16[1]);
-        qDebug("write data h: %x, l: %x, val %f", uData16[1], uData16[0], static_cast<float>(writeNum));
+        qDebug("write data h: %x, l: %x, val %f", uData16[1], uData16[0], write_val);
         //LOGDEBUG<<"uData16[0]:"<<uData16[0]<<"   uData16[1]:"<<uData16[1]<<"   writeNum:"<<writeNum;
     } else {
         qDebug("写入寄存器类型错误");
         return false;
     }
-    //LOGDEBUG<<"writeModbusData typeNum:"<<typeNum<<"   writeNum:"<<writeNum;
     if(auto *reply = m_modbustcp->sendWriteRequest(writeUnit,1)) {
         if(!reply->isFinished()) {
             connect(reply,&QModbusReply::finished,this,[reply]() {
@@ -212,15 +214,21 @@ void ModbusTcp::slot_readReadyRegisters()
             quint16 uData16[2] = {0};
             uData16[0] = valueList[0];
             uData16[1] = valueList[1];
-            int resultNum = uData16[0] | (uData16[1] << 16);
+            uint32_t resultNum = uData16[0] | (uData16[1] << 16);
 
-            QByteArray val;
-            val.resize(4);
-            memcpy(&resultNum, val.data(), 4);
+            // Debug("read register h: %x, l: %x, val %x", resultNum >> 16, resultNum & 0xffff, resultNum);
+            float val = 0.0;
+            memcpy(&resultNum, &val, sizeof(float));
+
+            std::lock_guard<std::mutex> lg(mtx);
+            {
+                rdy_flag = true;
+                rdy_data = val;
+            }
 
             //LOGDEBUG<<"uData16[0]:"<<uData16[0]<<"   uData16[1]:"<<uData16[1]<<"   resultNum:"<<resultNum;
-            qDebug("read register h: %x, l: %x, val %f", resultNum >> 16, resultNum & 0xffff, *reinterpret_cast<float *>(val.data()));
-            emit signal_readRegisters(resultNum);
+            qDebug("read register h: %x, l: %x, val %f", resultNum >> 16, resultNum & 0xffff, val);
+            // emit signal_readRegisters(resultNum);
         } else {
             qDebug("保持寄存器返回数据错误,个数: %d", nSize);
         }
@@ -228,4 +236,8 @@ void ModbusTcp::slot_readReadyRegisters()
         qDebug("保持/输入寄存器回复错误: %s", reply->error());
     }
     reply->deleteLater();
+}
+
+bool ModbusTcp::waitDataReady() {
+    return true;
 }

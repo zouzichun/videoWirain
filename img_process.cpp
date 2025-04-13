@@ -258,8 +258,19 @@ int TimeElapsed() {
 Point2f getCrossPoint(Vec4i LineA, Vec4i LineB)
 {
     double ka, kb;
-    ka = (double)(LineA[3] - LineA[1]) / (double)(LineA[2] - LineA[0]); //求出LineA斜率
-    kb = (double)(LineB[3] - LineB[1]) / (double)(LineB[2] - LineB[0]); //求出LineB斜率
+    double tt;
+    if (LineA[2] - LineA[0] == 0) {
+        tt = 0.00001;
+    } else{
+        tt = (double)(LineA[2] - LineA[0]);
+    }
+    ka = (double)(LineA[3] - LineA[1]) / tt; //求出LineA斜率
+    if (LineB[2] - LineB[0] == 0) {
+        tt = 0.000001;
+    } else{
+        tt = (double)(LineB[2] - LineB[0]);
+    }
+    kb = (double)(LineB[3] - LineB[1]) / tt; //求出LineB斜率
 
     Point2f crossPoint;
     crossPoint.x = (ka*LineA[0] - LineA[1] - kb*LineB[0] + LineB[1]) / (ka - kb);

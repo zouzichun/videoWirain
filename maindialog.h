@@ -126,6 +126,8 @@ private slots:
     void camera_img_refresh(cv::Mat img);
     void camera_refresh_delta(float d_x1, float d_x2, float d_ang, float p_x, float p_y);
 
+    void on_modbusSend_2_clicked();
+
 private:
     Ui::MainDialog *m_ui;
     SerialPort * m_serial = nullptr;

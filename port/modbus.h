@@ -35,6 +35,7 @@ public:
 
     virtual bool readModbusData(int typeNum,int startAdd,quint16 numbers);
     virtual bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum);
+    virtual bool waitDataReady();
  
  signals:
     void signal_stateChanged(bool flag);

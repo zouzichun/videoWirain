@@ -111,7 +111,8 @@ public:
 
     virtual bool readModbusData(int typeNum,int startAdd,quint16 numbers) = 0;
     virtual bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum) = 0;
-
+    virtual bool writeModbusData(int typeNum,int startAdd, float write_val) = 0;
+    virtual bool waitDataReady() {return true;};
     
     QWidget* pWidget;
     QMutex mutex;

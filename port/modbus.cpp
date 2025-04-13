@@ -256,3 +256,8 @@ void ModbusPort::slot_readReadyRegisters()
     }
     reply->deleteLater();
 }
+
+bool ModbusPort::waitDataReady() {
+    return true;
+}
+

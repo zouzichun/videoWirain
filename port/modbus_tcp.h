@@ -26,7 +26,14 @@ public:
     // virtual int sendMsg(int idx);
 
     virtual bool readModbusData(int typeNum,int startAdd,quint16 numbers);
-    virtual bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum);
+    bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum) {
+                return true;
+    };
+    virtual bool writeModbusData(int typeNum,int startAdd, float write_val);
+    virtual bool waitDataReady();
+
+    volatile bool rdy_flag;
+    volatile float rdy_data;
 
  signals:
     void signal_stateChanged(bool flag);
@@ -39,6 +46,7 @@ private slots:
     void slot_readReadyRegisters();
 
 private:
+    std::mutex mtx;
     QString tcp_ip;
     uint32_t tcp_port;
     QModbusTcpClient * m_modbustcp;

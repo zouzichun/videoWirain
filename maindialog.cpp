@@ -669,9 +669,11 @@ void MainDialog::on_modbusSend_clicked()
         qDebug("port is not opened!");
     } else {
         if (m_ui->optype->text().toInt() == 0) {
-            m_port->readModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->length->text().toInt());
+            // m_port->readModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->length->text().toInt());
+            m_port->readModbusData(3, m_ui->addr->text().toInt(), m_ui->length->text().toInt());
         } if (m_ui->optype->text().toInt() == 1) {
-            m_port->writeModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->val->text().toInt());
+            // m_port->writeModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->val->text().toInt());
+            m_port->writeModbusData(2, m_ui->addr->text().toInt(), m_ui->val->text().toFloat());
         } else {
 
         }
@@ -685,3 +687,9 @@ void MainDialog::camera_refresh_delta(float d_x1, float d_x2, float d_ang, float
     m_ui->p_x->setText(QString::number(p_x));
     m_ui->p_y->setText(QString::number(p_y));
 }
+
+void MainDialog::on_modbusSend_2_clicked()
+{
+
+}
+
