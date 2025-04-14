@@ -167,3 +167,7 @@ void Port::parseMsg(int buff_idx)
     mIoTimer->stop();
     emit receivedSignal(buff_idx);
 }
+
+void Port::thd_msleep(uint32_t ms) {
+    QThread::msleep(ms);
+}

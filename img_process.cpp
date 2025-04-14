@@ -34,7 +34,9 @@ float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB) {
     A = pointA.y - pointB.y;
     B = pointB.x - pointA.x;
     C = pointA.x*pointB.y - pointA.y*pointB.x;
-    float distance = ((float)abs(A*pointP.x + B*pointP.y + C)) / ((float)sqrtf(A*A + B*B));
+    float tt = sqrtf(A*A + B*B);
+    if (tt == 0.0f) tt = 0.00001;
+    float distance = ((float)abs(A*pointP.x + B*pointP.y + C)) / tt;
     // float distance = ((float)abs(A*pointP.x + B*pointP.y + C)) * 10 / (A*A + B*B);
     return distance;
 }
@@ -299,18 +301,13 @@ void pointsToHoughParams(const cv::Point& p1,
 
     // 计算角度（弧度制）
     theta = std::atan2(B, A);  // 法线方向角度
+    rho = C / denominator;
 
     // 规范角度到 [0, π) 范围
-    if (theta < 0) {
+    if (rho < 0) {
+        rho = -rho;
         theta += CV_PI;
     }
 
-    // 计算距离
-    rho = std::abs(C) / denominator;
-
-    // 根据直线位置调整符号
-    const float check = A * p1.x + B * p1.y;
-    if (check < 0) {
-        rho = -rho;
-    }
+    theta = fmod(theta, CV_PI);
 }

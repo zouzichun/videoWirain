@@ -60,6 +60,7 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
             float rho = 0.0, ang = 0.0;
             rho = v.rho;
             ang = v.angle;
+            qDebug() << "video cap stoped, frames " <<  frame_cnt;
             Point2i pt1(static_cast<int>(rho / cos(ang)), 0);
             Point2i pt2(static_cast<int>(rho / cos(ang) - IMG_HEIGHT * sin(ang) / cos(ang)), IMG_HEIGHT);
             if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
@@ -130,6 +131,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
            }
 
             Point2f p1, p2;
+            float dist = 0.0, delta_x = 0.0, delta_x2 = 0.0;
+            Point2f p_mid;
             if (g_lines[0].points_in_img.size() >= 2 &&
                 g_lines[1].points_in_img.size() >= 2 &&
                 g_lines[2].points_in_img.size() >= 2) {
@@ -143,9 +146,18 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
                         g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
                     Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
                         g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
+                
+                // dist  = getDist_P2L(p_mid, Point2f(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second),
+                //     Point2f(g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
+            
+                // if (cos(g_lines[1].lines_filterd[0].second) != 0.0 && sin(g_lines[1].lines_filterd[0].second) != 0.0) {
+                //     delta_x = dist / cos(g_lines[1].lines_filterd[0].second);
+                //     delta_x2 = dist / sin(g_lines[1].lines_filterd[0].second);
+                // }
             }
 
-            Point2f p_mid = Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
+            p_mid = Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
+            p_mid = Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
             // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
             cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
             cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
@@ -157,8 +169,16 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
             Point2f p_mid_golden = Point2f((golden_p1.x + golden_p2.x)/2, (golden_p1.y + golden_p2.y) /2);
             cv::drawMarker(color_img, golden_p1, cv::Scalar(255,0,0), 3, 20, 8);
             cv::drawMarker(color_img, golden_p2, cv::Scalar(255,0,0), 3, 20, 8);
-            cv::drawMarker(color_img, p_mid_golden, cv::Scalar(255,255,0), 3, 20, 8);
+            cv::drawMarker(color_img, p_mid_golden, cv::Scalar(255,0,0), 3, 20, 8);
+//            qDebug("abs edge length %f pix, %f pix per ms",
+//               sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
+//                   srtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
 
+            // qDebug("abs edge length %f pix, %f pix per ms",
+            //     sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
+            //         sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
+            
+            // qDebug("delta x %.2f, delta x2 %.2f", delta_x, delta_x2 / 5.98);
             cv::line(color_img, golden_p1, p_mid_golden, cv::Scalar(0,255,255), 4);
             cv::line(color_img, p_mid_golden, golden_p2, cv::Scalar(0,255,255), 4);
 
@@ -692,10 +712,10 @@ bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img, 
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
 
-    for (int i = 0; i < edge_img.rows / 2; i++)
-        for (int j = 0; j < edge_img.cols; j++)
-            if (edge_img.at<uchar>(i, j) > 0)
-                edge_img.at<uchar>(i, j) = 0;
+    // for (int i = 0; i < edge_img.rows / 2; i++)
+    //     for (int j = 0; j < edge_img.cols; j++)
+    //         if (edge_img.at<uchar>(i, j) > 0)
+    //             edge_img.at<uchar>(i, j) = 0;
 
 //    std::vector<vector<Point>> contours;
 //    std::vector<Point> hull_points;
@@ -897,7 +917,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
                 // if (delta < configData.line_roh_abs) {
                 if (rho_norm < ROH_ABS && ang_norm < ANG_ABS) {
                     ret = true;
-                    v.lines_filterd.push_back(std::pair<float, float>(rho, theta));
+                    v.lines_filterd.push_back(std::pair<float, float>(abs(rho), theta));
                     // spdlog::debug("{:.2f} -> {:.2f}, {:.2f} -> {:.2f}", rho, v.rho, theta, v.angle);
                     break;
                 }
@@ -925,6 +945,7 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
             ang = ang / v.lines_filterd.size();
             v.lines_filterd.clear();
             v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
+             qDebug("get ang %.2f, rho %.2f", ang, rho);
             Point2i pt1(static_cast<int>(rho / cos(ang)), 0);
             Point2i pt2(static_cast<int>(rho / cos(ang) - IMG_HEIGHT * sin(ang) / cos(ang)), IMG_HEIGHT);
             if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
@@ -936,8 +957,6 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
                     v.points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
                 }
             }
-            // v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
-            // spdlog::debug("lines after filter rho,ang {:.2f},{:.2f}", rho, ang);
         }
     }
 

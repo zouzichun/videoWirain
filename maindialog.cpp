@@ -71,6 +71,8 @@ MainDialog::MainDialog(QWidget *parent) :
     // if (configData.netType == 3) {
     // m_port = new ModbusPort(parent);
     m_port = new ModbusTcp(parent);
+    m_port->moveToThread(&mmodbusthd);
+    connect(&mmodbusthd, &QThread::finished, m_port, &QObject::deleteLater);
     m_port->startPort(configData);
     // } else if (configData.netType == 3) {
     //     m_serial = new SerialPort();
@@ -118,6 +120,7 @@ MainDialog::MainDialog(QWidget *parent) :
     CameraInit();
 
     mWorkerThread.start();
+    mmodbusthd.start();
 
     qDebug()<< "MainDialog thd id: " << QThread::currentThreadId();
 }
@@ -148,7 +151,8 @@ MainDialog::~MainDialog()
 
     mWorkerThread.quit();
     mWorkerThread.wait();
-
+    mmodbusthd.quit();
+    mmodbusthd.wait();
     m_monitor_timer->stop();
     delete m_monitor_timer;
 }
@@ -690,6 +694,45 @@ void MainDialog::camera_refresh_delta(float d_x1, float d_x2, float d_ang, float
 
 void MainDialog::on_modbusSend_2_clicked()
 {
+    if (!m_port) {
+        qDebug("port is not opened!");
+    } else {
+            // m_port->readModbusData(m_ui->ceil->text().toInt(), m_ui->addr->text().toInt(), m_ui->length->text().toInt());
+            {
+                std::lock_guard<std::mutex> lock(m_port->mtx);
+                m_port->rdy_flag = false;
+                m_port->rdy_data = 0;
+            }
 
+            // uint32_t loops = 0;
+            // while(!m_port->rdy_flag) {
+            //     m_port->readModbusData(3, 700, 2);
+            //     QThread::sleep(1);
+            //     loops++;
+            //     if (loops > 20)
+            //     {
+            //         qDebug("modbus timeout!");
+            //         return;
+            //     }
+            // };
+            qDebug("get D700 %f", m_port->rdy_data);
+            m_port->writeModbusData(2, 500, m_ui->d500->text().toFloat());
+            m_port->thd_msleep(100);
+            m_port->writeModbusData(2, 504, m_ui->d504->text().toFloat());
+            m_port->thd_msleep(100);
+            m_port->writeModbusData(2, 508, m_ui->d508->text().toFloat());
+            m_port->thd_msleep(100);
+            m_port->writeModbusData(2, 520, m_ui->d520->text().toFloat());
+            m_port->thd_msleep(100);
+            m_port->writeModbusData(2, 524, m_ui->d524->text().toFloat());
+            m_port->thd_msleep(100);
+            m_port->writeModbusData(2, 528, m_ui->d528->text().toFloat());
+            m_port->thd_msleep(100);
+            m_port->writeModbusData(2, 700, 0.0f);
+            m_port->thd_msleep(100);
+            // m_port->writeModbusData(2, 700, 0.0f);
+            // m_port->thd_msleep(500);
+            qDebug("send D500 %f, D504 %f, D508 %f", m_ui->d500->text().toFloat(), m_ui->d504->text().toFloat(), m_ui->d508->text().toFloat());
+    }
 }
 

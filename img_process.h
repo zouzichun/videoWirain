@@ -14,6 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 class MainDialog;
+float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
 
 class ImgProcess : public QObject
 {

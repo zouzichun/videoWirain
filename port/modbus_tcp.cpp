@@ -4,7 +4,7 @@
 
 ModbusTcp::ModbusTcp(QWidget *parent) :
     Port(parent),
-    tcp_ip("192.168.20.32"),
+    tcp_ip("192.168.1.111"),
     tcp_port(520) {
     m_modbustcp = new QModbusTcpClient();
 }
@@ -81,6 +81,8 @@ bool ModbusTcp::readModbusData(int typeNum,int startAdd, quint16 numbers) {
 
     //多读
     if(auto *reply = m_modbustcp->sendReadRequest(ReadUnit,1)) {
+
+        while (!reply->isFinished())
         if(!reply->isFinished()) {
             if((typeNum == 1) || (typeNum == 2)) {
                 QObject::connect(reply,&QModbusReply::finished,this,&ModbusTcp::slot_readReadyCoils);   //读取线圈
@@ -139,6 +141,7 @@ bool ModbusTcp::writeModbusData(int typeNum,int startAdd, float write_val)
         if(!reply->isFinished()) {
             connect(reply,&QModbusReply::finished,this,[reply]() {
                 if(reply->error() == QModbusDevice::NoError) {
+                    qDebug("写入OK");
                     reply->deleteLater();
                     return true;
                 } else {
@@ -214,21 +217,24 @@ void ModbusTcp::slot_readReadyRegisters()
             quint16 uData16[2] = {0};
             uData16[0] = valueList[0];
             uData16[1] = valueList[1];
-            uint32_t resultNum = uData16[0] | (uData16[1] << 16);
+
+            uint32_t resultNum = uData16[1];
+            resultNum = resultNum << 16;
+            resultNum |= uData16[0];
 
             // Debug("read register h: %x, l: %x, val %x", resultNum >> 16, resultNum & 0xffff, resultNum);
             float val = 0.0;
-            memcpy(&resultNum, &val, sizeof(float));
+            memcpy(&val, &resultNum, sizeof(float));
 
             std::lock_guard<std::mutex> lg(mtx);
             {
-                rdy_flag = true;
                 rdy_data = val;
+                rdy_flag = true;
             }
 
             //LOGDEBUG<<"uData16[0]:"<<uData16[0]<<"   uData16[1]:"<<uData16[1]<<"   resultNum:"<<resultNum;
             qDebug("read register h: %x, l: %x, val %f", resultNum >> 16, resultNum & 0xffff, val);
-            // emit signal_readRegisters(resultNum);
+            emit signal_readRegisters(resultNum);
         } else {
             qDebug("保持寄存器返回数据错误,个数: %d", nSize);
         }

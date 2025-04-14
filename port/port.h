@@ -113,12 +113,17 @@ public:
     virtual bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum) = 0;
     virtual bool writeModbusData(int typeNum,int startAdd, float write_val) = 0;
     virtual bool waitDataReady() {return true;};
+    void thd_msleep(uint32_t ms);
     
     QWidget* pWidget;
-    QMutex mutex;
+    // QMutex  mtx;
+    std::mutex mtx;
     QTimer* mIoTimer;
     QMessageBox* msgBoxIoTimeout;
     bool isOpened = false;
+
+    volatile bool rdy_flag;
+    volatile float rdy_data;
 
     std::shared_ptr<BufferManager> send_buff_mgr;
     std::shared_ptr<BufferManager> recv_buff_mgr;

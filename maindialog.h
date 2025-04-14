@@ -146,6 +146,7 @@ private:
     std::vector<CameraInfo> m_cameras;
 
     QThread mWorkerThread; //定义处理线程
+    QThread mmodbusthd;
 };
 
 #endif // MAINDIALOG_H

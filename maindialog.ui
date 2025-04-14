@@ -240,13 +240,6 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="5" column="0">
-       <widget class="QLineEdit" name="addr">
-        <property name="text">
-         <string>500</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="0">
        <widget class="QLineEdit" name="ceil">
         <property name="text">
@@ -254,42 +247,60 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QLineEdit" name="addr_2">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="d700">
         <property name="text">
-         <string>504</string>
+         <string>0</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="ceil_2">
+      <item row="5" column="2">
+       <widget class="QLineEdit" name="d524">
         <property name="text">
-         <string>2</string>
+         <string>40</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QLineEdit" name="val"/>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="optype">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLineEdit" name="addr">
+        <property name="text">
+         <string>500</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QPushButton" name="modbusSend_2">
+        <property name="text">
+         <string>TS发送</string>
+        </property>
+       </widget>
       </item>
       <item row="7" column="1">
        <widget class="QLineEdit" name="val_2"/>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="optype_2">
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="d504">
         <property name="text">
-         <string>1</string>
+         <string>34</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="d500">
+        <property name="text">
+         <string>12</string>
         </property>
        </widget>
       </item>
       <item row="6" column="0">
        <widget class="QLineEdit" name="length">
-        <property name="text">
-         <string>2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="length_2">
         <property name="text">
          <string>2</string>
         </property>
@@ -302,10 +313,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLineEdit" name="optype">
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="d528">
         <property name="text">
-         <string>0</string>
+         <string>20</string>
         </property>
        </widget>
       </item>
@@ -316,10 +327,20 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
-       <widget class="QPushButton" name="modbusSend_2">
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="d508">
         <property name="text">
-         <string>modbus发送</string>
+         <string>15</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLineEdit" name="val"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="d520">
+        <property name="text">
+         <string>15</string>
         </property>
        </widget>
       </item>
