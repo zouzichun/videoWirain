@@ -311,7 +311,7 @@ std::pair<cv::Point2f, cv::Point2f> HoughToPoints(double rho, double theta) {
 std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta, int width, int height) {
     double aa = cos(theta), bb = sin(theta);
     double x00 = aa * rho, y00 = bb * rho;
-    double x1 = cvRound(x00 + 10000*(-bb));
+    double x1 = cvRound(x00 + 10000*(-bb));            
     double y1 = cvRound(y00 + 10000*(aa));
     double x2 = cvRound(x00 - 10000*(-bb));
     double y2 = cvRound(y00 - 10000*(aa));

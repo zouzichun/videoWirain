@@ -29,10 +29,6 @@ imgWindow::~imgWindow()
     delete ui;
 }
 
-QLabel * imgWindow::getImgPic() {
-    return ui->img_label;
-};
-
 int position;
 int curr_line_pos;
 
@@ -168,6 +164,7 @@ void imgWindow::on_abcd_clicked()
         / ((x1_img - x2_img) * (x1_img - x2_img) + (y1_img - y2_img) * (y1_img - y2_img));
     c = x1_mach - a * x1_img + b * y1_img;
     d = y1_mach - b * x1_img - a * y1_img;
+
     ui->a->setText(QString::number(a));
     ui->b->setText(QString::number(b));
     ui->c->setText(QString::number(c));

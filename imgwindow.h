@@ -16,7 +16,6 @@ class imgWindow : public QWidget
 public:
     explicit imgWindow(QWidget *parent = nullptr);
     ~imgWindow();
-    QLabel * getImgPic();
     bool cal_enabled = false;
     int total_lines = 6;
 
