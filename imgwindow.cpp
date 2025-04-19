@@ -8,8 +8,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include "img_process.h"
 
-using namespace cv;
+extern ConfigData configData;
 
 imgWindow::imgWindow(QWidget *parent) :
     QWidget(parent),
@@ -17,6 +18,10 @@ imgWindow::imgWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     cal_enabled = false;
+    ui->a->setText(QString::number(configData.a));
+    ui->b->setText(QString::number(configData.b));
+    ui->c->setText(QString::number(configData.c));
+    ui->d->setText(QString::number(configData.d));
 }
 
 imgWindow::~imgWindow()
@@ -44,26 +49,22 @@ void imgWindow::on_sel1_clicked()
 
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
 extern std::vector<Lines> g_lines;
-extern void pointsToHoughParams(const cv::Point& p1, 
-    const cv::Point& p2,
-    float& rho, 
-    float& theta);
 
-void imgWindow::mousePressEvent(QMouseEvent *event)
-{
+void imgWindow::mousePressEvent(QMouseEvent *event) {
     if (cal_enabled) {
-        // if (curr_line_pos == 0) {
-        //     g_lines.clear();
-        // }
-
         if (event->QEvent::MouseButtonPress) {
             QPoint pppt = event->globalPos();
             QPoint ppp = ui->img_label->mapFromGlobal(pppt);
 
-            switch (position) {
+            float ppx = ppp.x();
+            float ppy = ppp.y();
+            ppx = ppx * SCALE;
+            ppy = ppy * SCALE;
+
+            switch (position % 2) {
                 case 0:
-                    ui->l1_p1x->setText(QString::number(ppp.x()));
-                    ui->l1_p1y->setText(QString::number(ppp.y()));
+                    ui->l1_p1x->setText(QString::number(ppx));
+                    ui->l1_p1y->setText(QString::number(ppy));
                     ui->l1_p2x->setText(QString::number(0));
                     ui->l1_p2y->setText(QString::number(0));
                     ui->l1_out->setText(QString(""));
@@ -71,37 +72,26 @@ void imgWindow::mousePressEvent(QMouseEvent *event)
                     position++;
                     break;
                 case 1:
-                    ui->l1_p2x->setText(QString::number(ppp.x()));
-                    ui->l1_p2y->setText(QString::number(ppp.y()));
+                    ui->l1_p2x->setText(QString::number(ppx));
+                    ui->l1_p2y->setText(QString::number(ppy));
                     position++;
                 break;
                 default:
                     break;
             }
 
-            if (position>=2) {
-                position = 0;
+            if (position % 2 == 0) {
                 Lines line = {};
-
                 std::vector<float>  p11{ui->l1_p1x->text().toFloat(), ui->l1_p1y->text().toFloat()};
                 std::vector<float>  p12{ui->l1_p2x->text().toFloat(), ui->l1_p2y->text().toFloat()};
-                cv::Point2f p1(p11[0] * SCALE, p11[1] * SCALE);
-                cv::Point2f p2(p12[0] * SCALE, p12[1] * SCALE);
+                cv::Point2f p1(p11[0], p11[1]);
+                cv::Point2f p2(p12[0], p12[1]);
                 
-                // float tt1;
-                // if (p12[0] - p11[0] < 0.0001) {
-                //     tt1 = (p12[1] - p11[1]) / 0.0001;
-                // } else {
-                //     tt1 = (p12[1] - p11[1]) / (p12[0] - p11[0]);
-                // }
-
-                // float dis1 = getDist_P2L(cv::Point(0,0), cv::Point(p11[0], p11[1]), cv::Point(p12[0], p12[1]));
-                // float ang1 = atan(tt1) * 180 / CV_PI;
                 float rho, theta;
-                pointsToHoughParams(p1, p2, rho, theta);
+                auto tmp = PointsToHoughParams(p1, p2);
+                rho = tmp.first;
+                theta = tmp.second;
                 spdlog::debug("line {}, p1 ({}, {}), p2 ({}, {}), theta {}, rho {}", curr_line_pos, p1.x, p1.y, p2.x, p2.y, theta, rho);
-                // spdlog::debug("line 1 out theta {}, dist {}", atan(tt1), atan(tt1) * 180 / 3.1415 + 90, dis1);
-                // spdlog::debug("line 2 out theta {}, dist {}", atan(tt2), atan(tt2) * 180 / 3.1415 + 90, dis2);
                 ui->l1_out->setText(QString::number(theta) +QString(", ")+QString::number(rho));
 
                 g_lines[curr_line_pos].rho = rho;
@@ -110,10 +100,9 @@ void imgWindow::mousePressEvent(QMouseEvent *event)
                 curr_line_pos++;
                 if (curr_line_pos >= total_lines) {
                     curr_line_pos = 0;
+                    position = 0;
                 }
             }
-        } else {
-
         }
     }
 }
@@ -134,3 +123,85 @@ void imgWindow::camera_img_refresh(cv::Mat img) {
     }
 }
 
+void imgWindow::on_img2mach_clicked()
+{
+    float a,b,c,d;
+    float x1_img,y1_img,x2_img,y2_img;
+    float x1_mach,y1_mach,x2_mach,y2_mach;
+    x1_img = ui->x1_img->text().toFloat();
+    y1_img = ui->y1_img->text().toFloat();
+    x2_img = ui->x2_img->text().toFloat();
+    y2_img = ui->y2_img->text().toFloat();
+    a = ui->a->text().toFloat();
+    b = ui->b->text().toFloat();
+    c = ui->c->text().toFloat();
+    d = ui->d->text().toFloat();
+
+    x1_mach = x1_img * a - b * y1_img + c;
+    y1_mach = x1_img * b + a * y1_img + d;
+    x2_mach = x2_img * a - b * y2_img + c;
+    y2_mach = x2_img * b + a * y2_img + d;
+
+    ui->x1_mach->setText(QString::number(x1_mach));
+    ui->y1_mach->setText(QString::number(y1_mach));
+    ui->x2_mach->setText(QString::number(x2_mach));
+    ui->y2_mach->setText(QString::number(y2_mach));
+}
+
+void imgWindow::on_abcd_clicked()
+{
+    float a,b,c,d;
+    float x1_img,y1_img,x2_img,y2_img;
+    float x1_mach,y1_mach,x2_mach,y2_mach;
+    x1_img = ui->x1_img->text().toFloat();
+    y1_img = ui->y1_img->text().toFloat();
+    x2_img = ui->x2_img->text().toFloat();
+    y2_img = ui->y2_img->text().toFloat();
+    x1_mach = ui->x1_mach->text().toFloat();
+    y1_mach = ui->y1_mach->text().toFloat();
+    x2_mach = ui->x2_mach->text().toFloat();
+    y2_mach = ui->y2_mach->text().toFloat();
+
+    a = ((x1_mach - x2_mach) * (x1_img - x2_img) + (y1_mach - y2_mach) * (y1_img - y2_img))
+        / ((x1_img - x2_img) * (x1_img - x2_img) + (y1_img - y2_img) * (y1_img - y2_img));
+    b = ((y1_mach - y2_mach) * (x1_img - x2_img) - (x1_mach - x2_mach) * (y1_img - y2_img))
+        / ((x1_img - x2_img) * (x1_img - x2_img) + (y1_img - y2_img) * (y1_img - y2_img));
+    c = x1_mach - a * x1_img + b * y1_img;
+    d = y1_mach - b * x1_img - a * y1_img;
+    ui->a->setText(QString::number(a));
+    ui->b->setText(QString::number(b));
+    ui->c->setText(QString::number(c));
+    ui->d->setText(QString::number(d));
+
+    configData.a = a;
+    configData.b = b;
+    configData.c = c;
+    configData.d = d;
+}
+
+void imgWindow::on_mach2img_clicked()
+{
+    float a,b,c,d;
+    float x1_img,y1_img,x2_img,y2_img;
+    float x1_mach,y1_mach,x2_mach,y2_mach;
+    x1_mach = ui->x1_mach->text().toFloat();
+    y1_mach = ui->y1_mach->text().toFloat();
+    x2_mach = ui->x2_mach->text().toFloat();
+    y2_mach = ui->y2_mach->text().toFloat();
+
+    a = ui->a->text().toFloat();
+    b = ui->b->text().toFloat();
+    c = ui->c->text().toFloat();
+    d = ui->d->text().toFloat();
+
+    float denominator = a * a + b * b;
+    x1_img = (a * (x1_mach - c) + b * (y1_mach - d)) / denominator;
+    y1_img = (-b * (x1_mach - c) + a * (y1_mach - d)) / denominator;
+    x2_img = (a * (x2_mach - c) + b * (y2_mach - d)) / denominator;
+    y2_img = (-b * (x2_mach - c) + a * (y2_mach - d)) / denominator;
+
+    ui->x1_img->setText(QString::number(x1_img));
+    ui->y1_img->setText(QString::number(y1_img));
+    ui->x2_img->setText(QString::number(x2_img));
+    ui->y2_img->setText(QString::number(y2_img));
+}

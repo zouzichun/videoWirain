@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     port/modbus.cpp \
     port/port.cpp \
     img_process.cpp \
-    img_process_cam.cpp
+    img_process_cam.cpp \
+    img_process_img.cpp
 
 HEADERS  += maindialog.h \
     MvCamera.h \
@@ -96,7 +97,6 @@ HEADERS  += maindialog.h \
     spdlog/spdlog.h \
     spdlog/tweakme.h \
     spdlog/version.h \
-    tcp_server.h \
     img_process.h
 
 FORMS    += maindialog.ui \

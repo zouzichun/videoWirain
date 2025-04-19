@@ -1,6 +1,7 @@
 #ifndef COMDATA_H
 #define COMDATA_H
 #include <QString>
+#include <vector>
 
 typedef struct {
     int netType;  // 0-tcp, 1-udp client, 2-serial, 3-modbus can
@@ -48,6 +49,10 @@ typedef struct {
     float line_roh_abs;
     float line_ang_abs;
     int lines_num;
+    float a;
+    float b;
+    float c;
+    float d;
 
     // configured store lines for img filter
     // could be changed during calibration

@@ -1,9 +1,7 @@
 #ifndef MAINDIALOG_H
 #define MAINDIALOG_H
 #include "comdata.h"
-
 #include <QDialog>
-
 #include <thread>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -62,6 +60,10 @@ const ConfigData defaultSetting {
     .line_roh_abs=0.05,
     .line_ang_abs=0.02,
     .lines_num=3,
+    .a=11.0,
+    .b=12.0,
+    .c=13.0,
+    .d=14.0,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
 };

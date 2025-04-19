@@ -18,7 +18,7 @@ public:
     ~imgWindow();
     QLabel * getImgPic();
     bool cal_enabled = false;
-    int total_lines = 3;
+    int total_lines = 6;
 
 public slots:
 void camera_img_refresh(cv::Mat img);
@@ -27,6 +27,11 @@ private slots:
     void on_sel1_clicked();
     void mousePressEvent(QMouseEvent *event);
 
+    void on_img2mach_clicked();
+
+    void on_abcd_clicked();
+
+    void on_mach2img_clicked();
 
 private:
     Ui::imgWindow *ui;

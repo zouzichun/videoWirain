@@ -6,22 +6,27 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QObject>
+#include <QImage>
 #include <iostream>
 #include <functional>
 #include <thread>
+#include <opencv2/opencv.hpp>
 #include "MvCamera.h"
 #include "comdata.h"
-#include <opencv2/opencv.hpp>
 
-class MainDialog;
+extern std::vector<Lines> g_lines;
 float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
+std::pair<double, double> PointsToHoughParams(cv::Point p1, cv::Point p2);
+std::pair<double, double> rotateHoughLine(double rho, double theta, double rotate_rad, std::pair<double, double> center);
+cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
+std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta, int width, int height);
 
 class ImgProcess : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ImgProcess(QString dev_name);
+    explicit ImgProcess(QString dev_name, int img_height, int img_width, bool color_img);
     ~ImgProcess();
 
     bool ImgReady();
@@ -46,6 +51,9 @@ public:
 
 
     volatile bool camera_enable;
+    int IMG_HEIGHT = 2048;
+    int IMG_WIDTH = 2048;
+    bool color_img = false;
 
 signals:
     void signal_refresh_img(cv::Mat img);
@@ -55,6 +63,8 @@ signals:
 public slots:
     void CameraTest(CMvCamera* p_cam);
     void CameraCalTest(CMvCamera* p_cam);
+    void ImageTest(CMvCamera* p_cam);
+    void ImageCalTest(CMvCamera* p_cam);
 
 private:
     QString m_dev_name;

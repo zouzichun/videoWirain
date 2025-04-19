@@ -29,23 +29,6 @@ extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
 extern std::vector<Lines> g_lines;
 
-/**
- * @brief Constructor for MainDialog class
- * @param parent Parent widget pointer
- * 
- * Initializes the main dialog window with UI components, camera settings,
- * and communication interfaces. Sets up:
- * - Window flags and UI configuration
- * - Modbus/Serial port communication
- * - Image processing components
- * - Camera initialization
- * - Timer for monitoring
- * - Signal/slot connections for UI controls
- * - Configuration data loading
- * 
- * The dialog handles camera image display, parameter adjustments for image 
- * processing, and communication with external devices.
- */
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::MainDialog),
@@ -86,7 +69,7 @@ MainDialog::MainDialog(QWidget *parent) :
     m_monitor_timer->stop();
 
 
-    m_imgproc = new ImgProcess("image");
+    m_imgproc = new ImgProcess("image", 2048, 2048, true);
     m_imgproc->moveToThread(&mWorkerThread); //把数据处理类移到线程
     connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
 
@@ -203,6 +186,10 @@ void MainDialog::saveImgParam()
 
     sets.setValue("line_angs",configData.line_angs);
     sets.setValue("line_rhos",configData.line_rhos);
+    sets.setValue("a",QString::number(configData.a, 'f', 6));
+    sets.setValue("b",QString::number(configData.b, 'f', 6));
+    sets.setValue("c",QString::number(configData.c, 'f', 6));
+    sets.setValue("d",QString::number(configData.d, 'f', 6));
 
     sets.sync();
 }
@@ -263,6 +250,10 @@ void MainDialog::loadConfigFile()
 
     configData.line_angs = sets.value("line_angs",defaultSetting.line_angs).toString();
     configData.line_rhos = sets.value("line_rhos",defaultSetting.line_rhos).toString();
+    configData.a = sets.value("a",defaultSetting.a).toFloat();
+    configData.b = sets.value("b",defaultSetting.b).toFloat();
+    configData.c = sets.value("c",defaultSetting.c).toFloat();
+    configData.d = sets.value("d",defaultSetting.d).toFloat();
 
     std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
     std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
@@ -424,13 +415,14 @@ void MainDialog::on_bnOpen_clicked()
 
 void MainDialog::on_Calibration_clicked()
 {
-    // m_ui->Calibration->setEnabled(true);
+    static bool click_stat = false;
+    m_ui->Calibration->setEnabled(true);
     for (auto & v : m_cameras) {
         if (v.is_opened) {
             v.is_opened = false;
             m_ui->Calibration->setText("校准");
             m_imgproc->camera_enable = false;
-            // emit cameraCalStart(v.handler);
+            emit cameraCalStart(v.handler);
             imgw->hide();
             qDebug() << "g_lines size " << g_lines.size();
             std::stringstream ss_rho, ss_ang;
@@ -454,18 +446,12 @@ void MainDialog::on_Calibration_clicked()
             spdlog::info("line angs {}, rhos {}", line_angs, line_rhos);
         } else {
             v.is_opened = true;
-            m_ui->Calibration->setText("校准中...");
-            imgw->total_lines = 6;
-            imgw->show();
-            //        m_imgproc->CameraCal(m_ui->painter,imgw->getImgPic(), m_ui->X, m_ui->Y, m_pcMyCamera);
-            //        if (m_pcMyCamera)
-            //        {
-            //            m_pcMyCamera->Close();
-            //        }
-            m_imgproc->camera_enable = true;
-            emit cameraCalStart(v.handler);
-            // saveImgParam();
-        }
+             m_ui->Calibration->setText("校准中...");
+             imgw->total_lines = 6;
+             imgw->show();
+             m_imgproc->camera_enable = true;
+             emit cameraCalStart(v.handler);
+         }
     }
 }
 
