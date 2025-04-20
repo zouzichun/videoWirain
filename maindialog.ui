@@ -431,43 +431,37 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="3" column="2">
+      <item row="4" column="2">
        <widget class="QLineEdit" name="p_y"/>
       </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="delta_mm"/>
-      </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>中心偏差</string>
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>X2 RHO</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="5">
        <layout class="QHBoxLayout" name="horizontalLayout"/>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QLineEdit" name="p_x">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="3" column="4">
+      <item row="4" column="4">
        <widget class="QLineEdit" name="d_ang"/>
       </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="x2"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>毫米</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
+      <item row="4" column="3">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>角度</string>
@@ -477,32 +471,53 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>X1/X2</string>
+         <string>X1</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="x1"/>
+       <widget class="QLineEdit" name="x1_start"/>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>X2 RHO</string>
+         <string>X2</string>
         </property>
        </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="x2_start"/>
       </item>
       <item row="1" column="1">
        <widget class="QLineEdit" name="x2_rho"/>
       </item>
-      <item row="1" column="4">
-       <widget class="QLineEdit" name="moto_rho"/>
-      </item>
-      <item row="1" column="3">
+      <item row="1" column="2">
        <widget class="QLabel" name="label_12">
         <property name="text">
          <string>Motor RHO</string>
         </property>
        </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="motor_rho"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="x1_fetch"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="x2_fetch"/>
+      </item>
+      <item row="2" column="4">
+       <widget class="QLineEdit" name="x1_delta"/>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLineEdit" name="x2_delta"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLineEdit" name="x1_target"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLineEdit" name="x2_target"/>
       </item>
      </layout>
     </item>
@@ -512,7 +527,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>190</y>
+     <y>250</y>
      <width>721</width>
      <height>371</height>
     </rect>

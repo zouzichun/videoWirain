@@ -67,7 +67,9 @@ const ConfigData defaultSetting {
     .seprate_rho=1234.1,
     .seprate_theta=1.5,
     .x2_rho = 330.0,
-    .motor_rho = 23.0,
+    .motor_rho = 21.6,
+    .x1_start = 256.0,
+    .x2_start = 256.0,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
 };

@@ -97,6 +97,10 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->line2_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line_roh_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->line_ang_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->x1_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->x2_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->motor_rho,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->x2_rho,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 
     CameraInit();
 
@@ -190,6 +194,10 @@ void MainDialog::saveImgParam()
     sets.setValue("d",QString::number(configData.d, 'f', 6));
     sets.setValue("seprate_rho",QString::number(configData.seprate_rho, 'f', 3));
     sets.setValue("seprate_theta",QString::number(configData.seprate_theta, 'f', 3));
+    sets.setValue("x1_start",QString::number(configData.x1_start, 'f', 2));
+    sets.setValue("x2_start",QString::number(configData.x2_start, 'f', 2));
+    sets.setValue("x2_rho",QString::number(configData.x2_rho, 'f', 2));
+    sets.setValue("motor_rho",QString::number(configData.motor_rho, 'f', 2));
 
     sets.sync();
 }
@@ -268,6 +276,9 @@ void MainDialog::loadConfigFile()
     configData.x2_rho = sets.value("x2_rho",defaultSetting.x2_rho).toFloat();
     configData.motor_rho = sets.value("motor_rho",defaultSetting.motor_rho).toFloat();
     spdlog::info("config x2_rho {}, motor_rho {}", configData.x2_rho, configData.motor_rho);
+    configData.x1_start = sets.value("x1_start",defaultSetting.x1_start).toFloat();
+    configData.x2_start = sets.value("x2_start",defaultSetting.x2_start).toFloat();
+    spdlog::info("config x1_start {}, x2_start {}", configData.x1_start, configData.x2_start);
 
     std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
     std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
@@ -311,6 +322,10 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->line2_roh->setText(QString::number(configData.line2_roh));
     m_ui->line_roh_abs->setText(QString::number(configData.line_roh_abs));
     m_ui->line_ang_abs->setText(QString::number(configData.line_ang_abs));
+    m_ui->x1_start->setText(QString::number(configData.x1_start));
+    m_ui->x2_start->setText(QString::number(configData.x2_start));
+    m_ui->x2_rho->setText(QString::number(configData.x2_rho));
+    m_ui->motor_rho->setText(QString::number(configData.motor_rho));
 }
 
 void MainDialog::camera_img_refresh(cv::Mat img) {
@@ -657,6 +672,10 @@ void MainDialog::on_cal_editingFinished()
     configData.line2_roh = m_ui->line2_roh->text().toInt();
     configData.line_roh_abs = m_ui->line_roh_abs->text().toFloat();
     configData.line_ang_abs = m_ui->line_ang_abs->text().toFloat();
+    configData.x1_start = m_ui->x1_start->text().toFloat();
+    configData.x2_start = m_ui->x2_start->text().toFloat();
+    configData.x2_rho = m_ui->x2_rho->text().toFloat();
+    configData.motor_rho = m_ui->motor_rho->text().toFloat();
 }
 
 void MainDialog::on_SerialSend_clicked()
@@ -683,8 +702,8 @@ void MainDialog::on_modbusSend_clicked()
 }
 
 void MainDialog::camera_refresh_delta(float d_x1, float d_x2, float d_ang, float p_x, float p_y) {
-    m_ui->x1->setText(QString::number(d_x1));
-    m_ui->x2->setText(QString::number(d_x2));
+    m_ui->x1_delta->setText(QString::number(d_x1));
+    m_ui->x2_delta->setText(QString::number(d_x2));
     m_ui->d_ang->setText(QString::number(d_ang));
     m_ui->p_x->setText(QString::number(p_x));
     m_ui->p_y->setText(QString::number(p_y));

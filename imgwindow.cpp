@@ -92,7 +92,6 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
                 std::vector<float>  p12{ui->l1_p2x->text().toFloat(), ui->l1_p2y->text().toFloat()};
                 cv::Point2f p1(p11[0], p11[1]);
                 cv::Point2f p2(p12[0], p12[1]);
-                
                 float rho, theta;
                 auto tmp = PointsToHoughParams(p1, p2);
                 rho = tmp.first;
