@@ -500,7 +500,6 @@ bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img,
                             cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i)))
                         edge_img.at<uchar>(i, j) = 0;
                 }
-                
             }
         }
     }

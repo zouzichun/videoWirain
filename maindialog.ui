@@ -519,6 +519,9 @@
       <item row="3" column="3">
        <widget class="QLineEdit" name="x2_target"/>
       </item>
+      <item row="1" column="4">
+       <widget class="QLineEdit" name="start_delta"/>
+      </item>
      </layout>
     </item>
    </layout>

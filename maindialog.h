@@ -133,7 +133,7 @@ private slots:
     void on_saveImg_clicked();
     void on_modbusSend_clicked();
     void camera_img_refresh(cv::Mat img);
-    void camera_refresh_delta(float d_x1, float d_x2, float d_ang, float p_x, float p_y);
+    void camera_refresh_delta();
 
     void on_modbusSend_2_clicked();
 

@@ -701,12 +701,15 @@ void MainDialog::on_modbusSend_clicked()
     }
 }
 
-void MainDialog::camera_refresh_delta(float d_x1, float d_x2, float d_ang, float p_x, float p_y) {
-    m_ui->x1_delta->setText(QString::number(d_x1));
-    m_ui->x2_delta->setText(QString::number(d_x2));
-    m_ui->d_ang->setText(QString::number(d_ang));
-    m_ui->p_x->setText(QString::number(p_x));
-    m_ui->p_y->setText(QString::number(p_y));
+extern DataPkt data_pkt;
+void MainDialog::camera_refresh_delta() {
+    m_ui->x1_delta->setText(QString::number(data_pkt.x1_delta));
+    m_ui->x2_delta->setText(QString::number(data_pkt.x2_delta));
+    m_ui->x1_fetch->setText(QString::number(data_pkt.x1_fetch));
+    m_ui->x2_fetch->setText(QString::number(data_pkt.x2_fetch));
+    m_ui->x1_target->setText(QString::number(data_pkt.x1_target));
+    m_ui->x2_target->setText(QString::number(data_pkt.x2_target));
+    m_ui->start_delta->setText(QString::number(data_pkt.start_delta));
 }
 
 void MainDialog::on_modbusSend_2_clicked()

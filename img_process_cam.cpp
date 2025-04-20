@@ -20,6 +20,7 @@ cv::Point2f X12(-1970.84, 12.132);
 
 std::pair<double, double> X2_MACH(-330.0, 0.0);
 std::pair<double, double> X1_MACH(690.0, 0.0);
+DataPkt data_pkt;
 
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
@@ -58,6 +59,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
     const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
     const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+    X2_MACH.first = configData.x2_rho;
+    X1_MACH.first = 1020.0 + configData.x2_rho;
 
     while (camera_enable) {
         {
@@ -170,27 +173,36 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         cv::line(color_img, p21, p22, cv::Scalar(255,255,0), 4);
         cv::line(color_img, p_mid, p_mid2, cv::Scalar(0,255,255), 4);
 
+
         auto mach_p_up = PointsImg2Mach(p1, p2);
         auto mach_p_down = PointsImg2Mach(p21, p22);
 
         auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
         auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
+        auto mach_start = PointsToHoughParams(cv::Point2f(0, configData.x2_start),
+            cv::Point2f(315, configData.x1_start));
+
+        auto img_start = PointsMach2Img(cv::Point2f(0, configData.x2_start),
+                                        cv::Point2f(315, configData.x1_start));
+        cv::line(color_img, img_start.first, img_start.second,
+                 cv::Scalar(255,255,255), 4);
 
         mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
         mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
 
-        X2_MACH.first = configData.x2_rho;
-        X1_MACH.first = 1020.0 + configData.x2_rho;
-
         std::pair<double, double> x2_corss_up = getCrossPoint(mach_hline_up, X2_MACH);
         std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
-
         std::pair<double, double> x1_corss_up = getCrossPoint(mach_hline_up, X1_MACH);
         std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
+        std::pair<double, double> x1_start = getCrossPoint(mach_start, X1_MACH);
+        std::pair<double, double> x2_start = getCrossPoint(mach_start, X2_MACH);
+
+        double start_delta2 = sqrtf(pow(x2_start.first - x2_corss_down.first, 2) + pow(x2_start.second - x2_corss_down.second, 2));
+        double start_delta1 = sqrtf(pow(x1_start.first - x1_corss_down.first, 2) + pow(x1_start.second - x1_corss_down.second, 2));
+        qDebug("start_delta2 %.2f, start_delta1 %.2f", start_delta2, start_delta1);
 
         double dist_x2 = sqrtf(pow(x2_corss_up.first - x2_corss_down.first, 2) + pow(x2_corss_up.second - x2_corss_down.second, 2));
         double dist_x1 = sqrtf(pow(x1_corss_up.first - x1_corss_down.first, 2) + pow(x1_corss_up.second - x1_corss_down.second, 2));
-
         if (x2_corss_up.second < x2_corss_down.second) {
             dist_x2 = -dist_x2;
         }
@@ -198,46 +210,20 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         if (x1_corss_up.second < x1_corss_up.second) {
             dist_x1 = -dist_x1;
         }
-
-        // std::pair<double, double> x1 = rotateHoughLine(
-        //     mach_hline_up.first, mach_hline_up.second, mach_hline_up.second - mach_hline_down.second,
-        //     rot_mid_up);
-
-        // std::pair<double, double> rot_mid_down((mach_p_down.first.x + mach_p_down.second.x)/2, (mach_p_down.first.y + mach_p_down.second.y)/2);
-
-        // std::pair<double, double> after_rot_line = rotateHoughLine(
-        //     mach_hline_down.first, mach_hline_down.second, mach_hline_down.second - mach_hline_up.second,
-        //     rot_mid_down);
-
-
-        // cv::Point2f p_mid_golden = cv::Point2f((golden_p1.x + golden_p2.x)/2, (golden_p1.y + golden_p2.y) /2);
-        // cv::drawMarker(color_img, golden_p1, cv::Scalar(255,0,0), 3, 20, 8);
-        // cv::drawMarker(color_img, golden_p2, cv::Scalar(255,0,0), 3, 20, 8);
-        // cv::drawMarker(color_img, p_mid_golden, cv::Scalar(255,0,0), 3, 20, 8);
-    //            qDebug("abs edge length %f pix, %f pix per ms",
-    //               sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
-    //                   srtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
-
-        // qDebug("abs edge length %f pix, %f pix per ms",
-        //     sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
-        //         sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
         
-        // qDebug("delta x %.2f, delta x2 %.2f", delta_x, delta_x2 / 5.98);
-        
-
-        // float golden_ang = std::atan((golden_p2.y - golden_p1.y) /  (golden_p2.x - golden_p1.x));
-        // spdlog::debug("golden p {},{},  {},{}, ang {}", golden_p1.x, golden_p1.y, golden_p2.x, golden_p2.y, golden_ang);
-        // cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
-        //            cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
-        // cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
-        //            cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
+        data_pkt.x2_start = x2_start.second;
+        data_pkt.x2_fetch = x2_corss_down.second;
+        data_pkt.x2_target = x2_corss_up.second;
+        data_pkt.x1_start = x1_start.second;
+        data_pkt.x1_fetch = x1_corss_down.second;
+        data_pkt.x1_target = x1_corss_up.second;
+        data_pkt.x1_delta = dist_x1;
+        data_pkt.x2_delta = dist_x2;
+        data_pkt.start_delta = start_delta2;
 
         emit signal_refresh_img(color_img);
 
-        emit signal_refresh_delta(
-            dist_x2, dist_x1,
-            mach_hline_up.second - mach_hline_down.second,
-            p_mid.x - p_mid2.x, p_mid.y - p_mid2.y);
+        emit signal_refresh_delta();
         
         frame_cnt++;
     }
@@ -493,83 +479,27 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
 
             std::vector<cv::Vec2f> lines_found;
             Process(grayimg, edge, contours_img, lines_found);
-//            std::vector<Lines> lines_out;
             if (!FilterLines(edge, lines_found)) {
-                // p_cam->StopGrabbing();
-                // return false;
-                // qDebug("FilterLines failed!");
                 frame_cnt++;
-                // waitKey(1);
-                // continue;
             }
 
             for (const auto & v : lines_found) {
                 float rho = v[0];
                 float theta = v[1];
                 // spdlog::debug("line {} rho {:.2f}, theta {:.2f}, cnt {}", pos, rho, theta, cnts[pos]);
-                    //直线与第一行的交叉点
-                    cv::Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
-                    //直线与最后一行的交叉点
-                    cv::Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
-                    cv::line(color_img, pt1, pt2, cv::Scalar(255, 255, 255), 2);
-                    // if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
-                    //     if (pt1.y > pt2.y) {
-                    //         lines.push_back(cv::Vec4i(pt2.x, pt2.y, pt1.x, pt1.y));
-                    //     } else {
-                    //         lines.push_back(cv::Vec4i(pt1.x, pt1.y, pt2.x, pt2.y));
-                    //     }
-                    // }
+                auto pts = HoughToPoints(rho, theta);
+                    cv::line(color_img, pts.first, pts.second, cv::Scalar(255, 255, 255), 2);
             }
 
             emit signal_refresh_img(color_img);
 
             emit signal_refresh_cal_img(edge);
-
-            // pgp.push_back(points);
-            // // spdlog::debug("top {},{}, p {}:{}, bottom {},{}", points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y);
-            // cv::line(color_img, points[0], points[1], cv::Scalar(0,255,255), 2, CV_AA);
-            // cv::line(color_img, points[1], points[2], cv::Scalar(0,255,255), 2, CV_AA);
-            // x->setText(QString(QString::number(points[1].x)));
-            // y->setText(QString(QString::number(points[1].y)));
-            // cv::drawMarker(color_img, points[1], cv::Scalar(255,255,255), 3, 20, 4);
-
             frame_cnt++;
-            // waitKey(10);
         }
     } else {
         p_cam->StopGrabbing();
         qDebug() << "video exit, frames " <<  frame_cnt;
     }
-
-    // std::vector<cv::Point2i> linesp = {cv::Point2i(0,0),cv::Point2i(0,0),cv::Point2i(0,0)};
-    // const int SZ = pgp.size() == 0? 1 : pgp.size();
-    // auto f = [&] () ->int {
-    //     for (const auto & v: pgp) {
-    //         linesp[0].x = linesp[0].x + v[0].x;
-    //         linesp[0].y = linesp[0].y + v[0].y;
-    //         linesp[1].x = linesp[1].x + v[1].x;
-    //         linesp[1].y = linesp[1].y + v[1].y;
-    //         linesp[2].x = linesp[2].x + v[2].x;
-    //         linesp[2].y = linesp[2].y + v[2].y;
-    //     }
-
-    //     for (auto & v: linesp) {
-    //         v.x = v.x / SZ;
-    //         v.y = v.y / SZ;
-    //     }
-    // };
-
-    // f();
-
-    // qDebug("cal x:y to %d:%d", linesp[1].x, linesp[1].y);
-    // configData.camera_abs_x = linesp[1].x;
-    // configData.camera_abs_y = linesp[1].y;
-
-    // configData.point1_x = linesp[0].x;
-    // configData.point1_y = linesp[0].y;
-    // configData.point2_x = linesp[2].x;
-    // configData.point2_y = linesp[2].y;
-
     return;
 }
 

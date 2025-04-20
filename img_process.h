@@ -22,7 +22,6 @@ std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta,
 std::pair<double, double> PointsToHoughParams(cv::Point2f p1, cv::Point2f p2);
 std::pair<double, double> rotateHoughLine(double rho, double theta, double rotate_rad, std::pair<double, double> center);
 cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
-std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta, int width, int height);
 std::pair<cv::Point2f, cv::Point2f> PointsImg2Mach(cv::Point2f p1, cv::Point2f p2);
 std::pair<cv::Point2f, cv::Point2f> PointsMach2Img(cv::Point2f p1, cv::Point2f p2);
 bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p);
@@ -33,6 +32,23 @@ enum {
     DOWN_LINE,
     FULL_IMG
 };
+
+typedef struct DataPkt_ {
+    float x1_start = 0.0;
+    float x1_fetch = 0.0;
+    float x1_target = 0.0;
+    float x1_delta = 0.0;
+    float x2_start = 0.0;
+    float x2_fetch = 0.0;
+    float x2_target = 0.0;
+    float x2_delta = 0.0;
+    float y1_start = 0.0;
+    float y1_fetch = 0.0;
+    float y1_target = 0.0;
+    float y1_delta = 0.0;
+
+    float start_delta = 0.0;
+} DataPkt;
 
 class ImgProcess : public QObject
 {
@@ -68,7 +84,7 @@ public:
 
 signals:
     void signal_refresh_img(cv::Mat img);
-    void signal_refresh_delta(float delta_x1, float delta_x2, float delta_ang, float delta_p_x, float delta_p_y);
+    void signal_refresh_delta();
     void signal_refresh_cal_img(cv::Mat img);
 
 public slots:

@@ -1,4 +1,5 @@
 #include "maindialog.h"
+#include "img_process.h"
 #include <QtDebug>
 #include <QMutex>
 #include <QFile>
