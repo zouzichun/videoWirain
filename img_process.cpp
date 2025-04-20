@@ -298,6 +298,32 @@ cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB)
     return crossPoint;
 }
 
+std::pair<double, double> getCrossPoint(std::pair<double, double> line1, std::pair<double, double> line2) {
+    std::pair<cv::Point2f, cv::Point2f> pl1 = HoughToPoints(line1.first, line1.second);
+    std::pair<cv::Point2f, cv::Point2f> pl2 = HoughToPoints(line2.first, line2.second);
+    cv::Vec4d LineA(pl1.first.x, pl1.first.y, pl1.second.x, pl1.second.y);
+    cv::Vec4d LineB(pl2.first.x, pl2.first.y, pl2.second.x, pl2.second.y);
+    double ka, kb;
+    double tt;
+    if (LineA[2] - LineA[0] == 0) {
+        tt = 0.00001;
+    } else{
+        tt = (double)(LineA[2] - LineA[0]);
+    }
+    ka = (double)(LineA[3] - LineA[1]) / tt; //求出LineA斜率
+    if (LineB[2] - LineB[0] == 0) {
+        tt = 0.000001;
+    } else{
+        tt = (double)(LineB[2] - LineB[0]);
+    }
+    kb = (double)(LineB[3] - LineB[1]) / tt; //求出LineB斜率
+
+    cv::Point2f crossPoint;
+    crossPoint.x = (ka*LineA[0] - LineA[1] - kb*LineB[0] + LineB[1]) / (ka - kb);
+    crossPoint.y = (ka*kb*(LineA[0] - LineB[0]) + ka*LineB[1] - kb*LineA[1]) / (ka - kb);
+    return std::pair<double, double>(crossPoint.x, crossPoint.y);
+}
+
 std::pair<cv::Point2f, cv::Point2f> HoughToPoints(double rho, double theta) {
     double aa = cos(theta), bb = sin(theta);
     double x00 = aa * rho, y00 = bb * rho;
@@ -328,7 +354,44 @@ std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta,
     }
 }
 
-std::pair<double, double> PointsToHoughParams(cv::Point p1, cv::Point p2) {
+std::pair<cv::Point2f, cv::Point2f> PointsImg2Mach(cv::Point2f p1, cv::Point2f p2) {
+    float x1_img,y1_img,x2_img,y2_img;
+    float x1_mach,y1_mach,x2_mach,y2_mach;
+    x1_img = p1.x;
+    y1_img = p1.y;
+    x2_img = p2.x;
+    y2_img = p2.y;
+    float a = configData.a;
+    float b = configData.b;
+    float c = configData.c;
+    float d = configData.d;
+    x1_mach = x1_img * a - b * y1_img + c;
+    y1_mach = x1_img * b + a * y1_img + d;
+    x2_mach = x2_img * a - b * y2_img + c;
+    y2_mach = x2_img * b + a * y2_img + d;
+    return std::pair<cv::Point2f, cv::Point2f>(cv::Point2f(x1_mach, y1_mach), cv::Point2f(x2_mach, y2_mach));
+}
+
+std::pair<cv::Point2f, cv::Point2f> PointsMach2Img(cv::Point2f p1, cv::Point2f p2) {
+    float x1_img,y1_img,x2_img,y2_img;
+    float x1_mach,y1_mach,x2_mach,y2_mach;
+    x1_mach = p1.x;
+    y1_mach = p1.y;
+    x2_mach = p2.x;
+    y2_mach = p2.y;
+    float a = configData.a;
+    float b = configData.b;
+    float c = configData.c;
+    float d = configData.d;
+    float denominator = a * a + b * b;
+    x1_img = (a * (x1_mach - c) + b * (y1_mach - d)) / denominator;
+    y1_img = (-b * (x1_mach - c) + a * (y1_mach - d)) / denominator;
+    x2_img = (a * (x2_mach - c) + b * (y2_mach - d)) / denominator;
+    y2_img = (-b * (x2_mach - c) + a * (y2_mach - d)) / denominator;
+    return std::pair<cv::Point2f, cv::Point2f>(cv::Point2f(x1_img, y1_img), cv::Point2f(x2_img, y2_img));
+}
+
+std::pair<double, double> PointsToHoughParams(cv::Point2f p1, cv::Point2f p2) {
     double A = p2.y - p1.y;
     double B = p1.x - p2.x;
     double C = p2.x * p1.y - p1.x * p2.y;
@@ -391,46 +454,24 @@ std::pair<double, double> rotateHoughLine(double rho, double theta, double rotat
     // 旋转点并计算新直线
     auto [rx1, ry1] = rotate(x1, y1);
     auto [rx2, ry2] = rotate(x2, y2);
-    auto new_line = PointsToHoughParams(cv::Point(rx1, ry1), cv::Point(rx2, ry2));
+    auto new_line = PointsToHoughParams(cv::Point2f(rx1, ry1), cv::Point2f(rx2, ry2));
     return new_line;
 }
 
+bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p) {
+    // 计算向量叉积 (x2 - x1)(yp - y1) - (y2 - y1)(xp - x1)
+    int cross = (pt2.x - pt1.x) * (p.y - pt1.y)
+              - (pt2.y - pt1.y) * (p.x - pt1.x);
 
-// 通过两个点计算霍夫参数 (rho, theta)
-// void pointsToHoughParams(const cv::Point& p1, 
-//         const cv::Point& p2,
-//         float& rho, 
-//         float& theta) {
-//     // 计算直线方程参数
-//     const float A = p2.y - p1.y;
-//     const float B = p1.x - p2.x;
-//     const float C = p2.x * p1.y - p1.x * p2.y;
+//    // 根据OpenCV坐标系判断方向
+//    if (cross > 0) return "上方";  // 向量左侧
+//    if (cross < 0) return "下方";  // 向量右侧
+//    return "在直线上";
+    return (cross > 0) ? true : false;
+}
 
-//     // 计算霍夫参数
-//     const float denominator = std::sqrt(A*A + B*B);
-//     if (denominator == 0) { // 处理重合点的情况
-//         rho = 0;
-//         theta = 0;
-//         return;
-//     }
-
-//     // 计算角度（弧度制）
-//     theta = std::atan2(B, A);  // 法线方向角度
-//     rho = C / denominator;
-
-//     // 规范角度到 [0, π) 范围
-//     if (rho < 0) {
-//         rho = -rho;
-//         theta += CV_PI;
-//     }
-
-//     theta = fmod(theta, CV_PI);
-// }
-
-
-bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img, std::vector<cv::Vec2f> & lines_found) {
-    const int IMG_HEIGHT = img.rows;
-    const int IMG_WIDTH = img.cols;
+bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img,
+    cv::Mat &contour_img, std::vector<cv::Vec2f> & lines_found, int up) {
     cv::Mat img_tt;
     // cv::bilateralFilter(img, img_tt, 0, 200, 10);
     // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
@@ -440,10 +481,29 @@ bool ImgProcess::Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img, 
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
 
-    // for (int i = 0; i < edge_img.rows / 2; i++)
-    //     for (int j = 0; j < edge_img.cols; j++)
-    //         if (edge_img.at<uchar>(i, j) > 0)
-    //             edge_img.at<uchar>(i, j) = 0;
+    if (up == UP_LINE) {
+        for (int i = 0; i < edge_img.rows / 2; i++) {
+            for (int j = 0; j < edge_img.cols; j++) {
+                if (edge_img.at<uchar>(i, j) > 0) {
+                    if (!PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
+                            cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i)))
+                        edge_img.at<uchar>(i, j) = 0;
+                }
+                
+            }
+        }
+    } else if (up == DOWN_LINE) {
+        for (int i = 0; i < edge_img.rows / 2; i++) {
+            for (int j = 0; j < edge_img.cols; j++) {
+                if (edge_img.at<uchar>(i, j) > 0) {
+                    if (PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
+                            cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i)))
+                        edge_img.at<uchar>(i, j) = 0;
+                }
+                
+            }
+        }
+    }
 
 //    std::vector<vector<Point>> contours;
 //    std::vector<Point> hull_points;
@@ -616,20 +676,30 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> & lines_found,
 }
         
 
-bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
+bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found, bool up) {
     const int IMG_HEIGHT = img.rows;
     const int IMG_WIDTH = img.cols;
     const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_roh_abs;
     const float ANG_ABS = CV_PI * configData.line_ang_abs;
 
-    for (auto & v : g_lines) {
-        v.lines_filterd.clear();
-        v.points_in_img.clear();
+    for (auto it = g_lines.begin(); it != g_lines.end(); ++it) {
+        size_t index = std::distance(g_lines.begin(), it);  // 实际索引位置
+        if (up) {
+            if (index > 2) {
+                continue;
+            }
+        } else {
+            if (index < 3) {
+                continue;
+            }
+        }
+        it->lines_filterd.clear();
+        it->points_in_img.clear();
     }
 
-    for ( auto  it = lines_found.begin(); it != lines_found.end();) {
-        float rho = (*it)[0];
-        float thetatt = (*it)[1];
+    for ( auto  ilt = lines_found.begin(); ilt != lines_found.end();) {
+        float rho = (*ilt)[0];
+        float thetatt = (*ilt)[1];
         float theta = thetatt;
 //        if (thetatt >= CV_PI)
 //            theta = thetatt - CV_PI;
@@ -637,16 +707,26 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
 
         auto valid_line_check = [&] (float rho, float theta) -> bool {
             bool ret = false;
-            for (auto & v : g_lines) {
-                float rho_norm = abs(v.rho - rho);
-                float ang_norm = abs(sin(v.angle) - sin(theta));
-
+            for (auto it = g_lines.begin(); it != g_lines.end(); ++it) {
+                size_t index = std::distance(g_lines.begin(), it);  // 实际索引位置
+                if (up) {
+                    if (index > 2) {
+                        continue;
+                    }
+                } else {
+                    if (index < 3) {
+                        continue;
+                    }
+                }
+                float rho_norm = abs(it->rho - rho);
+                float ang_norm = abs(sin(it->angle) - sin(theta));
+//                spdlog::debug("{:.2f} -> {:.2f}, {:.2f} -> {:.2f}", rho, v.rho, theta, v.angle);
                 // float delta = sqrtf(rho_norm * rho_norm + ang_norm * ang_norm);
                 // if (delta < configData.line_roh_abs) {
                 if (rho_norm < ROH_ABS && ang_norm < ANG_ABS) {
                     ret = true;
-                    v.lines_filterd.push_back(std::pair<float, float>(abs(rho), theta));
-                    // spdlog::debug("{:.2f} -> {:.2f}, {:.2f} -> {:.2f}", rho, v.rho, theta, v.angle);
+                    it->lines_filterd.push_back(std::pair<float, float>(rho, theta));
+//                     spdlog::debug("{:.2f} -> {:.2f}, {:.2f} -> {:.2f}", rho, v.rho, theta, v.angle);
                     break;
                 }
             }
@@ -654,35 +734,45 @@ bool ImgProcess::FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) 
         };
 
         if (!valid_line_check(rho, theta)) {
-            lines_found.erase(it);
+            lines_found.erase(ilt);
             continue;
         } else {
             // spdlog::debug("++++ valid line rho,ang {:.2f},{:.2f}", rho, theta);
-            it++;
+            ilt++;
         }
     }
 
-    for (auto & v : g_lines) {
-        if (v.lines_filterd.size() != 0) {
+    for (auto it = g_lines.begin(); it != g_lines.end(); ++it) {
+        size_t index = std::distance(g_lines.begin(), it);  // 实际索引位置
+        if (up) {
+            if (index > 2) {
+                continue;
+            }
+        } else {
+            if (index < 3) {
+                continue;
+            }
+        }
+        if (it->lines_filterd.size() != 0) {
             float rho = 0.0, ang = 0.0;
-            for (const auto &w : v.lines_filterd) {
+            for (const auto &w : it->lines_filterd) {
                 rho += w.first;
                 ang += w.second;
             }
-            rho = rho / v.lines_filterd.size();
-            ang = ang / v.lines_filterd.size();
-            v.lines_filterd.clear();
-            v.lines_filterd.push_back(std::pair<float, float>(rho, ang));
+            rho = rho / it->lines_filterd.size();
+            ang = ang / it->lines_filterd.size();
+            it->lines_filterd.clear();
+            it->lines_filterd.push_back(std::pair<float, float>(rho, ang));
 //             qDebug("get ang %.2f, rho %.2f", ang, rho);
             cv::Point2i pt1(static_cast<int>(rho / cos(ang)), 0);
             cv::Point2i pt2(static_cast<int>(rho / cos(ang) - IMG_HEIGHT * sin(ang) / cos(ang)), IMG_HEIGHT);
             if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
                 if (pt1.y > pt2.y) {
-                    v.points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
-                    v.points_in_img.push_back(std::pair<int, int>(pt1.x, pt1.y));
+                    it->points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
+                    it->points_in_img.push_back(std::pair<int, int>(pt1.x, pt1.y));
                 } else {
-                    v.points_in_img.push_back(std::pair<int, int>(pt1.x, pt1.y));
-                    v.points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
+                    it->points_in_img.push_back(std::pair<int, int>(pt1.x, pt1.y));
+                    it->points_in_img.push_back(std::pair<int, int>(pt2.x, pt2.y));
                 }
             }
         }

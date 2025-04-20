@@ -18,6 +18,7 @@ public:
     ~imgWindow();
     bool cal_enabled = false;
     int total_lines = 6;
+    bool sep_enable = false;
 
 public slots:
 void camera_img_refresh(cv::Mat img);
@@ -31,6 +32,8 @@ private slots:
     void on_abcd_clicked();
 
     void on_mach2img_clicked();
+
+    void on_sep_but_clicked();
 
 private:
     Ui::imgWindow *ui;

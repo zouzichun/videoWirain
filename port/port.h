@@ -113,6 +113,7 @@ public:
     virtual bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum) = 0;
     virtual bool writeModbusData(int typeNum,int startAdd, float write_val) = 0;
     virtual bool waitDataReady() {return true;};
+    void ClearFlagData();
     void thd_msleep(uint32_t ms);
     
     QWidget* pWidget;

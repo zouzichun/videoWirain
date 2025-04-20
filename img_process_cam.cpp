@@ -18,37 +18,77 @@ cv::Point2f X22(-1970.84, 12.132);
 cv::Point2f X11(-1959.74, -1716.01);
 cv::Point2f X12(-1970.84, 12.132);
 
-void ImgProcess::CameraTest(CMvCamera* p_cam) {
+std::pair<double, double> X2_MACH(-330.0, 0.0);
+std::pair<double, double> X1_MACH(690.0, 0.0);
+
+void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
-    if (camera_enable) {
-        frame_cnt = 0;
-        // namedWindow("video", WINDOW_KEEPRATIO | WINDOW_NORMAL);
-        int ret = p_cam->StartGrabbing();
-        if (ret) {
-            spdlog::error("sstart grabbing failed!");
-            return;
-        }
+    int ret = p_cam->StartGrabbing();
+    if (ret) {
+        spdlog::error("Start Grabing failed!");
+        return;
+    }
+    // ch:获取数据包大小 | en:Get payload size
+    MVCC_INTVALUE_EX stParam;
+    memset(&stParam, 0, sizeof(MVCC_INTVALUE_EX));
+    ret = p_cam->GetIntValue("PayloadSize", &stParam);
+    if (MV_OK != ret) {
+        spdlog::error("Get PayloadSize fail! {}", ret);
+        p_cam->StopGrabbing();
+        return;
+    } else {
+        spdlog::debug("Get PayloadSize {}", stParam.nCurValue);
+    }
+    MV_FRAME_OUT frame;
+    memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
-        // ch:获取数据包大小 | en:Get payload size
-        MVCC_INTVALUE_EX stParam;
-        memset(&stParam, 0, sizeof(MVCC_INTVALUE_EX));
-        ret = p_cam->GetIntValue("PayloadSize", &stParam);
-        if (MV_OK != ret) {
-            spdlog::error("Get PayloadSize fail! {}", ret);
-            p_cam->StopGrabbing();
-            return;
-        } else {
-            spdlog::debug("Get PayloadSize {}", stParam.nCurValue);
-        }
-        MV_FRAME_OUT frame;
-        memset(&frame, 0, sizeof(MV_FRAME_OUT));
+    ret = p_cam->GetImageBuffer(&frame, 1000);
+    if (ret != MV_OK) {
+        spdlog::debug("No data {:#x}", ret);
+        p_cam->StopGrabbing();
+        return;
+    }
 
+    ret = p_cam->FreeImageBuffer(&frame);
+    if (ret != MV_OK) {
+        spdlog::debug("free img buffer failed!");
+        p_cam->StopGrabbing();
+        return;
+    }
+
+    const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
+    const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+
+    while (camera_enable) {
+        {
+            std::lock_guard<std::mutex> lg(p_port->mtx);
+            p_port->rdy_flag = false;
+            p_port->rdy_data = 0.0f;
+        }
+        
+        // do {
+        //     p_port->readModbusData(3, 700, 2);
+        //     p_port->thd_msleep(100);
+        // } while(!p_port->rdy_flag && p_port->rdy_data != 1.0f);
+    
         ret = p_cam->GetImageBuffer(&frame, 1000);
         if (ret != MV_OK) {
             spdlog::debug("No data {:#x}", ret);
             p_cam->StopGrabbing();
             return;
         }
+        cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
+        cv::Mat grayimg, color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3);
+
+        cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
+        cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
+
+        cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        
+        std::vector<cv::Vec2f> lines_found_up;
+        std::vector<cv::Vec2f> lines_found_down;
 
         ret = p_cam->FreeImageBuffer(&frame);
         if (ret != MV_OK) {
@@ -57,210 +97,152 @@ void ImgProcess::CameraTest(CMvCamera* p_cam) {
             return;
         }
 
-        const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
-        const int IMG_WIDTH = frame.stFrameInfo.nWidth;
-        for (auto & v : g_lines) {
-            float rho = 0.0, ang = 0.0;
-            rho = v.rho;
-            ang = v.angle;
-            // cv::Point2i pt1(static_cast<int>(rho / cos(ang)), 0);
-            // cv::Point2i pt2(static_cast<int>(rho / cos(ang) - IMG_HEIGHT * sin(ang) / cos(ang)), IMG_HEIGHT);
-            // if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
-            //     if (pt1.y > pt2.y) {
-            //         v.golde_points.push_back(std::pair<int, int>(pt2.x, pt2.y));
-            //         v.golde_points.push_back(std::pair<int, int>(pt1.x, pt1.y));
-            //     } else {
-            //         v.golde_points.push_back(std::pair<int, int>(pt1.x, pt1.y));
-            //         v.golde_points.push_back(std::pair<int, int>(pt2.x, pt2.y));
-            //     }
-            // }
+        Process(grayimg, edge_up, contours_img, lines_found_up, UP_LINE);
 
-            auto points = HoughToPointsInImg(rho, ang, IMG_WIDTH, IMG_HEIGHT);
-            v.golde_points.push_back(std::pair<double, double>(points.first.x, points.first.y));
-            v.golde_points.push_back(std::pair<double, double>(points.second.x, points.second.y));
-        }
-
-        cv::Point2f golden_p11, golden_p12;
-        if (g_lines[0].golde_points.size() >= 2 &&
-            g_lines[1].golde_points.size() >= 2 &&
-            g_lines[2].golde_points.size() >= 2) {
-            golden_p11 = getCrossPoint(
-                cv::Vec4i(g_lines[0].golde_points[0].first, g_lines[0].golde_points[0].second,
-                    g_lines[0].golde_points[1].first, g_lines[0].golde_points[1].second),
-                cv::Vec4i(g_lines[1].golde_points[0].first, g_lines[1].golde_points[0].second,
-                    g_lines[1].golde_points[1].first, g_lines[1].golde_points[1].second));
-            golden_p12 = getCrossPoint(
-                cv::Vec4i(g_lines[1].golde_points[0].first, g_lines[1].golde_points[0].second,
-                    g_lines[1].golde_points[1].first, g_lines[1].golde_points[1].second),
-                cv::Vec4i(g_lines[2].golde_points[0].first, g_lines[2].golde_points[0].second,
-                    g_lines[2].golde_points[1].first, g_lines[2].golde_points[1].second));
-        }
-
-        cv::Point2f golden_p21, golden_p22;
-        if (g_lines[3].golde_points.size() >= 2 &&
-            g_lines[4].golde_points.size() >= 2 &&
-            g_lines[5].golde_points.size() >= 2) {
-            golden_p21 = getCrossPoint(
-                cv::Vec4i(g_lines[3].golde_points[0].first, g_lines[3].golde_points[0].second,
-                    g_lines[3].golde_points[1].first, g_lines[3].golde_points[1].second),
-                cv::Vec4i(g_lines[4].golde_points[0].first, g_lines[4].golde_points[0].second,
-                    g_lines[4].golde_points[1].first, g_lines[4].golde_points[1].second));
-            golden_p22 = getCrossPoint(
-                cv::Vec4i(g_lines[4].golde_points[0].first, g_lines[4].golde_points[0].second,
-                    g_lines[4].golde_points[1].first, g_lines[4].golde_points[1].second),
-                cv::Vec4i(g_lines[5].golde_points[0].first, g_lines[5].golde_points[0].second,
-                    g_lines[5].golde_points[1].first, g_lines[5].golde_points[1].second));
-        }
-
-//        auto get_cross = [&](std::vector<std::pair<cv::Point2f, cv::Point2f>> ) -> {
-
-//        };
-
-        for(;;) {
-            if (!camera_enable) {
-                p_cam->StopGrabbing();
-                qDebug() << "video cap stoped, frames " <<  frame_cnt;
-                return;
-            }
-
-            ret = p_cam->GetImageBuffer(&frame, 1000);
-            if (ret != MV_OK) {
-                spdlog::debug("No data {:#x}", ret);
-                p_cam->StopGrabbing();
-                return;
-            }
-             cv::Mat grayimg, color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3);
-             cv::Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-             cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-             cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
-
-             cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-             cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
-             std::vector<cv::Vec2f> lines_found;
-
-            ret = p_cam->FreeImageBuffer(&frame);
-            if (ret != MV_OK) {
-                spdlog::debug("free img buffer failed!");
-                p_cam->StopGrabbing();
-                return;
-            }
-
-           Process(grayimg, edge, contours_img, lines_found);
-
-           if (!FilterLines(edge, lines_found)) {
-               frame_cnt++;
-               continue;
-           }
-
-            qDebug("g_lines.points_in_img %d, %d, %d, %d, %d, %d",
-                    g_lines[0].points_in_img.size(),
-                    g_lines[1].points_in_img.size(),
-                    g_lines[2].points_in_img.size(),
-                    g_lines[3].points_in_img.size(),
-                    g_lines[4].points_in_img.size(),
-                    g_lines[5].points_in_img.size());
-
-            cv::Point2f p1, p2;
-            float dist = 0.0, delta_x = 0.0, delta_x2 = 0.0;
-            cv::Point2f p_mid;
-            if (g_lines[0].points_in_img.size() >= 2 &&
-                g_lines[1].points_in_img.size() >= 2 &&
-                g_lines[2].points_in_img.size() >= 2) {
-                p1 = getCrossPoint(
-                    cv::Vec4i(g_lines[0].points_in_img[0].first, g_lines[0].points_in_img[0].second,
-                        g_lines[0].points_in_img[1].first, g_lines[0].points_in_img[1].second),
-                    cv::Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
-                        g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
-                p2 = getCrossPoint(
-                    cv::Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
-                        g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
-                    cv::Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
-                        g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
-                
-                // dist  = getDist_P2L(p_mid, cv::Point2f(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second),
-                //     cv::Point2f(g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
-            
-                // if (cos(g_lines[1].lines_filterd[0].second) != 0.0 && sin(g_lines[1].lines_filterd[0].second) != 0.0) {
-                //     delta_x = dist / cos(g_lines[1].lines_filterd[0].second);
-                //     delta_x2 = dist / sin(g_lines[1].lines_filterd[0].second);
-                // }
-            }
-
-            cv::Point2f p21, p22;
-            cv::Point2f p_mid2;
-            if (g_lines[3].points_in_img.size() >= 2 &&
-                g_lines[4].points_in_img.size() >= 2 &&
-                g_lines[5].points_in_img.size() >= 2) {
-                p21 = getCrossPoint(
-                    cv::Vec4i(g_lines[3].points_in_img[0].first, g_lines[3].points_in_img[0].second,
-                        g_lines[3].points_in_img[1].first, g_lines[3].points_in_img[1].second),
-                    cv::Vec4i(g_lines[4].points_in_img[0].first, g_lines[4].points_in_img[0].second,
-                        g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second));
-                p22 = getCrossPoint(
-                    cv::Vec4i(g_lines[4].points_in_img[0].first, g_lines[4].points_in_img[0].second,
-                        g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second),
-                    cv::Vec4i(g_lines[5].points_in_img[0].first, g_lines[5].points_in_img[0].second,
-                        g_lines[5].points_in_img[1].first, g_lines[5].points_in_img[1].second));
-                
-                // dist  = getDist_P2L(p_mid, cv::Point2f(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second),
-                //     cv::Point2f(g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
-            
-                // if (cos(g_lines[1].lines_filterd[0].second) != 0.0 && sin(g_lines[1].lines_filterd[0].second) != 0.0) {
-                //     delta_x = dist / cos(g_lines[1].lines_filterd[0].second);
-                //     delta_x2 = dist / sin(g_lines[1].lines_filterd[0].second);
-                // }
-            }
-
-            p_mid = cv::Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
-            p_mid2 = cv::Point2f((p21.x + p22.x)/2, (p21.y + p22.y) /2);
-            // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
-            cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p_mid, cv::Scalar(255,255,0), 3, 20, 8);
-
-            cv::drawMarker(color_img, p21, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p22, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p_mid2, cv::Scalar(255,255,0), 3, 20, 8);
-
-            cv::line(color_img, p1, p2, cv::Scalar(0,255,255), 4);
-            cv::line(color_img, p21, p22, cv::Scalar(0,255,255), 4);
-
-            // cv::Point2f p_mid_golden = cv::Point2f((golden_p1.x + golden_p2.x)/2, (golden_p1.y + golden_p2.y) /2);
-            // cv::drawMarker(color_img, golden_p1, cv::Scalar(255,0,0), 3, 20, 8);
-            // cv::drawMarker(color_img, golden_p2, cv::Scalar(255,0,0), 3, 20, 8);
-            // cv::drawMarker(color_img, p_mid_golden, cv::Scalar(255,0,0), 3, 20, 8);
-//            qDebug("abs edge length %f pix, %f pix per ms",
-//               sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
-//                   srtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
-
-            // qDebug("abs edge length %f pix, %f pix per ms",
-            //     sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
-            //         sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
-            
-            // qDebug("delta x %.2f, delta x2 %.2f", delta_x, delta_x2 / 5.98);
-            cv::line(color_img, p_mid, p_mid2, cv::Scalar(0,255,255), 4);
-
-            // float golden_ang = std::atan((golden_p2.y - golden_p1.y) /  (golden_p2.x - golden_p1.x));
-            // spdlog::debug("golden p {},{},  {},{}, ang {}", golden_p1.x, golden_p1.y, golden_p2.x, golden_p2.y, golden_ang);
-            // cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
-            //            cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
-            // cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
-            //            cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
-
-            emit signal_refresh_img(color_img);
-
-//            emit signal_refresh_delta(0.0f, 1.1f, golden_ang - g_lines[1].lines_filterd[0].second, p_mid_golden.x - p_mid.x, p_mid_golden.y - p_mid.y);
-
-            // qDebug() << "video, frames " <<  frame_cnt;
+        if (!FilterLines(edge_up, lines_found_up, true)) {
             frame_cnt++;
-//            waitKey(10);
         }
-    } else {
-        p_cam->StopGrabbing();
-        qDebug() << "video exit, frames " <<  frame_cnt;
-        return;
+        // qDebug("lines_found_up size %d,", lines_found_up.size());
+
+        Process(grayimg, edge_down, contours_img, lines_found_down, DOWN_LINE);
+
+        if (!FilterLines(edge_down, lines_found_down, false)) {
+            frame_cnt++;
+        }
+        // qDebug("lines_found_down size %d,", lines_found_down.size());
+
+
+    //            qDebug("g_lines.points_in_img %d, %d, %d, %d, %d, %d",
+    //                    g_lines[0].points_in_img.size(),
+    //                    g_lines[1].points_in_img.size(),
+    //                    g_lines[2].points_in_img.size(),
+    //                    g_lines[3].points_in_img.size(),
+    //                    g_lines[4].points_in_img.size(),
+    //                    g_lines[5].points_in_img.size());
+
+        cv::Point2f p1, p2;
+        float dist = 0.0, delta_x = 0.0, delta_x2 = 0.0;
+        cv::Point2f p_mid;
+        if (g_lines[0].points_in_img.size() >= 2 &&
+            g_lines[1].points_in_img.size() >= 2 &&
+            g_lines[2].points_in_img.size() >= 2) {
+            p1 = getCrossPoint(
+                cv::Vec4i(g_lines[0].points_in_img[0].first, g_lines[0].points_in_img[0].second,
+                    g_lines[0].points_in_img[1].first, g_lines[0].points_in_img[1].second),
+                cv::Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
+                    g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
+            p2 = getCrossPoint(
+                cv::Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
+                    g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
+                cv::Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
+                    g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
+        }
+
+        cv::Point2f p21, p22;
+        cv::Point2f p_mid2;
+        if (g_lines[3].points_in_img.size() >= 2 &&
+            g_lines[4].points_in_img.size() >= 2 &&
+            g_lines[5].points_in_img.size() >= 2) {
+            p21 = getCrossPoint(
+                cv::Vec4i(g_lines[3].points_in_img[0].first, g_lines[3].points_in_img[0].second,
+                    g_lines[3].points_in_img[1].first, g_lines[3].points_in_img[1].second),
+                cv::Vec4i(g_lines[4].points_in_img[0].first, g_lines[4].points_in_img[0].second,
+                    g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second));
+            p22 = getCrossPoint(
+                cv::Vec4i(g_lines[4].points_in_img[0].first, g_lines[4].points_in_img[0].second,
+                    g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second),
+                cv::Vec4i(g_lines[5].points_in_img[0].first, g_lines[5].points_in_img[0].second,
+                    g_lines[5].points_in_img[1].first, g_lines[5].points_in_img[1].second));
+        }
+
+        p_mid = cv::Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
+        p_mid2 = cv::Point2f((p21.x + p22.x)/2, (p21.y + p22.y) /2);
+        // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
+        cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
+        cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
+        cv::drawMarker(color_img, p_mid, cv::Scalar(0,255,255), 3, 20, 8);
+
+        cv::drawMarker(color_img, p21, cv::Scalar(0,255,0), 3, 20, 8);
+        cv::drawMarker(color_img, p22, cv::Scalar(0,255,0), 3, 20, 8);
+        cv::drawMarker(color_img, p_mid2, cv::Scalar(255,255,0), 3, 20, 8);
+
+        cv::line(color_img, p1, p2, cv::Scalar(0,255,255), 4);
+        cv::line(color_img, p21, p22, cv::Scalar(255,255,0), 4);
+        cv::line(color_img, p_mid, p_mid2, cv::Scalar(0,255,255), 4);
+
+        auto mach_p_up = PointsImg2Mach(p1, p2);
+        auto mach_p_down = PointsImg2Mach(p21, p22);
+
+        auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
+        auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
+
+        mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
+        mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
+
+        X2_MACH.first = configData.x2_rho;
+        X1_MACH.first = 1020.0 + configData.x2_rho;
+
+        std::pair<double, double> x2_corss_up = getCrossPoint(mach_hline_up, X2_MACH);
+        std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
+
+        std::pair<double, double> x1_corss_up = getCrossPoint(mach_hline_up, X1_MACH);
+        std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
+
+        double dist_x2 = sqrtf(pow(x2_corss_up.first - x2_corss_down.first, 2) + pow(x2_corss_up.second - x2_corss_down.second, 2));
+        double dist_x1 = sqrtf(pow(x1_corss_up.first - x1_corss_down.first, 2) + pow(x1_corss_up.second - x1_corss_down.second, 2));
+
+        if (x2_corss_up.second < x2_corss_down.second) {
+            dist_x2 = -dist_x2;
+        }
+
+        if (x1_corss_up.second < x1_corss_up.second) {
+            dist_x1 = -dist_x1;
+        }
+
+        // std::pair<double, double> x1 = rotateHoughLine(
+        //     mach_hline_up.first, mach_hline_up.second, mach_hline_up.second - mach_hline_down.second,
+        //     rot_mid_up);
+
+        // std::pair<double, double> rot_mid_down((mach_p_down.first.x + mach_p_down.second.x)/2, (mach_p_down.first.y + mach_p_down.second.y)/2);
+
+        // std::pair<double, double> after_rot_line = rotateHoughLine(
+        //     mach_hline_down.first, mach_hline_down.second, mach_hline_down.second - mach_hline_up.second,
+        //     rot_mid_down);
+
+
+        // cv::Point2f p_mid_golden = cv::Point2f((golden_p1.x + golden_p2.x)/2, (golden_p1.y + golden_p2.y) /2);
+        // cv::drawMarker(color_img, golden_p1, cv::Scalar(255,0,0), 3, 20, 8);
+        // cv::drawMarker(color_img, golden_p2, cv::Scalar(255,0,0), 3, 20, 8);
+        // cv::drawMarker(color_img, p_mid_golden, cv::Scalar(255,0,0), 3, 20, 8);
+    //            qDebug("abs edge length %f pix, %f pix per ms",
+    //               sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
+    //                   srtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
+
+        // qDebug("abs edge length %f pix, %f pix per ms",
+        //     sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2)),
+        //         sqrtf(pow(golden_p1.x - golden_p2.x, 2) + pow(golden_p1.y - golden_p2.y, 2))/ 198);
+        
+        // qDebug("delta x %.2f, delta x2 %.2f", delta_x, delta_x2 / 5.98);
+        
+
+        // float golden_ang = std::atan((golden_p2.y - golden_p1.y) /  (golden_p2.x - golden_p1.x));
+        // spdlog::debug("golden p {},{},  {},{}, ang {}", golden_p1.x, golden_p1.y, golden_p2.x, golden_p2.y, golden_ang);
+        // cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
+        //            cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
+        // cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
+        //            cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
+
+        emit signal_refresh_img(color_img);
+
+        emit signal_refresh_delta(
+            dist_x2, dist_x1,
+            mach_hline_up.second - mach_hline_down.second,
+            p_mid.x - p_mid2.x, p_mid.y - p_mid2.y);
+        
+        frame_cnt++;
     }
 
+    p_cam->StopGrabbing();
     return;
 }
 
@@ -538,14 +520,6 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
                     //     }
                     // }
             }
-
-            // QImage qimg = QImage((const unsigned char*)(edge.data),
-            //                                 edge.cols,
-            //                                 edge.rows,
-            //                                 edge.step,
-            //                                 // QImage::Format_BGR888).copy();
-            //                                 QImage::Format_Grayscale8).copy();
-            // pt3->setPixmap(QPixmap::fromImage(qimg).scaled(pt->size(), Qt::KeepAspectRatio));
 
             emit signal_refresh_img(color_img);
 

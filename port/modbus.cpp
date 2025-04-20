@@ -206,7 +206,7 @@ void ModbusPort::slot_readReadyCoils()
     {
         const QModbusDataUnit unit = reply->result();
         vAllData = unit.values();
-        qDebug("read ceil %d", vAllData);
+//        qDebug("read ceil %d", vAllData);
         emit signal_readCoils(vAllData);
     }
     else

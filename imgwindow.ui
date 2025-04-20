@@ -230,6 +230,41 @@
     <string/>
    </property>
   </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
+     <y>270</y>
+     <width>161</width>
+     <height>89</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
+     <widget class="QLineEdit" name="sep1x"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="sep1y"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLineEdit" name="sep2x"/>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="sep2y">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" colspan="2">
+     <widget class="QPushButton" name="sep_but">
+      <property name="text">
+       <string>seprate line</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

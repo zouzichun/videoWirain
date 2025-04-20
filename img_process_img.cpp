@@ -52,7 +52,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam) {
             std::vector<cv::Vec2f> lines_found;
             Process(grayimg, edge, contours_img, lines_found);
 
-            if (!FilterLines(edge, lines_found)) {
+            if (!FilterLines(edge, lines_found, true)) {
                 frame_cnt++;
                 continue;
             }

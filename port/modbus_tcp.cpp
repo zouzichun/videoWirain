@@ -79,27 +79,69 @@ bool ModbusTcp::readModbusData(int typeNum,int startAdd, quint16 numbers) {
     }
     qDebug("readModbusData typeNum: %d, start addr %d, numbers %d", typeNum, startAdd, numbers);
 
+    {
+        std::lock_guard<std::mutex> lg(mtx);
+        rdy_data = 0;
+        rdy_flag = false;
+    }
     //多读
     if(auto *reply = m_modbustcp->sendReadRequest(ReadUnit,1)) {
-
-        while (!reply->isFinished())
-        if(!reply->isFinished()) {
-            if((typeNum == 1) || (typeNum == 2)) {
-                QObject::connect(reply,&QModbusReply::finished,this,&ModbusTcp::slot_readReadyCoils);   //读取线圈
-            }
-            if((typeNum == 3) || (typeNum == 4)) {
-                QObject::connect(reply,&QModbusReply::finished,this,&ModbusTcp::slot_readReadyRegisters);   //读取寄存器
-            }
-            //reply->deleteLater();
-            return true;
-        } else {
-            reply->deleteLater();
+        if(!reply) {
+            qDebug("读取保持/输入寄存器错误");
             return false;
         }
-    } else {
-        qDebug("读取错误: %s", m_modbustcp->errorString().toStdString().c_str());
-        return false;
+
+        while (!reply->isFinished());
+
+        if(reply->error() == QModbusDevice::NoError) {
+            const QModbusDataUnit unit = reply->result();
+            auto valueList = unit.values();
+            int nSize = valueList.size();
+            if(nSize == 2) {
+                quint16 uData16[2] = {0};
+                uData16[0] = valueList[0];
+                uData16[1] = valueList[1];
+
+                uint32_t resultNum = uData16[1];
+                resultNum = resultNum << 16;
+                resultNum |= uData16[0];
+
+                // Debug("read register h: %x, l: %x, val %x", resultNum >> 16, resultNum & 0xffff, resultNum);
+                float val = 0.0;
+                memcpy(&val, &resultNum, sizeof(float));
+
+                std::lock_guard<std::mutex> lg(mtx);
+                {
+                    rdy_data = val;
+                    rdy_flag = true;
+                }
+
+                qDebug("read register h: %x, l: %x, val %f", resultNum >> 16, resultNum & 0xffff, val);
+            } else {
+                qDebug("保持寄存器返回数据错误,个数: %d", nSize);
+            }
+        }
+        reply->deleteLater();
     }
+
+//        // while (!reply->isFinished())
+//        if(!reply->isFinished()) {
+//            if((typeNum == 1) || (typeNum == 2)) {
+//                QObject::connect(reply,&QModbusReply::finished,this,&ModbusTcp::slot_readReadyCoils);   //读取线圈
+//            }
+//            if((typeNum == 3) || (typeNum == 4)) {
+//                QObject::connect(reply,&QModbusReply::finished,this,&ModbusTcp::slot_readReadyRegisters);   //读取寄存器
+//            }
+//            //reply->deleteLater();
+//            return true;
+//        } else {
+//            reply->deleteLater();
+//            return false;
+//        }
+//    } else {
+//        qDebug("读取错误: %s", m_modbustcp->errorString().toStdString().c_str());
+//        return false;
+//    }
 
     return false;
 }

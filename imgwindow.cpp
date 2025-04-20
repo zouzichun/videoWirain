@@ -43,6 +43,16 @@ void imgWindow::on_sel1_clicked()
     position = 0;
 }
 
+
+void imgWindow::on_sep_but_clicked()
+{
+    if (!sep_enable)
+        ui->sep_but->setText(QString("sep end"));
+    else
+        ui->sep_but->setText(QString("sep start"));
+    sep_enable = ~sep_enable;
+}
+
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
 extern std::vector<Lines> g_lines;
 
@@ -100,6 +110,55 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
                 }
             }
         }
+    }
+
+    if (sep_enable) {
+        if (event->QEvent::MouseButtonPress) {
+            QPoint pppt = event->globalPos();
+            QPoint ppp = ui->img_label->mapFromGlobal(pppt);
+
+            float ppx = ppp.x();
+            float ppy = ppp.y();
+            ppx = ppx * SCALE;
+            ppy = ppy * SCALE;
+
+            switch (position % 2) {
+                case 0:
+                    ui->sep1x->setText(QString::number(ppx));
+                    ui->sep1y->setText(QString::number(ppy));
+                    ui->sep2x->setText(QString::number(0));
+                    ui->sep2y->setText(QString::number(0));
+                    position++;
+                    break;
+                case 1:
+                    ui->sep2x->setText(QString::number(ppx));
+                    ui->sep2y->setText(QString::number(ppy));
+                    position++;
+                break;
+                default:
+                    break;
+            }
+
+            if (position % 2 == 0) {
+                position = 0;
+                Lines line = {};
+                std::vector<float>  p11{ui->sep1x->text().toFloat(), ui->sep1y->text().toFloat()};
+                std::vector<float>  p12{ui->sep2x->text().toFloat(), ui->sep2y->text().toFloat()};
+                cv::Point2f p1(p11[0], p11[1]);
+                cv::Point2f p2(p12[0], p12[1]);
+                auto tmp = PointsToHoughParams(p1, p2);
+                configData.seprate_rho = tmp.first;
+                configData.seprate_theta = tmp.second;
+                auto tt = HoughToPoints(configData.seprate_rho, configData.seprate_theta);
+                configData.seprate_p1x = tt.first.x;
+                configData.seprate_p1y = tt.first.y;
+                configData.seprate_p2x = tt.second.x;
+                configData.seprate_p2y = tt.second.y;
+                spdlog::info("seprate p1 ({},{}), p2 ({},{}), rho {}, theta {}", configData.seprate_p1x, configData.seprate_p1y,
+                    configData.seprate_p2x, configData.seprate_p2y, configData.seprate_rho, configData.seprate_theta);
+            }
+        }
+
     }
 }
 
@@ -202,3 +261,4 @@ void imgWindow::on_mach2img_clicked()
     ui->x2_img->setText(QString::number(x2_img));
     ui->y2_img->setText(QString::number(y2_img));
 }
+

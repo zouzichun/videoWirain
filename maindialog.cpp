@@ -78,8 +78,6 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
     connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection); // 或 QueuedConnection
 
-
-
     imgw = new imgWindow();
     connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::CameraCalTest, Qt::QueuedConnection);
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
@@ -190,6 +188,8 @@ void MainDialog::saveImgParam()
     sets.setValue("b",QString::number(configData.b, 'f', 6));
     sets.setValue("c",QString::number(configData.c, 'f', 6));
     sets.setValue("d",QString::number(configData.d, 'f', 6));
+    sets.setValue("seprate_rho",QString::number(configData.seprate_rho, 'f', 3));
+    sets.setValue("seprate_theta",QString::number(configData.seprate_theta, 'f', 3));
 
     sets.sync();
 }
@@ -254,6 +254,20 @@ void MainDialog::loadConfigFile()
     configData.b = sets.value("b",defaultSetting.b).toFloat();
     configData.c = sets.value("c",defaultSetting.c).toFloat();
     configData.d = sets.value("d",defaultSetting.d).toFloat();
+
+    configData.seprate_rho = sets.value("seprate_rho",defaultSetting.seprate_rho).toFloat();
+    configData.seprate_theta = sets.value("seprate_theta",defaultSetting.seprate_theta).toFloat();
+    auto tt = HoughToPoints(configData.seprate_rho, configData.seprate_theta);
+    configData.seprate_p1x = tt.first.x;
+    configData.seprate_p1y = tt.first.y;
+    configData.seprate_p2x = tt.second.x;
+    configData.seprate_p2y = tt.second.y;
+    spdlog::info("config seprate points ({},{}), ({},{}), rho {}, theta {}", configData.seprate_p1x, configData.seprate_p1y,
+        configData.seprate_p2x, configData.seprate_p2y, configData.seprate_rho, configData.seprate_theta);
+
+    configData.x2_rho = sets.value("x2_rho",defaultSetting.x2_rho).toFloat();
+    configData.motor_rho = sets.value("motor_rho",defaultSetting.motor_rho).toFloat();
+    spdlog::info("config x2_rho {}, motor_rho {}", configData.x2_rho, configData.motor_rho);
 
     std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
     std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
@@ -397,18 +411,16 @@ void MainDialog::on_bnOpen_clicked()
             m_ui->tbGain->setEnabled(false);
             m_ui->tbFrameRate->setEnabled(false);
             m_imgproc->camera_enable = false;
-            emit cameraStart(v.handler);
+            emit cameraStart(v.handler, m_port);
         } else {
             v.is_opened = true;
             m_ui->bnOpen->setText("关闭");
             m_ui->tbExposure->setEnabled(true);
             m_ui->tbGain->setEnabled(true);
             m_ui->tbFrameRate->setEnabled(true);
-
             v.timer->stop();
-
             m_imgproc->camera_enable = true;
-            emit cameraStart(v.handler);
+            emit cameraStart(v.handler, m_port);
         }
     }
 }

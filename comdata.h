@@ -54,6 +54,16 @@ typedef struct {
     float c;
     float d;
 
+    float seprate_rho;
+    float seprate_theta;
+    int seprate_p1x;
+    int seprate_p1y;
+    int seprate_p2x;
+    int seprate_p2y;
+
+    float x2_rho;
+    float motor_rho;
+
     // configured store lines for img filter
     // could be changed during calibration
     QString line_angs;

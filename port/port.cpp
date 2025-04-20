@@ -171,3 +171,11 @@ void Port::parseMsg(int buff_idx)
 void Port::thd_msleep(uint32_t ms) {
     QThread::msleep(ms);
 }
+
+void Port::ClearFlagData() {
+    std::lock_guard<std::mutex> lg(mtx);
+    {
+        rdy_data = 0.0f;
+        rdy_flag = false;
+    }
+}

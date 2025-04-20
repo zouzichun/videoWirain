@@ -13,13 +13,26 @@
 #include <opencv2/opencv.hpp>
 #include "MvCamera.h"
 #include "comdata.h"
+#include "port/port.h"
 
 extern std::vector<Lines> g_lines;
 float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
-std::pair<double, double> PointsToHoughParams(cv::Point p1, cv::Point p2);
+std::pair<cv::Point2f, cv::Point2f> HoughToPoints(double rho, double theta);
+std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta, int width, int height);
+std::pair<double, double> PointsToHoughParams(cv::Point2f p1, cv::Point2f p2);
 std::pair<double, double> rotateHoughLine(double rho, double theta, double rotate_rad, std::pair<double, double> center);
 cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
 std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta, int width, int height);
+std::pair<cv::Point2f, cv::Point2f> PointsImg2Mach(cv::Point2f p1, cv::Point2f p2);
+std::pair<cv::Point2f, cv::Point2f> PointsMach2Img(cv::Point2f p1, cv::Point2f p2);
+bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p);
+std::pair<double, double> getCrossPoint(std::pair<double, double> line1, std::pair<double, double> line2);
+
+enum {
+    UP_LINE = 0,
+    DOWN_LINE,
+    FULL_IMG
+};
 
 class ImgProcess : public QObject
 {
@@ -35,20 +48,18 @@ public:
     void imgProcTimeout();
     static bool CameraDemo(bool & enable, QImage & img, QLineEdit * x, QLineEdit * y, float * delta, float * delta_ang, CMvCamera* p_cam);
     bool CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit * y, CMvCamera* p_cam);
-    // bool Process(cv::Mat &img, cv::Mat &out_img, QImage & qimg);
-    static bool Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contours_img, std::vector<cv::Vec2f> & lines_found);
+    static bool Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contours_img, std::vector<cv::Vec2f> & lines_found, int up = FULL_IMG);
     static bool FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         std::vector<float> & rhos,
         std::vector<float> & thetas,
         std::vector<cv::Point2i> & points);
-    bool FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found);
+    bool FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found, bool up = true);
     static bool AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         std::vector<float> & rhos,
         std::vector<float> & thetas);
 
     int max_hash_win_x = 0;
     int max_hash_win_y = 0;
-
 
     volatile bool camera_enable;
     int IMG_HEIGHT = 2048;
@@ -61,7 +72,7 @@ signals:
     void signal_refresh_cal_img(cv::Mat img);
 
 public slots:
-    void CameraTest(CMvCamera* p_cam);
+    void CameraTest(CMvCamera* p_cam, Port * p_port);
     void CameraCalTest(CMvCamera* p_cam);
     void ImageTest(CMvCamera* p_cam);
     void ImageCalTest(CMvCamera* p_cam);

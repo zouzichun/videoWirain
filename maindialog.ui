@@ -364,7 +364,7 @@
      <x>10</x>
      <y>10</y>
      <width>721</width>
-     <height>167</height>
+     <height>191</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -431,58 +431,78 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_4">
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="p_y"/>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="delta_mm"/>
+      </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>毫米</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="5">
-       <layout class="QHBoxLayout" name="horizontalLayout"/>
-      </item>
-      <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>中心偏差</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>X1/X2</string>
-        </property>
-       </widget>
+      <item row="2" column="5">
+       <layout class="QHBoxLayout" name="horizontalLayout"/>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="delta_mm"/>
-      </item>
-      <item row="2" column="1">
        <widget class="QLineEdit" name="p_x">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
+      <item row="3" column="4">
+       <widget class="QLineEdit" name="d_ang"/>
+      </item>
       <item row="2" column="2">
-       <widget class="QLineEdit" name="p_y"/>
+       <widget class="QLineEdit" name="x2"/>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="x1"/>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>毫米</string>
+        </property>
+       </widget>
       </item>
-      <item row="2" column="3">
+      <item row="3" column="3">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>角度</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="x2"/>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>X1/X2</string>
+        </property>
+       </widget>
       </item>
-      <item row="2" column="4">
-       <widget class="QLineEdit" name="d_ang"/>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="x1"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>X2 RHO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="x2_rho"/>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLineEdit" name="moto_rho"/>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Motor RHO</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -492,21 +512,21 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>160</y>
+     <y>190</y>
      <width>721</width>
-     <height>401</height>
+     <height>371</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_4">
     <item>
-     <widget class="QLabel" name="painter">
+     <widget class="QLabel" name="painter_2">
       <property name="text">
        <string/>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="painter_2">
+     <widget class="QLabel" name="painter">
       <property name="text">
        <string/>
       </property>

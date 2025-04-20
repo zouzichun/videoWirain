@@ -64,6 +64,10 @@ const ConfigData defaultSetting {
     .b=12.0,
     .c=13.0,
     .d=14.0,
+    .seprate_rho=1234.1,
+    .seprate_theta=1.5,
+    .x2_rho = 330.0,
+    .motor_rho = 23.0,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
 };
@@ -71,7 +75,8 @@ const ConfigData defaultSetting {
 typedef struct {
     std::string name = {};
     int index = 0;
-    bool is_opened = false;
+    volatile bool is_opened = false;
+    volatile int status = -1;
     CMvCamera *handler = nullptr;
     QTimer * timer = nullptr;
     MVCC_FLOATVALUE stFloatValue1;
@@ -111,7 +116,7 @@ public:
 
 signals:
     void sendMsgWait(const QByteArray &val);
-    void cameraStart(CMvCamera* handler);
+    void cameraStart(CMvCamera* handler, Port * p_port);
     void cameraCalStart(CMvCamera* handler);
 
 private slots:
