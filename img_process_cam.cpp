@@ -182,6 +182,10 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         auto mach_start = PointsToHoughParams(cv::Point2f(0, configData.x2_start),
             cv::Point2f(315, configData.x1_start));
 
+        auto img_points = PointsMach2Img(cv::Point2f(0, configData.x2_start), cv::Point2f(315, configData.x1_start));
+        auto mach_pp = PointsImg2Mach(img_points.first, img_points.second);
+        auto mach_start_pp = PointsToHoughParams(mach_pp.first, mach_pp.second);
+
         auto img_start = PointsMach2Img(cv::Point2f(0, configData.x2_start),
                                         cv::Point2f(315, configData.x1_start));
         cv::line(color_img, img_start.first, img_start.second,
@@ -231,183 +235,6 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     p_cam->StopGrabbing();
     return;
 }
-
-bool ImgProcess::CameraDemo(bool & enable, QImage & qimg, QLineEdit * x, QLineEdit * y, float * delta, float * delta_ang, CMvCamera* p_cam) {
-    // namedWindow("video", WINDOW_KEEPRATIO | WINDOW_NORMAL);
-    int ret = p_cam->StartGrabbing();
-    if (ret) {
-        spdlog::error("Start Grabing failed!");
-        return false;
-    }
-
-    // ch:获取数据包大小 | en:Get payload size
-    MVCC_INTVALUE_EX stParam;
-    memset(&stParam, 0, sizeof(MVCC_INTVALUE_EX));
-    ret = p_cam->GetIntValue("PayloadSize", &stParam);
-    if (MV_OK != ret)
-    {
-        spdlog::error("Get PayloadSize fail! {}", ret);
-        p_cam->StopGrabbing();
-        return false;
-    } else {
-        spdlog::debug("Get PayloadSize {}", stParam.nCurValue);
-    }
-    MV_FRAME_OUT frame;
-    memset(&frame, 0, sizeof(MV_FRAME_OUT));
-    int frame_cnt = 0;
-
-    for(;;) {
-        if (!enable) {
-            p_cam->StopGrabbing();
-            spdlog::debug("video exit");
-            return false;
-        }
-
-        ret = p_cam->GetImageBuffer(&frame, 1000);
-        if (ret != MV_OK)
-        {
-            spdlog::debug("No data {}", ret);
-            p_cam->StopGrabbing();
-            return false;
-        }
-
-         const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
-         const int IMG_WIDTH = frame.stFrameInfo.nWidth;
-         cv::Mat grayimg, color_img;
-         cv::Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-         cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-         cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
-
-         cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-         cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
-         std::vector<cv::Vec2f> lines_found;
-         Process(grayimg, edge, contours_img, lines_found);
-         
-         std::vector<float> rhos(2);
-         std::vector<float> thetas(2);
-         std::vector<cv::Point2i> points;
-
-         if (!AdaptLines(edge, lines_found, rhos, thetas)) {
-             spdlog::debug("adapt lines failed!");
-             // p_cam->StopGrabbing();
-             continue;
-         }
-
-         ret = p_cam->FreeImageBuffer(&frame);
-         if (ret != MV_OK) {
-             spdlog::debug("free img buffer failed!");
-             p_cam->StopGrabbing();
-             return false;
-         }
-
-         std::vector<cv::Vec4i> lines;
-         for (int pos = 0; pos < 2; pos++)
-         {
-             float rho = rhos[pos];
-             float theta = thetas[pos];
-             // qDebug("line %d rho %f, theta %f, cnt %d", pos, rho, theta, cnts[pos]);
-                 //直线与第一行的交叉点
-                 cv::Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
-                 //直线与最后一行的交叉点
-                 cv::Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
-                 cv::line(color_img, pt1, pt2, cv::Scalar(0,0,255), 2);
-                 if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
-                     if (pt1.y > pt2.y) {
-                         lines.push_back(cv::Vec4i(pt2.x, pt2.y, pt1.x, pt1.y));
-                     } else {
-                         lines.push_back(cv::Vec4i(pt1.x, pt1.y, pt2.x, pt2.y));
-                     }
-                 }
-         }
-
-         double ka, kb;
-         ka = (double)(lines[0][3] - lines[0][1]) / (double)(lines[0][2] - lines[0][0]); //求出LineA斜率
-         kb = (double)(lines[1][3] - lines[1][1]) / (double)(lines[1][2] - lines[1][0]); //求出LineB斜率
-
-         cv::Point2f p;
-         p.x = (ka*lines[0][0] - lines[0][1] - kb*lines[1][0] + lines[1][1]) / (ka - kb);
-         p.y = (ka*kb*(lines[0][0] - lines[1][0]) + ka*lines[1][1] - kb*lines[0][1]) / (ka - kb);
-         // qDebug("ka %f, kb %f, p (%f, %f)", ka, kb, p.x, p.y);
-
-         cv::Point2i p_int(int(p.x), int(p.y));
-         cv::Point2i line1p, line2p;
-         if (configData.line1_sel_low == 0) {
-             if (lines[0][1] < lines[0][3]) {
-                 line1p.x = lines[0][2];
-                 line1p.y = lines[0][3];
-             } else {
-                 line1p.x = lines[0][0];
-                 line1p.y = lines[0][1];
-             }
-         } else {
-             if (lines[0][1] < lines[0][3]) {
-                 line1p.x = lines[0][0];
-                 line1p.y = lines[0][1];
-             } else {
-                 line1p.x = lines[0][2];
-                 line1p.y = lines[0][3];
-             }
-         }
-
-         if (configData.line2_sel_low == 0) {
-             if (lines[1][1] < lines[1][3]) {
-                 line2p.x = lines[1][2];
-                 line2p.y = lines[1][3];
-             } else {
-                 line2p.x = lines[1][0];
-                 line2p.y = lines[1][1];
-             }
-         } else {
-             if (lines[1][1] < lines[1][3]) {
-                 line2p.x = lines[1][0];
-                 line2p.y = lines[1][1];
-             } else {
-                 line2p.x = lines[1][2];
-                 line2p.y = lines[1][3];
-             }
-         }
-
-         // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
-         cv::drawMarker(color_img, p_int, cv::Scalar(0,255,0), 3, 20, 8);
-         cv::Vec4i base_line1(configData.camera_abs_x, configData.camera_abs_y, configData.point1_x, configData.point1_y);
-         cv::Vec4i base_line2(configData.camera_abs_x, configData.camera_abs_y, configData.point2_x, configData.point2_y);
-         
-         // int tt = (configData.point1_x - configData.point2_x) / (configData.point1_y - configData.point2_y) * (p.y - configData.point2_y) + configData.point2_x;
-         cv::Point2f tgt_p = getCrossPoint(base_line1, base_line2);
-        //  if (tt <= p.x) {
-        //      tgt_p = getCrossPoint(lines[0], base_line1);
-        //  } else {
-        //      tgt_p = getCrossPoint(lines[1], base_line2);
-        //  }
-         // spdlog::debug("  target point {:.2f}:{:.2f}", tgt_p.x, tgt_p.y);
-
-         cv::drawMarker(color_img, tgt_p, cv::Scalar(0,255,255), 3, 20, 8);
-         cv::line(color_img, tgt_p, p_int, cv::Scalar(0,0,255), 5);
-
-         *delta = sqrt(pow(tgt_p.x - p.x, 2) + pow(tgt_p.y - p.y, 2));
-         *delta_ang = ((thetas[0] - ((180 - configData.line1_ang) % 180) * CV_PI / 180) + (thetas[1] - ((180 - configData.line2_ang) % 180) * CV_PI / 180))/2;
-         x->setText(QString(QString::number(p.x, 'f', 1)));
-         y->setText(QString(QString::number(p.y, 'f', 1)));
-
-         cv::line(color_img, cv::Point2i(configData.point1_x, configData.point1_y),
-                     cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)), Scalar(0, 255, 0), 5, CV_AA);
-         cv::line(color_img, cv::Point2i(int(configData.camera_abs_x), int(configData.camera_abs_y)),
-                     cv::Point2i(configData.point2_x, configData.point2_y), Scalar(0, 255, 0), 5, CV_AA);
-
-        //  qimg = QImage((const unsigned char*)(color_img.data),
-        //                      color_img.cols,
-        //                      color_img.rows,
-        //                      color_img.step,
-        //                      // QImage::Format_Grayscale8).copy();
-        //                      QImage::Format_RGB888).copy();
-        frame_cnt++;
-    }
-
-    p_cam->StopGrabbing();
-
-    return true;
-}
-
 
 void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
     int frame_cnt = 0;
@@ -492,7 +319,6 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
             }
 
             emit signal_refresh_img(color_img);
-
             emit signal_refresh_cal_img(edge);
             frame_cnt++;
         }

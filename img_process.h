@@ -62,7 +62,6 @@ public:
     bool Init();
     bool Deinit();
     void imgProcTimeout();
-    static bool CameraDemo(bool & enable, QImage & img, QLineEdit * x, QLineEdit * y, float * delta, float * delta_ang, CMvCamera* p_cam);
     bool CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit * y, CMvCamera* p_cam);
     static bool Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contours_img, std::vector<cv::Vec2f> & lines_found, int up = FULL_IMG);
     static bool FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
