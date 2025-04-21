@@ -89,7 +89,7 @@ signals:
 public slots:
     void CameraTest(CMvCamera* p_cam, Port * p_port);
     void CameraCalTest(CMvCamera* p_cam);
-    void ImageTest(CMvCamera* p_cam);
+    void ImageTest(CMvCamera* p_cam, Port * p_port);
     void ImageCalTest(CMvCamera* p_cam);
 
 private:

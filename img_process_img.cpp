@@ -15,7 +15,15 @@ using namespace cv;
 extern std::vector<Lines> g_lines;
 cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
 
-void ImgProcess::ImageTest(CMvCamera* p_cam) {
+void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
+    cv::VideoCapture cap("/home/wirain/Video_20250421233506358.avi");
+    
+    // 检查是否成功打开
+    if (!cap.isOpened()) {
+        std::cerr << "错误：无法打开视频文件" << std::endl;
+        return;
+    }
+
     int frame_cnt = 0;
     if (camera_enable) {
         frame_cnt = 0;
@@ -25,7 +33,14 @@ void ImgProcess::ImageTest(CMvCamera* p_cam) {
                 qDebug() << "video cap stoped, frames " <<  frame_cnt;
                 return;
             }
-            cv::Mat color_img = cv::imread("../test_img/1.jpg");
+             // 1. 创建视频捕获对象
+
+            // 2. 逐帧读取并显示
+            cv::Mat color_img;
+            cap >> color_img;  // 读取新帧
+            
+            // 检查视频是否结束
+            if (color_img.empty()) break;
 
             const int IMG_HEIGHT = color_img.rows;
             const int IMG_WIDTH = color_img.cols;
@@ -49,6 +64,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam) {
             cv::morphologyEx(hsv, hsv, MORPH_OPEN, kernel, Point(-1,-1), 2);
             cv::cvtColor(hsv, tt_img, COLOR_HSV2RGB);
             cv::cvtColor(tt_img, grayimg, COLOR_RGB2GRAY);
+
             std::vector<cv::Vec2f> lines_found;
             Process(grayimg, edge, contours_img, lines_found);
 
@@ -87,6 +103,10 @@ void ImgProcess::ImageTest(CMvCamera* p_cam) {
         qDebug() << "test img exit, frames " <<  frame_cnt;
         return;
     }
+
+    // 3. 释放资源
+    cap.release();
+    cv::destroyAllWindows();
 
     return;
 }

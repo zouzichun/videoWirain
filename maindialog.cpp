@@ -68,7 +68,6 @@ MainDialog::MainDialog(QWidget *parent) :
     // connect(this->m_monitor_timer,SIGNAL(timeout()),this,SLOT(monitor_thread()));
     m_monitor_timer->stop();
 
-
     m_imgproc = new ImgProcess("image", 2048, 2048, true);
     m_imgproc->moveToThread(&mWorkerThread); //把数据处理类移到线程
     connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
@@ -76,7 +75,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_imgproc, &ImgProcess::signal_refresh_delta,
         this, &MainDialog::camera_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
-    connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection); // 或 QueuedConnection
+    // connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection);
+    connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::ImageTest, Qt::QueuedConnection);
 
     imgw = new imgWindow();
     connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::CameraCalTest, Qt::QueuedConnection);
