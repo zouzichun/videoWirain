@@ -55,6 +55,7 @@ void imgWindow::on_sep_but_clicked()
 
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
 extern std::vector<Lines> g_lines;
+extern std::vector<std::pair<double, double>> g_roi;
 
 void imgWindow::mousePressEvent(QMouseEvent *event) {
     if (cal_enabled) {
@@ -159,6 +160,21 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
         }
 
     }
+
+    if (roi_enable) {
+        if (event->QEvent::MouseButtonPress) {
+            QPoint pppt = event->globalPos();
+            QPoint ppp = ui->img_label->mapFromGlobal(pppt);
+
+            float ppx = ppp.x();
+            float ppy = ppp.y();
+            ppx = ppx * SCALE;
+            ppy = ppy * SCALE;
+
+            g_roi.push_back(std::pair(ppx, ppy));
+            spdlog::info("roi point ({:.2f},{:.2f})", ppx, ppy);
+        }
+    }
 }
 
 void imgWindow::camera_img_refresh(cv::Mat img) {
@@ -259,5 +275,22 @@ void imgWindow::on_mach2img_clicked()
     ui->y1_img->setText(QString::number(y1_img));
     ui->x2_img->setText(QString::number(x2_img));
     ui->y2_img->setText(QString::number(y2_img));
+}
+
+void imgWindow::on_roi_sel_clicked()
+{
+    if (!roi_enable) {
+        ui->roi_sel->setText(QString("roi end"));
+        configData.roi.clear();
+    } else {
+        ui->roi_sel->setText(QString("roi start"));
+        std::stringstream ss;
+        for (const auto v: g_roi) {
+            ss << v.first << "," << v.second << ";";
+        }
+        spdlog::info("roi points: {}", ss.str());
+        configData.roi = QString(ss.str().c_str());;
+    }
+    roi_enable = !roi_enable;
 }
 

@@ -72,6 +72,7 @@ const ConfigData defaultSetting {
     .x2_start = 256.0,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
+    .roi="0,0;0,2047;2047,2047;2047,0",
 };
 
 typedef struct {

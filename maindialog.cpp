@@ -79,7 +79,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::ImageTest, Qt::QueuedConnection);
 
     imgw = new imgWindow();
-    connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::CameraCalTest, Qt::QueuedConnection);
+    // connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::cameraCalTest, Qt::QueuedConnection);
+    connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::ImageCalTest, Qt::QueuedConnection);
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
 
     m_hWnd = (void*)m_ui->painter->winId();
@@ -188,6 +189,7 @@ void MainDialog::saveImgParam()
 
     sets.setValue("line_angs",configData.line_angs);
     sets.setValue("line_rhos",configData.line_rhos);
+    sets.setValue("roi",configData.roi);
     sets.setValue("a",QString::number(configData.a, 'f', 6));
     sets.setValue("b",QString::number(configData.b, 'f', 6));
     sets.setValue("c",QString::number(configData.c, 'f', 6));
@@ -291,6 +293,16 @@ void MainDialog::loadConfigFile()
         g_lines[pos] = l;
         spdlog::info("config ang {} rho {}", l.angle, l.rho);
     }
+
+    configData.roi = sets.value("roi",defaultSetting.roi).toString();
+    std::vector<std::string> rois = split(configData.roi.toStdString(),';');
+    for (int pos =0; pos < rois.size(); pos++) {
+        std::vector<std::string> point = split(rois[pos],',');
+        int x = std::atoi(point[0].c_str());
+        int y = std::atof(point[1].c_str());
+        spdlog::info("config roi {},{} ", x, y);
+    }
+
     m_ui->txbRecv->append("config file loadded!");
 }
 
@@ -412,44 +424,96 @@ void MainDialog::CameraInit() {
     }
 }
 
+static bool g_bExit = false;
 void MainDialog::on_bnOpen_clicked()
 {
-    for (auto & v : m_cameras) {
-        if (v.is_opened) {
-            v.is_opened = false;
+    // for (auto & v : m_cameras) {
+    //     if (v.is_opened) {
+    //         v.is_opened = false;
 
-            v.timer->stop();
+    //         v.timer->stop();
 
-            m_ui->bnOpen->setText("打开");
+    //         m_ui->bnOpen->setText("打开");
 
-            m_ui->tbExposure->setEnabled(false);
-            m_ui->tbGain->setEnabled(false);
-            m_ui->tbFrameRate->setEnabled(false);
-            m_imgproc->camera_enable = false;
-            emit cameraStart(v.handler, m_port);
-        } else {
-            v.is_opened = true;
-            m_ui->bnOpen->setText("关闭");
-            m_ui->tbExposure->setEnabled(true);
-            m_ui->tbGain->setEnabled(true);
-            m_ui->tbFrameRate->setEnabled(true);
-            v.timer->stop();
-            m_imgproc->camera_enable = true;
-            emit cameraStart(v.handler, m_port);
-        }
+    //         m_ui->tbExposure->setEnabled(false);
+    //         m_ui->tbGain->setEnabled(false);
+    //         m_ui->tbFrameRate->setEnabled(false);
+    //         m_imgproc->camera_enable = false;
+    //         emit cameraStart(v.handler, m_port);
+    //     } else {
+    //         v.is_opened = true;
+    //         m_ui->bnOpen->setText("关闭");
+    //         m_ui->tbExposure->setEnabled(true);
+    //         m_ui->tbGain->setEnabled(true);
+    //         m_ui->tbFrameRate->setEnabled(true);
+    //         v.timer->stop();
+    //         m_imgproc->camera_enable = true;
+    //         emit cameraStart(v.handler, m_port);
+    //     }
+    // }
+    if (g_bExit) {
+        m_ui->bnOpen->setText("打开");
+        m_ui->tbExposure->setEnabled(false);
+        m_ui->tbGain->setEnabled(false);
+        m_ui->tbFrameRate->setEnabled(false);
+        m_imgproc->camera_enable = false;
+        emit cameraStart(nullptr, m_port);
+    } else {
+        m_ui->bnOpen->setText("关闭");
+        m_ui->tbExposure->setEnabled(true);
+        m_ui->tbGain->setEnabled(true);
+        m_ui->tbFrameRate->setEnabled(true);
+        m_imgproc->camera_enable = true;
+        emit cameraStart(nullptr, m_port);
     }
+    g_bExit = ~g_bExit;
 }
-
+extern std::vector<std::pair<double, double>> g_roi;
 void MainDialog::on_Calibration_clicked()
 {
-    static bool click_stat = false;
+    bool click_stat = false;
     m_ui->Calibration->setEnabled(true);
-    for (auto & v : m_cameras) {
-        if (v.is_opened) {
-            v.is_opened = false;
-            m_ui->Calibration->setText("校准");
+    // for (auto & v : m_cameras) {
+    //     if (v.is_opened) {
+    //         v.is_opened = false;
+    //         m_ui->Calibration->setText("校准");
+    //         m_imgproc->camera_enable = false;
+    //         emit cameraCalStart(v.handler);
+    //         imgw->hide();
+    //         qDebug() << "g_lines size " << g_lines.size();
+    //         std::stringstream ss_rho, ss_ang;
+    //         for (const auto & v: g_lines) {
+    //             ss_rho << fmt::format("{:.2f}", v.rho);
+    //             ss_rho << fmt::format(",");
+
+    //             ss_ang << fmt::format("{:.2f}", v.angle);
+    //             ss_ang << fmt::format(",");
+    //         }
+    //         std::string line_angs = ss_ang.str();
+    //         std::string line_rhos = ss_rho.str();
+    //         if (!line_angs.empty()) {
+    //             line_angs.pop_back();
+    //         }
+    //         if (!line_rhos.empty()) {
+    //             line_rhos.pop_back();
+    //         }
+    //         configData.line_rhos = QString(line_rhos.c_str());
+    //         configData.line_angs = QString(line_angs.c_str());
+    //         spdlog::info("line angs {}, rhos {}", line_angs, line_rhos);
+    //     } else {
+    //         v.is_opened = true;
+    //          m_ui->Calibration->setText("校准中...");
+    //          imgw->total_lines = 6;
+    //          imgw->show();
+    //          m_imgproc->camera_enable = true;
+    //          emit cameraCalStart(v.handler);
+    //      }
+    // }
+        if (click_stat) {
+            click_stat = false;
             m_imgproc->camera_enable = false;
-            emit cameraCalStart(v.handler);
+            m_ui->Calibration->setText("校准");
+            emit cameraCalStart(nullptr);
             imgw->hide();
             qDebug() << "g_lines size " << g_lines.size();
             std::stringstream ss_rho, ss_ang;
@@ -471,15 +535,22 @@ void MainDialog::on_Calibration_clicked()
             configData.line_rhos = QString(line_rhos.c_str());
             configData.line_angs = QString(line_angs.c_str());
             spdlog::info("line angs {}, rhos {}", line_angs, line_rhos);
+
+            std::stringstream roi;
+            for (const auto & v: g_roi) {
+                roi << fmt::format("{}", v.first);
+                roi << fmt::format(",");
+                roi << fmt::format("{}", v.second);
+                roi << fmt::format(";");
+            }
+            configData.roi = QString(roi.str().c_str());
         } else {
-            v.is_opened = true;
+            click_stat = true;
+            m_imgproc->camera_enable = true;
              m_ui->Calibration->setText("校准中...");
-             imgw->total_lines = 6;
              imgw->show();
-             m_imgproc->camera_enable = true;
-             emit cameraCalStart(v.handler);
+             emit cameraCalStart(nullptr);
          }
-    }
 }
 
 void MainDialog::EnumCamDevice()

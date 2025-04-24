@@ -16,6 +16,7 @@ void spdLogInit();
 
 std::mutex g_mtx;
 std::vector<Lines> g_lines(6);
+std::vector<std::pair<double, double>> g_roi;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

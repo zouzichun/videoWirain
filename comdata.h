@@ -70,6 +70,7 @@ typedef struct {
     // could be changed during calibration
     QString line_angs;
     QString line_rhos;
+    QString roi;
 } ConfigData;
 
 extern ConfigData configData;

@@ -12,15 +12,16 @@
 
 using namespace cv;
 
-cv::Point2f X21(-1959.74, -1716.01);
-cv::Point2f X22(-1970.84, 12.132);
+//cv::Point2f X21(-1959.74, -1716.01);
+//cv::Point2f X22(-1970.84, 12.132);
 
-cv::Point2f X11(-1959.74, -1716.01);
-cv::Point2f X12(-1970.84, 12.132);
+//cv::Point2f X11(-1959.74, -1716.01);
+//cv::Point2f X12(-1970.84, 12.132);
 
-std::pair<double, double> X2_MACH(-330.0, 0.0);
-std::pair<double, double> X1_MACH(690.0, 0.0);
-DataPkt data_pkt;
+extern std::pair<double, double> X2_MACH;
+extern std::pair<double, double> X1_MACH;
+extern DataPkt data_pkt;
+
 
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;

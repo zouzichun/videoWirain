@@ -16,51 +16,6 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>630</x>
-     <y>90</y>
-     <width>161</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QLineEdit" name="l1_p1x"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="l1_p1y"/>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLineEdit" name="l1_p2x"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="l1_p2y"/>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="l1_out"/>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="total_lines"/>
-    </item>
-    <item>
-     <widget class="QPushButton" name="sel1">
-      <property name="text">
-       <string>开始选择</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
      <x>360</x>
      <y>638</y>
      <width>440</width>
@@ -233,35 +188,93 @@
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>630</x>
-     <y>270</y>
+     <x>635</x>
+     <y>20</y>
      <width>161</width>
-     <height>89</height>
+     <height>322</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
-     <widget class="QLineEdit" name="sep1x"/>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLineEdit" name="l1_p1x"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="l1_p1y"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLineEdit" name="l1_p2x"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="l1_p2y"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="l1_out"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="total_lines"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="sel1">
+        <property name="text">
+         <string>开始选择</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="0" column="1">
-     <widget class="QLineEdit" name="sep1y"/>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLineEdit" name="sep1x"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="sep1y"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="sep2x"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="sep2y">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QPushButton" name="sep_but">
+        <property name="text">
+         <string>seprate line</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="1" column="0">
-     <widget class="QLineEdit" name="sep2x"/>
-    </item>
-    <item row="1" column="1">
-     <widget class="QLineEdit" name="sep2y">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QPushButton" name="sep_but">
-      <property name="text">
-       <string>seprate line</string>
-      </property>
-     </widget>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLineEdit" name="roi_x"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="roi_y"/>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QPushButton" name="roi_sel">
+        <property name="text">
+         <string>ROI sel</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
