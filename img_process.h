@@ -34,6 +34,7 @@ enum {
 };
 
 typedef struct DataPkt_ {
+    bool valid = false;
     float x1_start = 0.0;
     float x1_fetch = 0.0;
     float x1_target = 0.0;
@@ -48,6 +49,7 @@ typedef struct DataPkt_ {
     float y1_delta = 0.0;
 
     float start_delta = 0.0;
+    uint64_t frames = 0;
 } DataPkt;
 
 class ImgProcess : public QObject
@@ -63,13 +65,10 @@ public:
     bool Deinit();
     void imgProcTimeout();
     bool CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit * y, CMvCamera* p_cam);
-    static bool Process(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contours_img, std::vector<cv::Vec2f> & lines_found, int up = FULL_IMG);
-    static bool FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
-        std::vector<float> & rhos,
-        std::vector<float> & thetas,
-        std::vector<cv::Point2i> & points);
-    bool FilterLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found, bool up = true);
-    static bool AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
+    bool PreProcess(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contours_img);
+    bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found);
+    bool FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found);
+    bool AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         std::vector<float> & rhos,
         std::vector<float> & thetas);
 

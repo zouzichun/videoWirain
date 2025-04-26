@@ -364,7 +364,7 @@
      <x>10</x>
      <y>10</y>
      <width>721</width>
-     <height>191</height>
+     <height>196</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -423,7 +423,7 @@
          <widget class="QLineEdit" name="tbGain"/>
         </item>
         <item>
-         <widget class="QLineEdit" name="fps"/>
+         <widget class="QLineEdit" name="frames"/>
         </item>
        </layout>
       </item>

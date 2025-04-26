@@ -342,6 +342,17 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
 
 void MainDialog::camera_img_refresh(cv::Mat img) {
 //    qDebug("cam refreshed..");
+    std::vector<cv::Point> points;
+    std::vector<std::string> rois = split(configData.roi.toStdString(),';');
+    for (int pos =0; pos < rois.size(); pos++) {
+        std::vector<std::string> point = split(rois[pos],',');
+        int x = std::atoi(point[0].c_str());
+        int y = std::atof(point[1].c_str());
+        points.push_back(cv::Point(x,y));
+    }
+
+    cv::polylines(img, points, true, cv::Scalar(0, 255, 0), 4);
+
     QImage qimg = QImage((const unsigned char*)(img.data),
         img.cols,
         img.rows,
@@ -360,6 +371,18 @@ void MainDialog::camera_img_refresh(cv::Mat img) {
     // m_ui->delta->setText(QString("%1").arg(m_delta));
     // m_ui->delta_mm->setText(QString("%1").arg(m_delta * 0.1));
     // m_ui->delta_c->setText(QString("%1").arg(m_delta_ang * 180 / CV_PI));
+}
+
+extern DataPkt data_pkt;
+void MainDialog::camera_refresh_delta() {
+    m_ui->x1_delta->setText(QString::number(data_pkt.x1_delta));
+    m_ui->x2_delta->setText(QString::number(data_pkt.x2_delta));
+    m_ui->x1_fetch->setText(QString::number(data_pkt.x1_fetch));
+    m_ui->x2_fetch->setText(QString::number(data_pkt.x2_fetch));
+    m_ui->x1_target->setText(QString::number(data_pkt.x1_target));
+    m_ui->x2_target->setText(QString::number(data_pkt.x2_target));
+    m_ui->start_delta->setText(QString::number(data_pkt.start_delta));
+    m_ui->frames->setText(QString::number(data_pkt.frames));
 }
 
 void MainDialog::on_SerialOpen_clicked()
@@ -471,7 +494,7 @@ void MainDialog::on_bnOpen_clicked()
 extern std::vector<std::pair<double, double>> g_roi;
 void MainDialog::on_Calibration_clicked()
 {
-    bool click_stat = false;
+    static bool click_stat = false;
     m_ui->Calibration->setEnabled(true);
     // for (auto & v : m_cameras) {
     //     if (v.is_opened) {
@@ -770,17 +793,6 @@ void MainDialog::on_modbusSend_clicked()
 
         }
     }
-}
-
-extern DataPkt data_pkt;
-void MainDialog::camera_refresh_delta() {
-    m_ui->x1_delta->setText(QString::number(data_pkt.x1_delta));
-    m_ui->x2_delta->setText(QString::number(data_pkt.x2_delta));
-    m_ui->x1_fetch->setText(QString::number(data_pkt.x1_fetch));
-    m_ui->x2_fetch->setText(QString::number(data_pkt.x2_fetch));
-    m_ui->x1_target->setText(QString::number(data_pkt.x1_target));
-    m_ui->x2_target->setText(QString::number(data_pkt.x2_target));
-    m_ui->start_delta->setText(QString::number(data_pkt.start_delta));
 }
 
 void MainDialog::on_modbusSend_2_clicked()

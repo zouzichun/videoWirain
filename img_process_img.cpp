@@ -44,10 +44,10 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             throw std::runtime_error("无效的视频尺寸");
         }
         
-        qDebug() << "成功打开视频：" << width << "x" << height;
+        qDebug() << "open vide ok, size " << width << "x" << height;
     } 
     catch (const std::exception& e) {
-        qCritical() << "初始化错误：" << e.what();
+        qCritical() << "video invalid, error:" << e.what();
         return;
     }
     int frame_cnt = 0;
@@ -70,48 +70,22 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
             const int IMG_HEIGHT = color_img.rows;
             const int IMG_WIDTH = color_img.cols;
-            cv::Mat grayimg(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat tt_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3, Scalar(0));
             cv::Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
             cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
 
             // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
             // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
 
-            Mat hsv;
-            cv::cvtColor(color_img, hsv, COLOR_BGR2HSV);
-            
-            // 白色阈值范围
-            cv::inRange(hsv, Scalar(0, 0, 40), Scalar(200, 60, 255), hsv);
-            
-            // 建议2：添加kernel验证
-            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(3,3));
-            // 建议1：分离输入输出图像避免原地操作
-            cv::Mat processed;
-            cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
-            cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
+            cv::cvtColor(color_img, color_img, COLOR_BGR2RGB);
+            PreProcess(color_img, edge, contours_img);
 
-            // cv::cvtColor(hsv, tt_img, COLOR_HSV2RGB);
-            // cv::cvtColor(tt_img, grayimg, COLOR_RGB2GRAY);
+            std::vector<cv::Vec2f> lines_found;
+            Process(edge, lines_found);
 
-            std::vector<cv::Vec2f> lines_found_up;
-            std::vector<cv::Vec2f> lines_found_down;
-
-            Process(grayimg, edge_up, contours_img, lines_found_up, UP_LINE);
-
-            if (!FilterLines(edge_up, lines_found_up, true)) {
+            if (!FilterLines(IMG_HEIGHT, IMG_WIDTH, lines_found)) {
                 frame_cnt++;
             }
-            // qDebug("lines_found_up size %d,", lines_found_up.size());
-
-            Process(grayimg, edge_down, contours_img, lines_found_down, DOWN_LINE);
-
-            if (!FilterLines(edge_down, lines_found_down, false)) {
-                frame_cnt++;
-            }
-            // qDebug("lines_found_down size %d,", lines_found_down.size());
+            // qDebug("lines_found_up size %d,", lines_found_up.size())
 
 
         //            qDebug("g_lines.points_in_img %d, %d, %d, %d, %d, %d",
@@ -202,7 +176,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
             double start_delta2 = sqrtf(pow(x2_start.first - x2_corss_down.first, 2) + pow(x2_start.second - x2_corss_down.second, 2));
             double start_delta1 = sqrtf(pow(x1_start.first - x1_corss_down.first, 2) + pow(x1_start.second - x1_corss_down.second, 2));
-            qDebug("start_delta2 %.2f, start_delta1 %.2f", start_delta2, start_delta1);
+            // qDebug("start_delta2 %.2f, start_delta1 %.2f", start_delta2, start_delta1);
 
             double dist_x2 = sqrtf(pow(x2_corss_up.first - x2_corss_down.first, 2) + pow(x2_corss_up.second - x2_corss_down.second, 2));
             double dist_x1 = sqrtf(pow(x1_corss_up.first - x1_corss_down.first, 2) + pow(x1_corss_up.second - x1_corss_down.second, 2));
@@ -223,8 +197,12 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             data_pkt.x1_delta = dist_x1;
             data_pkt.x2_delta = dist_x2;
             data_pkt.start_delta = start_delta2;
+            data_pkt.frames = frame_cnt;
+            data_pkt.valid = true;
 
             emit signal_refresh_img(color_img);
+
+            emit signal_refresh_delta();
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;
@@ -282,32 +260,14 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
 
             const int IMG_HEIGHT = color_img.rows;
             const int IMG_WIDTH = color_img.cols;
-            cv::Mat grayimg(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat tt_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3, Scalar(0));
             cv::Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
             cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
 
-            // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-            // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
-
-            Mat hsv;
-            cv::cvtColor(color_img, hsv, COLOR_BGR2HSV);
-            
-            // 白色阈值范围
-            cv::inRange(hsv, Scalar(0, 0, 40), Scalar(200, 60, 255), hsv);
-            
-            // 建议2：添加kernel验证
-            cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(3,3));
-            // 建议1：分离输入输出图像避免原地操作
-            cv::Mat processed;
-            cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
-            cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
+            PreProcess(color_img, edge, contours_img);
 
             std::vector<cv::Vec2f> lines_found;
-            Process(grayimg, edge, contours_img, lines_found);
-            if (!FilterLines(edge, lines_found)) {
+            Process(edge, lines_found);
+            if (!FilterLines(edge.rows, edge.cols, lines_found)) {
                 frame_cnt++;
             }
 
