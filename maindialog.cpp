@@ -29,6 +29,8 @@ extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
 extern std::vector<Lines> g_lines;
 
+#define TEST_CAMERA 0
+
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
     m_ui(new Ui::MainDialog),
@@ -75,12 +77,19 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_imgproc, &ImgProcess::signal_refresh_delta,
         this, &MainDialog::camera_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
-    // connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection);
-    connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::ImageTest, Qt::QueuedConnection);
+    
+    #if TEST_CAMERA
+        connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection);
+    #else
+        connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::ImageTest, Qt::QueuedConnection);
+    #endif
 
     imgw = new imgWindow();
-    // connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::cameraCalTest, Qt::QueuedConnection);
-    connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::ImageCalTest, Qt::QueuedConnection);
+    #if TEST_CAMERA
+        connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::CameraCalTest, Qt::QueuedConnection);
+    #else
+        connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::ImageCalTest, Qt::QueuedConnection);
+    #endif
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
 
     m_hWnd = (void*)m_ui->painter->winId();
@@ -450,88 +459,93 @@ void MainDialog::CameraInit() {
 static bool g_bExit = false;
 void MainDialog::on_bnOpen_clicked()
 {
-    // for (auto & v : m_cameras) {
-    //     if (v.is_opened) {
-    //         v.is_opened = false;
+    #if TEST_CAMERA
+    for (auto & v : m_cameras) {
+        if (v.is_opened) {
+            v.is_opened = false;
 
-    //         v.timer->stop();
+            v.timer->stop();
 
-    //         m_ui->bnOpen->setText("打开");
+            m_ui->bnOpen->setText("打开");
 
-    //         m_ui->tbExposure->setEnabled(false);
-    //         m_ui->tbGain->setEnabled(false);
-    //         m_ui->tbFrameRate->setEnabled(false);
-    //         m_imgproc->camera_enable = false;
-    //         emit cameraStart(v.handler, m_port);
-    //     } else {
-    //         v.is_opened = true;
-    //         m_ui->bnOpen->setText("关闭");
-    //         m_ui->tbExposure->setEnabled(true);
-    //         m_ui->tbGain->setEnabled(true);
-    //         m_ui->tbFrameRate->setEnabled(true);
-    //         v.timer->stop();
-    //         m_imgproc->camera_enable = true;
-    //         emit cameraStart(v.handler, m_port);
-    //     }
-    // }
-    if (g_bExit) {
-        m_ui->bnOpen->setText("打开");
-        m_ui->tbExposure->setEnabled(false);
-        m_ui->tbGain->setEnabled(false);
-        m_ui->tbFrameRate->setEnabled(false);
-        m_imgproc->camera_enable = false;
-        emit cameraStart(nullptr, m_port);
-    } else {
-        m_ui->bnOpen->setText("关闭");
-        m_ui->tbExposure->setEnabled(true);
-        m_ui->tbGain->setEnabled(true);
-        m_ui->tbFrameRate->setEnabled(true);
-        m_imgproc->camera_enable = true;
-        emit cameraStart(nullptr, m_port);
+            m_ui->tbExposure->setEnabled(false);
+            m_ui->tbGain->setEnabled(false);
+            m_ui->tbFrameRate->setEnabled(false);
+            m_imgproc->camera_enable = false;
+            emit cameraStart(v.handler, m_port);
+        } else {
+            v.is_opened = true;
+            m_ui->bnOpen->setText("关闭");
+            m_ui->tbExposure->setEnabled(true);
+            m_ui->tbGain->setEnabled(true);
+            m_ui->tbFrameRate->setEnabled(true);
+            v.timer->stop();
+            m_imgproc->camera_enable = true;
+            emit cameraStart(v.handler, m_port);
+        }
     }
-    g_bExit = ~g_bExit;
+    #else
+        if (g_bExit) {
+            m_ui->bnOpen->setText("打开");
+            m_ui->tbExposure->setEnabled(false);
+            m_ui->tbGain->setEnabled(false);
+            m_ui->tbFrameRate->setEnabled(false);
+            m_imgproc->camera_enable = false;
+            emit cameraStart(nullptr, m_port);
+        } else {
+            m_ui->bnOpen->setText("关闭");
+            m_ui->tbExposure->setEnabled(true);
+            m_ui->tbGain->setEnabled(true);
+            m_ui->tbFrameRate->setEnabled(true);
+            m_imgproc->camera_enable = true;
+            emit cameraStart(nullptr, m_port);
+        }
+        g_bExit = ~g_bExit;
+    #endif
 }
 extern std::vector<std::pair<double, double>> g_roi;
 void MainDialog::on_Calibration_clicked()
 {
     static bool click_stat = false;
     m_ui->Calibration->setEnabled(true);
-    // for (auto & v : m_cameras) {
-    //     if (v.is_opened) {
-    //         v.is_opened = false;
-    //         m_ui->Calibration->setText("校准");
-    //         m_imgproc->camera_enable = false;
-    //         emit cameraCalStart(v.handler);
-    //         imgw->hide();
-    //         qDebug() << "g_lines size " << g_lines.size();
-    //         std::stringstream ss_rho, ss_ang;
-    //         for (const auto & v: g_lines) {
-    //             ss_rho << fmt::format("{:.2f}", v.rho);
-    //             ss_rho << fmt::format(",");
+    #if TEST_CAMERA
+        for (auto & v : m_cameras) {
+            if (v.is_opened) {
+                v.is_opened = false;
+                m_ui->Calibration->setText("校准");
+                m_imgproc->camera_enable = false;
+                emit cameraCalStart(v.handler);
+                imgw->hide();
+                qDebug() << "g_lines size " << g_lines.size();
+                std::stringstream ss_rho, ss_ang;
+                for (const auto & v: g_lines) {
+                    ss_rho << fmt::format("{:.2f}", v.rho);
+                    ss_rho << fmt::format(",");
 
-    //             ss_ang << fmt::format("{:.2f}", v.angle);
-    //             ss_ang << fmt::format(",");
-    //         }
-    //         std::string line_angs = ss_ang.str();
-    //         std::string line_rhos = ss_rho.str();
-    //         if (!line_angs.empty()) {
-    //             line_angs.pop_back();
-    //         }
-    //         if (!line_rhos.empty()) {
-    //             line_rhos.pop_back();
-    //         }
-    //         configData.line_rhos = QString(line_rhos.c_str());
-    //         configData.line_angs = QString(line_angs.c_str());
-    //         spdlog::info("line angs {}, rhos {}", line_angs, line_rhos);
-    //     } else {
-    //         v.is_opened = true;
-    //          m_ui->Calibration->setText("校准中...");
-    //          imgw->total_lines = 6;
-    //          imgw->show();
-    //          m_imgproc->camera_enable = true;
-    //          emit cameraCalStart(v.handler);
-    //      }
-    // }
+                    ss_ang << fmt::format("{:.2f}", v.angle);
+                    ss_ang << fmt::format(",");
+                }
+                std::string line_angs = ss_ang.str();
+                std::string line_rhos = ss_rho.str();
+                if (!line_angs.empty()) {
+                    line_angs.pop_back();
+                }
+                if (!line_rhos.empty()) {
+                    line_rhos.pop_back();
+                }
+                configData.line_rhos = QString(line_rhos.c_str());
+                configData.line_angs = QString(line_angs.c_str());
+                spdlog::info("line angs {}, rhos {}", line_angs, line_rhos);
+            } else {
+                v.is_opened = true;
+                m_ui->Calibration->setText("校准中...");
+                imgw->total_lines = 6;
+                imgw->show();
+                m_imgproc->camera_enable = true;
+                emit cameraCalStart(v.handler);
+            }
+        }
+    #else
         if (click_stat) {
             click_stat = false;
             m_imgproc->camera_enable = false;
@@ -574,6 +588,7 @@ void MainDialog::on_Calibration_clicked()
              imgw->show();
              emit cameraCalStart(nullptr);
          }
+    #endif
 }
 
 void MainDialog::EnumCamDevice()
