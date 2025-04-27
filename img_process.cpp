@@ -275,8 +275,7 @@ int TimeElapsed() {
     return tt_time;
 }
 
-cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB)
-{
+cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB) {
     double ka, kb;
     double tt;
     if (LineA[2] - LineA[0] == 0) {
@@ -470,17 +469,37 @@ bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p) {
     return (cross > 0) ? true : false;
 }
 
-bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_img) {
+extern std::vector<std::string> split(const std::string & str, char dim);
+
+bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) {
     cv::Mat hsv;
     cv::Mat processed;
+    cv::Mat edge_img;
 //    cv::Mat color_img;
     cv::Mat grayimg;
+    cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
 
+    std::vector<cv::Point> points;
+    std::vector<std::string> rois = split(configData.roi.toStdString(),';');
+    for (int pos =0; pos < rois.size(); pos++) {
+        std::vector<std::string> point = split(rois[pos],',');
+        int x = std::atoi(point[0].c_str());
+        int y = std::atof(point[1].c_str());
+        points.push_back(cv::Point(x,y));
+    }
+
+    if (points.size() < 3) {
+        cv::cvtColor(img, hsv, COLOR_RGB2HSV);
+    } else {
+        cv::fillPoly(mask, {points}, cv::Scalar(255,255,255));
+        cv::Mat roi;
+        img.copyTo(roi, mask);
+        cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
+    }
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-//    cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
-
+    // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     // qDebug("in img depth %d, type %d, ", img.depth(), img.type());
-    cv::cvtColor(img, hsv, COLOR_RGB2HSV);
+    // cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     
@@ -488,7 +507,7 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_im
     cv::inRange(hsv, Scalar(0, 0, 40), Scalar(200, 60, 255), hsv);
     
     // 建议2：添加kernel验证
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(3,3));
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(configData.blur_kernel,configData.blur_kernel));
     cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
     cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
     cv::Mat img_tt;
@@ -500,29 +519,23 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_im
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
 
-//    if (up == UP_LINE) {
-//        for (int i = 0; i < edge_img.rows / 2; i++) {
-//            for (int j = 0; j < edge_img.cols; j++) {
-//                if (edge_img.at<uchar>(i, j) > 0) {
-//                    if (!PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
-//                            cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i)))
-//                        edge_img.at<uchar>(i, j) = 0;
-//                }
-                
-//            }
-//        }
-//    } else if (up == DOWN_LINE) {
-//        for (int i = 0; i < edge_img.rows / 2; i++) {
-//            for (int j = 0; j < edge_img.cols; j++) {
-//                if (edge_img.at<uchar>(i, j) > 0) {
-//                    if (PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
-//                            cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i)))
-//                        edge_img.at<uchar>(i, j) = 0;
-//                }
-//            }
-//        }
-//    }
+    edge_up = edge_img.clone();
+    edge_down = edge_img.clone();
 
+    for (int i = 0; i < edge_img.rows; i++) {
+        for (int j = 0; j < edge_img.cols; j++) {
+            double result = PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
+            cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i));
+            if (result <= 0) {
+                edge_down.at<uchar>(i, j) = 0;
+            } else {
+                edge_up.at<uchar>(i, j) = 0;
+            }
+        }
+    }
+}
+
+bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found) {
 //    std::vector<vector<Point>> contours;
 //    std::vector<Point> hull_points;
 //    std::vector<cv::Vec4i> hierarchy;
@@ -543,9 +556,6 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contour_im
 //            cv::drawContours(contour_img, hullv, 0, Scalar(255), 2, LINE_8, hierarchy, 0);
 //        }
 //    }
-}
-
-bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found) {
     cv::HoughLines(edge_img, lines_found,
         configData.hgline_1,
         configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
@@ -555,7 +565,7 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
         
 
-bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found) {
+bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found, bool up) {
     const int IMG_HEIGHT = rows;
     const int IMG_WIDTH = cols;
     const float ROH_ABS = sqrtf(IMG_HEIGHT*IMG_HEIGHT + IMG_WIDTH*IMG_WIDTH) * configData.line_roh_abs;
@@ -563,15 +573,15 @@ bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_f
 
     for (auto it = g_lines.begin(); it != g_lines.end(); ++it) {
         size_t index = std::distance(g_lines.begin(), it);  // 实际索引位置
-//        if (up) {
-//            if (index > 2) {
-//                continue;
-//            }
-//        } else {
-//            if (index < 3) {
-//                continue;
-//            }
-//        }
+        if (up) {
+            if (index > 2) {
+                continue;
+            }
+        } else {
+            if (index < 3) {
+                continue;
+            }
+        }
         it->lines_filterd.clear();
         it->points_in_img.clear();
     }
@@ -585,15 +595,15 @@ bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_f
             bool ret = false;
             for (auto it = g_lines.begin(); it != g_lines.end(); ++it) {
                 size_t index = std::distance(g_lines.begin(), it);  // 实际索引位置
-//                if (up) {
-//                    if (index > 2) {
-//                        continue;
-//                    }
-//                } else {
-//                    if (index < 3) {
-//                        continue;
-//                    }
-//                }
+                if (up) {
+                    if (index > 2) {
+                        continue;
+                    }
+                } else {
+                    if (index < 3) {
+                        continue;
+                    }
+                }
                 float rho_norm = abs(it->rho - rho);
                 float ang_norm = abs(sin(it->angle) - sin(theta));
 //                spdlog::debug("{:.2f} -> {:.2f}, {:.2f} -> {:.2f}", rho, v.rho, theta, v.angle);
@@ -620,15 +630,15 @@ bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_f
 
     for (auto it = g_lines.begin(); it != g_lines.end(); ++it) {
         size_t index = std::distance(g_lines.begin(), it);  // 实际索引位置
-//        if (up) {
-//            if (index > 2) {
-//                continue;
-//            }
-//        } else {
-//            if (index < 3) {
-//                continue;
-//            }
-//        }
+        if (up) {
+            if (index > 2) {
+                continue;
+            }
+        } else {
+            if (index < 3) {
+                continue;
+            }
+        }
         if (it->lines_filterd.size() != 0) {
             float rho = 0.0, ang = 0.0;
             for (const auto &w : it->lines_filterd) {

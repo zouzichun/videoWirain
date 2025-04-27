@@ -52,6 +52,12 @@ typedef struct DataPkt_ {
     uint64_t frames = 0;
 } DataPkt;
 
+typedef struct LineSegment_ {
+    cv::Point2f start;
+    cv::Point2f mid;
+    cv::Point2f end;
+} LineSegment;
+
 class ImgProcess : public QObject
 {
     Q_OBJECT
@@ -64,10 +70,9 @@ public:
     bool Init();
     bool Deinit();
     void imgProcTimeout();
-    bool CameraCal(QLabel * pt, QLabel * pt3, QLineEdit * x, QLineEdit * y, CMvCamera* p_cam);
-    bool PreProcess(cv::Mat &img, cv::Mat &edge_img, cv::Mat &contours_img);
+    bool PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
     bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found);
-    bool FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found);
+    bool FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found, bool up = true);
     bool AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
         std::vector<float> & rhos,
         std::vector<float> & thetas);

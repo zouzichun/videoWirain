@@ -456,7 +456,6 @@ void MainDialog::CameraInit() {
     }
 }
 
-static bool g_bExit = false;
 void MainDialog::on_bnOpen_clicked()
 {
     #if TEST_CAMERA
@@ -485,7 +484,7 @@ void MainDialog::on_bnOpen_clicked()
         }
     }
     #else
-        if (g_bExit) {
+        if (m_imgproc->camera_enable) {
             m_ui->bnOpen->setText("打开");
             m_ui->tbExposure->setEnabled(false);
             m_ui->tbGain->setEnabled(false);
@@ -500,7 +499,6 @@ void MainDialog::on_bnOpen_clicked()
             m_imgproc->camera_enable = true;
             emit cameraStart(nullptr, m_port);
         }
-        g_bExit = ~g_bExit;
     #endif
 }
 extern std::vector<std::pair<double, double>> g_roi;

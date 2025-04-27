@@ -13,7 +13,6 @@
 using namespace cv;
 
 extern std::vector<Lines> g_lines;
-cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
 
 cv::Point2f X21(-1959.74, -1716.01);
 cv::Point2f X22(-1970.84, 12.132);
@@ -24,7 +23,6 @@ cv::Point2f X12(-1970.84, 12.132);
 std::pair<double, double> X2_MACH(-330.0, 0.0);
 std::pair<double, double> X1_MACH(690.0, 0.0);
 DataPkt data_pkt;
-
 
 void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
     qDebug() << "image test";
@@ -50,6 +48,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
         qCritical() << "video invalid, error:" << e.what();
         return;
     }
+
     int frame_cnt = 0;
     if (camera_enable) {
         frame_cnt = 0;
@@ -70,35 +69,39 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
             const int IMG_HEIGHT = color_img.rows;
             const int IMG_WIDTH = color_img.cols;
-            cv::Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-
-            // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-            // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
+            cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+            cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+            std::vector<cv::Vec2f> lines_found_up;
+            std::vector<cv::Vec2f> lines_found_down;
 
             cv::cvtColor(color_img, color_img, COLOR_BGR2RGB);
-            PreProcess(color_img, edge, contours_img);
-
-            std::vector<cv::Vec2f> lines_found;
-            Process(edge, lines_found);
-
-            if (!FilterLines(IMG_HEIGHT, IMG_WIDTH, lines_found)) {
-                frame_cnt++;
+            PreProcess(color_img, edge_up, edge_down);
+            bool valid_flag = true;
+            Process(edge_up, lines_found_up);
+            if (!FilterLines(edge_up.rows, edge_up.cols, lines_found_up, true)) {
+                qDebug() << "up lines not enough";
+                valid_flag = false;
             }
-            // qDebug("lines_found_up size %d,", lines_found_up.size())
+            Process(edge_down, lines_found_down);
+            if (!FilterLines(edge_down.rows, edge_down.cols, lines_found_down, false)) {
+                qDebug() << "down lines not enough";
+                valid_flag = false;
+            }
 
+            if (!valid_flag) {
+                frame_cnt++;
+                continue;
+            }
 
-        //            qDebug("g_lines.points_in_img %d, %d, %d, %d, %d, %d",
-        //                    g_lines[0].points_in_img.size(),
-        //                    g_lines[1].points_in_img.size(),
-        //                    g_lines[2].points_in_img.size(),
-        //                    g_lines[3].points_in_img.size(),
-        //                    g_lines[4].points_in_img.size(),
-        //                    g_lines[5].points_in_img.size());
+//            cv::resize(edge_down, edge_down, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+//            cv::resize(edge_up, edge_up, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+//            imshow("edge_down", edge_down);
+//            imshow("edge_up", edge_up);
 
-            cv::Point2f p1, p2;
-            float dist = 0.0, delta_x = 0.0, delta_x2 = 0.0;
-            cv::Point2f p_mid;
+            std::vector<std::pair<cv::Point2f, cv::Point2f>> line_seg;
+
+            cv::Point2f p1, p2, p_mid;
+            cv::Point2f p21, p22, p_mid2;
             if (g_lines[0].points_in_img.size() >= 2 &&
                 g_lines[1].points_in_img.size() >= 2 &&
                 g_lines[2].points_in_img.size() >= 2) {
@@ -112,10 +115,10 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
                         g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
                     cv::Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
                         g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
+            } else {
+                qDebug() << "up lines not enough";
             }
 
-            cv::Point2f p21, p22;
-            cv::Point2f p_mid2;
             if (g_lines[3].points_in_img.size() >= 2 &&
                 g_lines[4].points_in_img.size() >= 2 &&
                 g_lines[5].points_in_img.size() >= 2) {
@@ -129,6 +132,8 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
                         g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second),
                     cv::Vec4i(g_lines[5].points_in_img[0].first, g_lines[5].points_in_img[0].second,
                         g_lines[5].points_in_img[1].first, g_lines[5].points_in_img[1].second));
+            } else {
+                qDebug() << "down lines not enough";
             }
 
             p_mid = cv::Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
@@ -148,10 +153,10 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
 
             auto mach_p_up = PointsImg2Mach(p1, p2);
-            auto mach_p_down = PointsImg2Mach(p21, p22);
-
             auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
+            auto mach_p_down = PointsImg2Mach(p21, p22);
             auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
+
             auto mach_start = PointsToHoughParams(cv::Point2f(0, configData.x2_start),
                 cv::Point2f(315, configData.x1_start));
 
@@ -260,18 +265,22 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
 
             const int IMG_HEIGHT = color_img.rows;
             const int IMG_WIDTH = color_img.cols;
-            cv::Mat edge(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat contours_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+            cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+            cv::Mat edge_dwon(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+            std::vector<cv::Vec2f> lines_found_up;
+            std::vector<cv::Vec2f> lines_found_down;
 
-            PreProcess(color_img, edge, contours_img);
-
-            std::vector<cv::Vec2f> lines_found;
-            Process(edge, lines_found);
-            if (!FilterLines(edge.rows, edge.cols, lines_found)) {
+            PreProcess(color_img, edge_up, edge_dwon);
+            Process(edge_up, lines_found_up);
+            if (!FilterLines(edge_up.rows, edge_up.cols, lines_found_up, true)) {
+                frame_cnt++;
+            }
+            Process(edge_dwon, lines_found_down);
+            if (!FilterLines(edge_dwon.rows, edge_dwon.cols, lines_found_down, false)) {
                 frame_cnt++;
             }
 
-            for (const auto & v : lines_found) {
+            for (const auto & v : lines_found_up) {
                 float rho = v[0];
                 float theta = v[1];
                 // spdlog::debug("line {} rho {:.2f}, theta {:.2f}, cnt {}", pos, rho, theta, cnts[pos]);
@@ -288,6 +297,17 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
                     //     }
                     // }
             }
+
+            for (const auto & v : lines_found_down) {
+                float rho = v[0];
+                float theta = v[1];
+                    cv::Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
+                    cv::Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
+                    cv::line(color_img, pt1, pt2, cv::Scalar(255, 255, 255), 2);
+            }
+            
+            cv::Mat edge;
+            cv::addWeighted(edge_up, 0.5, edge_dwon, 0.5, 0, edge);
 
             emit signal_refresh_img(color_img);
 
