@@ -475,7 +475,6 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     cv::Mat hsv;
     cv::Mat processed;
     cv::Mat edge_img;
-//    cv::Mat color_img;
     cv::Mat grayimg;
     cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
 
@@ -493,7 +492,7 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     } else {
         cv::fillPoly(mask, {points}, cv::Scalar(255,255,255));
         cv::Mat roi;
-        img.copyTo(roi, mask);
+        img.copyTo(roi, mask);\
         cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
     }
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
@@ -518,6 +517,13 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+    if (points.size() >= 2) {
+        cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
+        for (auto it = points.begin()+1; it < points.end(); it++)
+            cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
+//        cv::bitwise_and(edge_img, mask, edge_img);
+        cv::line(edge_img, *points.begin(), *points.rbegin(), Scalar(0), 15);
+    }
 
     edge_up = edge_img.clone();
     edge_down = edge_img.clone();
@@ -533,6 +539,11 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
             }
         }
     }
+//    cv::resize(edge_up, edge_up, cv::Size(600, 600));
+//    cv::resize(edge_down, edge_down, cv::Size(600, 600));
+
+//    imshow("edge_up", edge_up);
+//    imshow("edge_down", edge_down);
 }
 
 bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found) {
