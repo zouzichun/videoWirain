@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(LogMsgOutput);
     qRegisterMetaType<QTextCursor>("QTextCursor");
     qRegisterMetaType<cv::Mat>("cv::Mat");
+    qRegisterMetaType<QModbusDevice::State>("QModbusDevice::State");
     MainDialog w;
     w.show();
 

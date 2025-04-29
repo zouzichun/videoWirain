@@ -42,7 +42,7 @@ void ModbusPort::closePort() {
     m_serial.close();
 }
 
-bool ModbusPort::readModbusData(int typeNum,int startAdd, quint16 numbers) {
+bool ModbusPort::readModbusData(int startAdd, quint16 numbers, float & val) {
     qDebug("modbus send read message!");
     //读取modbus设备各寄存器数据
     //typeNum:1_线圈 2_离散输入 3_保持 4_输入
@@ -53,42 +53,13 @@ bool ModbusPort::readModbusData(int typeNum,int startAdd, quint16 numbers) {
 
     //确定寄存器类型
     QModbusDataUnit ReadUnit;
-    if(typeNum == 1)
-    {
-        ReadUnit = QModbusDataUnit(QModbusDataUnit::Coils,startAdd,numbers);
-    }
-    else if(typeNum == 2)
-    {
-        ReadUnit = QModbusDataUnit(QModbusDataUnit::DiscreteInputs,startAdd,numbers);
-    }
-    else if(typeNum == 3)
-    {
         ReadUnit = QModbusDataUnit(QModbusDataUnit::HoldingRegisters,startAdd,numbers);
-    }
-    else if(typeNum == 4)
-    {
-        ReadUnit = QModbusDataUnit(QModbusDataUnit::InputRegisters,startAdd,numbers);
-    }
-    else
-    {
-        qDebug("读取寄存器类型错误");
-        return false;
-    }
-    qDebug("readModbusData typeNum: %d", typeNum);
-
     //多读
     if(auto *reply = m_master.sendReadRequest(ReadUnit,1))
     {
         if(!reply->isFinished())
         {
-            if((typeNum == 1) || (typeNum == 2))
-            {
-                QObject::connect(reply,&QModbusReply::finished,this,&ModbusPort::slot_readReadyCoils);   //读取线圈
-            }
-            if((typeNum == 3) || (typeNum == 4))
-            {
                 QObject::connect(reply,&QModbusReply::finished,this,&ModbusPort::slot_readReadyRegisters);   //读取寄存器
-            }
             //reply->deleteLater();
             return true;
         }
@@ -109,71 +80,8 @@ bool ModbusPort::readModbusData(int typeNum,int startAdd, quint16 numbers) {
 
 //对modbus设备各寄存器写入数据
 //typeNum:1_线圈 2_保持 (这两类寄存器可读可写,其余的只读)
-bool ModbusPort::writeModbusData(int typeNum,int startAdd, uint32_t writeNum)
+bool ModbusPort::writeModbusData(int startAdd, uint32_t writeNum, float val)
 {
-    if(m_master.state() != QModbusDevice::ConnectedState)
-    {
-        return false;
-    }
-
-    //确定寄存器类型
-    QModbusDataUnit writeUnit;
-    if(typeNum == 1)
-    {
-        writeUnit = QModbusDataUnit(QModbusDataUnit::Coils,startAdd,1);   //写入一个数据
-        writeUnit.setValue(0,writeNum);
-
-        //单写
-        //bool ok;
-        //quint16 hexData = writeData.toInt(&ok,16);   //转16进制
-    }
-    else if(typeNum == 2)
-    {
-        writeUnit = QModbusDataUnit(QModbusDataUnit::HoldingRegisters,startAdd,2);   //写入两个数据
-        quint16 uData16[2] = {0};
-        uData16[0] = writeNum & 0xffff;
-        uData16[1] = (writeNum >> 16) & 0xffff;
-        writeUnit.setValue(0,uData16[0]);
-        writeUnit.setValue(1,uData16[1]);
-        qDebug("write data h: %x, l: %x, val %f", uData16[1], uData16[0], static_cast<float>(writeNum));
-        //LOGDEBUG<<"uData16[0]:"<<uData16[0]<<"   uData16[1]:"<<uData16[1]<<"   writeNum:"<<writeNum;
-    }
-    else
-    {
-        qDebug("写入寄存器类型错误");
-        return false;
-    }
-    //LOGDEBUG<<"writeModbusData typeNum:"<<typeNum<<"   writeNum:"<<writeNum;
-    if(auto *reply = m_master.sendWriteRequest(writeUnit,1))
-    {
-        if(!reply->isFinished())
-        {
-            connect(reply,&QModbusReply::finished,this,[reply]()
-            {
-                if(reply->error() == QModbusDevice::NoError)
-                {
-                    reply->deleteLater();
-                    return true;
-                }
-                else
-                {
-                    qDebug("写入返回错误: %s", reply->error());
-                    reply->deleteLater();
-                    return false;
-                }
-            });
-        }
-        else
-        {
-            reply->deleteLater();
-            return false;
-        }
-    }
-    else
-    {
-        qDebug("写入错误: %s" ,m_master.errorString().toStdString().c_str());
-        return false;
-    }
     return true;
 }
 

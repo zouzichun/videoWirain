@@ -25,22 +25,17 @@ public:
     virtual void closePort();
     // virtual int sendMsg(int idx);
 
-    virtual bool readModbusData(int typeNum,int startAdd,quint16 numbers);
-    bool writeModbusData(int typeNum,int startAdd,uint32_t writeNum) {
-                return true;
-    };
-    virtual bool writeModbusData(int typeNum,int startAdd, float write_val);
+    virtual bool readModbusData(int startAdd, quint16 numbers, float &val);
+    virtual bool writeModbusData(int startAdd, quint16 numbers, float val);
     virtual bool waitDataReady();
 
- signals:
-    void signal_stateChanged(bool flag);
-    void signal_readCoils(QVector<quint16> vAllData);
-    void signal_readRegisters(int resultNum);
+//  signals:
+    // // void signal_stateChanged(bool flag);
+    // void signal_readRegisters(int resultNum);
 
 private slots:
-    void slot_stateChanged();
-    void slot_readReadyCoils();
-    void slot_readReadyRegisters();
+    void handleStateChanged(QModbusDevice::State state);
+    void handleErrorOccurred(QModbusDevice::Error error);
 
 private:
     QString tcp_ip;
