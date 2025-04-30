@@ -29,7 +29,7 @@ extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
 extern std::vector<Lines> g_lines;
 
-#define TEST_CAMERA 1
+#define TEST_CAMERA 0
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
@@ -75,8 +75,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
 
     connect(m_imgproc, &ImgProcess::signal_refresh_delta,
-        this, &MainDialog::camera_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
-    connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
+        this, &MainDialog::calibration_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
+    connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::main_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
     
     #if TEST_CAMERA
         connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection);
@@ -90,7 +90,10 @@ MainDialog::MainDialog(QWidget *parent) :
     #else
         connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::ImageCalTest, Qt::QueuedConnection);
     #endif
-    connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::camera_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
+    connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::calibration_refresh, Qt::QueuedConnection);
+
+    // change img display mode
+    connect(imgw, &imgWindow::img_sw_status_changed, m_imgproc, &ImgProcess::ChangeCalImageMode, Qt::QueuedConnection);
 
     m_hWnd = (void*)m_ui->painter->winId();
     connect(m_ui->inv_thd,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
@@ -349,8 +352,7 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->motor_rho->setText(QString::number(configData.motor_rho));
 }
 
-void MainDialog::camera_img_refresh(cv::Mat img) {
-//    qDebug("cam refreshed..");
+void MainDialog::main_img_refresh(cv::Mat img) {
     std::vector<cv::Point> points;
     std::vector<std::string> rois = split(configData.roi.toStdString(),';');
     for (int pos =0; pos < rois.size(); pos++) {
@@ -383,7 +385,7 @@ void MainDialog::camera_img_refresh(cv::Mat img) {
 }
 
 extern DataPkt data_pkt;
-void MainDialog::camera_refresh_delta() {
+void MainDialog::calibration_refresh_delta() {
     m_ui->x1_delta->setText(QString::number(data_pkt.x1_delta));
     m_ui->x2_delta->setText(QString::number(data_pkt.x2_delta));
     m_ui->x1_fetch->setText(QString::number(data_pkt.x1_fetch));

@@ -11,6 +11,9 @@
 #include "img_process.h"
 
 extern ConfigData configData;
+extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
+extern std::vector<Lines> g_lines;
+extern std::vector<std::pair<double, double>> g_roi;
 
 imgWindow::imgWindow(QWidget *parent) :
     QWidget(parent),
@@ -43,19 +46,25 @@ void imgWindow::on_sel1_clicked()
     position = 0;
 }
 
-
 void imgWindow::on_sep_but_clicked()
 {
-    if (!sep_enable)
+    if (!sep_enable) {
         ui->sep_but->setText(QString("sep end"));
-    else
+    } else {
         ui->sep_but->setText(QString("sep start"));
+    }
     sep_enable = ~sep_enable;
 }
 
-extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
-extern std::vector<Lines> g_lines;
-extern std::vector<std::pair<double, double>> g_roi;
+void imgWindow::mouseMoveEvent(QMouseEvent* event) {
+    QPoint pppt = event->globalPos();
+    QPoint ppp = ui->img_label->mapFromGlobal(pppt);
+    float ppx = ppp.x();
+    float ppy = ppp.y();
+    ppx = ppx * SCALE;
+    ppy = ppy * SCALE;
+    ui->mouse_pos->setText(QString::number(ppx) + QString(", ") + QString::number(ppy));
+}
 
 void imgWindow::mousePressEvent(QMouseEvent *event) {
     if (cal_enabled) {
@@ -177,14 +186,22 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
     }
 }
 
-void imgWindow::camera_img_refresh(cv::Mat img) {
-    // qDebug("cam refreshed..");
-    QImage qimg = QImage((const unsigned char*)(img.data),
-        img.cols,
-        img.rows,
-        img.step,
-        QImage::Format_Grayscale8).copy();
-        // QImage::Format_RGB888).copy();
+void imgWindow::calibration_refresh(cv::Mat img) {
+    QImage qimg;
+    if (img_sw_status == 0) {
+        qimg = QImage((const unsigned char*)(img.data),
+                           img.cols,
+                           img.rows,
+                           img.step,
+                           QImage::Format_Grayscale8).copy();
+
+    } else {
+        qimg = QImage((const unsigned char*)(img.data),
+                           img.cols,
+                           img.rows,
+                           img.step,
+                           QImage::Format_RGB888).copy();
+    }
 
     QPixmap piximg = QPixmap::fromImage(qimg);
 
@@ -292,5 +309,12 @@ void imgWindow::on_roi_sel_clicked()
         configData.roi = QString(ss.str().c_str());;
     }
     roi_enable = !roi_enable;
+}
+
+
+void imgWindow::on_img_sw_clicked()
+{
+    img_sw_status = (img_sw_status + 1) % 3;
+    emit img_sw_status_changed(img_sw_status);
 }
 

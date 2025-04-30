@@ -21,12 +21,16 @@ public:
     bool sep_enable = false;
     bool roi_enable = false;
 
+signals:
+    void img_sw_status_changed(int mode);
+
 public slots:
-void camera_img_refresh(cv::Mat img);
+void calibration_refresh(cv::Mat img);
 
 private slots:
     void on_sel1_clicked();
     void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent* event);
 
     void on_img2mach_clicked();
 
@@ -38,9 +42,12 @@ private slots:
 
     void on_roi_sel_clicked();
 
+    void on_img_sw_clicked();
+
 private:
     Ui::imgWindow *ui;
     const float SCALE = (2048.0f / 600.0f);
+    int img_sw_status = 0;
 };
 
 #endif // IMGWINDOW_H

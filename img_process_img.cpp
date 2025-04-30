@@ -311,7 +311,11 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
 
             emit signal_refresh_img(color_img);
 
-            emit signal_refresh_cal_img(edge);
+            if (cal_img_mode == 0) {
+                emit signal_refresh_cal_img(edge);
+            } else {
+                emit signal_refresh_cal_img(color_img);
+            }
 
             frame_cnt++;
             // waitKey(10);

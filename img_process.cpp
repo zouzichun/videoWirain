@@ -32,7 +32,9 @@ bool ImgProcess::Deinit() {
 void ImgProcess::imgProcTimeout() {
 }
 
-
+void ImgProcess::ChangeCalImageMode(int mode) {
+    cal_img_mode = mode;
+}
 
 float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB) {
     int A = 0, B = 0, C = 0;

@@ -328,7 +328,12 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
             cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);
 
             emit signal_refresh_img(color_img);
-            emit signal_refresh_cal_img(edge);
+
+            if (cal_img_mode == 0)
+                emit signal_refresh_cal_img(edge);
+            else
+                emit signal_refresh_cal_img(color_img);
+
             frame_cnt++;
         }
     } else {

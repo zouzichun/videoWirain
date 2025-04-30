@@ -89,6 +89,7 @@ signals:
     void signal_refresh_img(cv::Mat img);
     void signal_refresh_delta();
     void signal_refresh_cal_img(cv::Mat img);
+    void signal_change_cal_img_mode(int mode);
 
 public slots:
     void CameraTest(CMvCamera* p_cam, Port * p_port);
@@ -96,8 +97,11 @@ public slots:
     void ImageTest(CMvCamera* p_cam, Port * p_port);
     void ImageCalTest(CMvCamera* p_cam);
 
+    void ChangeCalImageMode(int mode);
+
 private:
     QString m_dev_name;
+    int cal_img_mode = 0;
 };
 
 #endif // IMGPROCESS_H

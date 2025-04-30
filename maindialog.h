@@ -133,8 +133,8 @@ private slots:
 
     void on_saveImg_clicked();
     void on_modbusSend_clicked();
-    void camera_img_refresh(cv::Mat img);
-    void camera_refresh_delta();
+    void main_img_refresh(cv::Mat img);
+    void calibration_refresh_delta();
 
     void on_modbusSend_2_clicked();
 
