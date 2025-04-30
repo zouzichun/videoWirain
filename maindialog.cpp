@@ -29,7 +29,7 @@ extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
 extern std::vector<Lines> g_lines;
 
-#define TEST_CAMERA 0
+#define TEST_CAMERA 1
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
@@ -804,6 +804,29 @@ void MainDialog::on_modbusSend_clicked()
         } else {
 
         }
+
+            float w_val = 1.0;
+            float r_val;
+        m_port->writeModbusData(600, 2 , w_val);
+        QThread::sleep(1);
+        m_port->writeModbusData(602, 2 , w_val + 1.1);
+         QThread::sleep(1);
+        m_port->writeModbusData(604, 2 , w_val + 1.1);
+         QThread::sleep(1);
+        m_port->writeModbusData(606, 2 , w_val + 1.1);
+         QThread::sleep(1);
+        m_port->readModbusData(600, 2 , r_val);
+         QThread::sleep(1);
+        qDebug("read %d, %f", 600, r_val);
+        m_port->readModbusData(602, 2 , r_val);
+         QThread::sleep(1);
+        qDebug("read %d, %f", 602, r_val);
+        m_port->readModbusData(604, 2 , r_val);
+         QThread::sleep(1);
+        qDebug("read %d, %f", 604, r_val);
+        m_port->readModbusData(606, 2 , r_val);
+         QThread::sleep(1);
+        qDebug("read %d, %f", 606, r_val);
     }
 }
 

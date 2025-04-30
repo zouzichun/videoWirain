@@ -109,8 +109,8 @@ public:
     int formFrame(unsigned char command, unsigned int size, void * buff);
     void parseMsg(int idx);
 
-    virtual bool readModbusData(int startAdd, quint16 numbers, float &val) = 0;
-    virtual bool writeModbusData(int startAdd, quint16 numbers, float val) = 0;
+    virtual bool readModbusData(int startAdd, int numbers, float &val) = 0;
+    virtual bool writeModbusData(int startAdd, int numbers, float val) = 0;
     virtual bool waitDataReady() {return true;};
     void ClearFlagData();
     void thd_msleep(uint32_t ms);

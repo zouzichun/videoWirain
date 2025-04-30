@@ -83,7 +83,7 @@ void ModbusTcp::closePort() {
     m_modbustcp->disconnectDevice();
 }
 
-bool ModbusTcp::readModbusData(int startAdd, quint16 numbers, float &val) {
+bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
     if (!m_modbustcp || m_modbustcp->state() != QModbusDevice::ConnectedState)
         return false;
     QModbusDataUnit readUnit(QModbusDataUnit::HoldingRegisters, startAdd, numbers);
@@ -148,7 +148,7 @@ bool ModbusTcp::readModbusData(int startAdd, quint16 numbers, float &val) {
 
 //对modbus设备各寄存器写入数据
 //typeNum:1_线圈 2_保持 (这两类寄存器可读可写,其余的只读)
-bool ModbusTcp::writeModbusData(int startAdd, quint16 numbers, float val)
+bool ModbusTcp::writeModbusData(int startAdd, int numbers, float val)
 {
     if(m_modbustcp->state() != QModbusDevice::ConnectedState) {
         return false;
