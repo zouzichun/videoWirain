@@ -29,7 +29,10 @@ extern QTextBrowser *logOut;
 extern void rcvFunc(QByteArray &buf, QTcpSocket *socket);
 extern std::vector<Lines> g_lines;
 
-#define TEST_CAMERA 0
+std::pair<double, double> X2_MACH;
+std::pair<double, double> X1_MACH;
+
+#define TEST_CAMERA 1
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
@@ -314,6 +317,11 @@ void MainDialog::loadConfigFile()
         int y = std::atof(point[1].c_str());
         spdlog::info("config roi {},{} ", x, y);
     }
+
+    X2_MACH.first = configData.x2_rho;
+    X2_MACH.second = 0;
+    X1_MACH.first = 1020.0 + configData.x2_rho;
+    X1_MACH.second = 0;
 
     m_ui->txbRecv->append("config file loadded!");
 }
@@ -807,28 +815,28 @@ void MainDialog::on_modbusSend_clicked()
 
         }
 
-            float w_val = 1.0;
-            float r_val;
-        m_port->writeModbusData(600, 2 , w_val);
+        float w_val = 1.0;
+        float r_val;
+        m_port->writeModbusData(500, 2 , w_val);
         QThread::sleep(1);
-        m_port->writeModbusData(602, 2 , w_val + 1.1);
+        m_port->writeModbusData(502, 2 , w_val + 1.1);
          QThread::sleep(1);
-        m_port->writeModbusData(604, 2 , w_val + 1.1);
+        m_port->writeModbusData(504, 2 , w_val + 1.1);
          QThread::sleep(1);
-        m_port->writeModbusData(606, 2 , w_val + 1.1);
+        m_port->writeModbusData(506, 2 , w_val + 1.1);
          QThread::sleep(1);
-        m_port->readModbusData(600, 2 , r_val);
+        m_port->readModbusData(500, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 600, r_val);
-        m_port->readModbusData(602, 2 , r_val);
+        qDebug("read %d, %f", 500, r_val);
+        m_port->readModbusData(502, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 602, r_val);
-        m_port->readModbusData(604, 2 , r_val);
+        qDebug("read %d, %f", 502, r_val);
+        m_port->readModbusData(504, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 604, r_val);
-        m_port->readModbusData(606, 2 , r_val);
+        qDebug("read %d, %f", 504, r_val);
+        m_port->readModbusData(506, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 606, r_val);
+        qDebug("read %d, %f", 506, r_val);
     }
 }
 
@@ -857,3 +865,20 @@ void MainDialog::on_modbusSend_2_clicked()
             qDebug("send D500 %f, D504 %f, D508 %f", m_ui->d500->text().toFloat(), m_ui->d504->text().toFloat(), m_ui->d508->text().toFloat());
     }
 }
+
+void MainDialog::on_read_clicked()
+{
+    float val = 0.0f;
+    m_ui->test_val->setText(QString("0"));
+    m_port->readModbusData(m_ui->test_addr->text().toInt(), 2 , val);
+    m_ui->test_val->setText(QString("%1").arg(val));
+}
+
+
+
+void MainDialog::on_write_clicked()
+{
+    float val = m_ui->test_val->text().toFloat();
+    m_port->writeModbusData(m_ui->test_addr->text().toInt(), 2 , val);
+}
+

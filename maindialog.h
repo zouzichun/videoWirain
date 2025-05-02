@@ -66,7 +66,7 @@ const ConfigData defaultSetting {
     .d=14.0,
     .seprate_rho=1234.1,
     .seprate_theta=1.5,
-    .x2_rho = 330.0,
+    .x2_rho = -330.0,
     .motor_rho = 21.6,
     .x1_start = 256.0,
     .x2_start = 256.0,
@@ -137,6 +137,10 @@ private slots:
     void calibration_refresh_delta();
 
     void on_modbusSend_2_clicked();
+
+    void on_read_clicked();
+
+    void on_write_clicked();
 
 private:
     Ui::MainDialog *m_ui;

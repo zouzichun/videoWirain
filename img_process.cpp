@@ -478,25 +478,26 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     cv::Mat processed;
     cv::Mat edge_img;
     cv::Mat grayimg;
-    cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
+    // cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
 
-    std::vector<cv::Point> points;
-    std::vector<std::string> rois = split(configData.roi.toStdString(),';');
-    for (int pos =0; pos < rois.size(); pos++) {
-        std::vector<std::string> point = split(rois[pos],',');
-        int x = std::atoi(point[0].c_str());
-        int y = std::atof(point[1].c_str());
-        points.push_back(cv::Point(x,y));
-    }
+    // std::vector<cv::Point> points;
+    // std::vector<std::string> rois = split(configData.roi.toStdString(),';');
+    // for (int pos =0; pos < rois.size(); pos++) {
+    //     std::vector<std::string> point = split(rois[pos],',');
+    //     int x = std::atoi(point[0].c_str());
+    //     int y = std::atof(point[1].c_str());
+    //     points.push_back(cv::Point(x,y));
+    // }
 
-    if (points.size() < 3) {
-        cv::cvtColor(img, hsv, COLOR_RGB2HSV);
-    } else {
-        cv::fillPoly(mask, {points}, cv::Scalar(255,255,255));
-        cv::Mat roi;
-        img.copyTo(roi, mask);\
-        cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
-    }
+    // if (points.size() < 3) {
+    //     cv::cvtColor(img, hsv, COLOR_RGB2HSV);
+    // } else {
+    //     cv::fillPoly(mask, {points}, cv::Scalar(255,255,255));
+    //     cv::Mat roi;
+    //     img.copyTo(roi, mask);
+    //     cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
+    // }
+
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     // qDebug("in img depth %d, type %d, ", img.depth(), img.type());
@@ -504,28 +505,31 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     
-    // 白色阈值范围
-    cv::inRange(hsv, Scalar(0, 0, 40), Scalar(200, 60, 255), hsv);
+   // 白色阈值范围
+//    cv::inRange(hsv, Scalar(0, 0, 40), Scalar(200, 60, 255), hsv);
     
     // 建议2：添加kernel验证
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(configData.blur_kernel,configData.blur_kernel));
-    cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
-    cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
+//    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(configData.blur_kernel,configData.blur_kernel));
+//    cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
+//    cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
+
     cv::Mat img_tt;
+    cv::cvtColor(img, img_tt, COLOR_RGB2GRAY);
+
     // cv::bilateralFilter(img, img_tt, 0, 200, 10);
     // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
-    // cv::threshold(img, img_tt, configData.inv_thd, 255, THRESH_BINARY);
+//    cv::threshold(img_tt, img_tt, configData.inv_thd, 255, THRESH_BINARY);
     // cv::medianBlur(img_tt, img_tt, configData.blur_kernel);
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
-    cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
-    if (points.size() >= 2) {
-        cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
-        for (auto it = points.begin()+1; it < points.end(); it++)
-            cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
-//        cv::bitwise_and(edge_img, mask, edge_img);
-        cv::line(edge_img, *points.begin(), *points.rbegin(), Scalar(0), 15);
-    }
+    cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+//   if (points.size() >= 2) {
+//       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
+//       for (auto it = points.begin()+1; it < points.end(); it++)
+//           cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
+////        cv::bitwise_and(edge_img, mask, edge_img);
+//       cv::line(edge_img, *points.begin(), *points.rbegin(), Scalar(0), 15);
+//   }
 
     edge_up = edge_img.clone();
     edge_down = edge_img.clone();

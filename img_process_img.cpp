@@ -20,8 +20,8 @@ cv::Point2f X22(-1970.84, 12.132);
 cv::Point2f X11(-1959.74, -1716.01);
 cv::Point2f X12(-1970.84, 12.132);
 
-std::pair<double, double> X2_MACH(-330.0, 0.0);
-std::pair<double, double> X1_MACH(690.0, 0.0);
+extern std::pair<double, double> X2_MACH;
+extern std::pair<double, double> X1_MACH;
 DataPkt data_pkt;
 
 void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {

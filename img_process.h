@@ -101,7 +101,7 @@ public slots:
 
 private:
     QString m_dev_name;
-    int cal_img_mode = 0;
+    int cal_img_mode = 1;
 };
 
 #endif // IMGPROCESS_H

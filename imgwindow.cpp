@@ -67,16 +67,16 @@ void imgWindow::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void imgWindow::mousePressEvent(QMouseEvent *event) {
+    float ppx = 0.0f;
+    float ppy = 0.0f;
+    if (event->QEvent::MouseButtonPress) {
+        QPoint pppt = event->globalPos();
+        QPoint ppp = ui->img_label->mapFromGlobal(pppt);
+        ppx = ppp.x() * SCALE;
+        ppy = ppp.y() * SCALE;
+    }
     if (cal_enabled) {
         if (event->QEvent::MouseButtonPress) {
-            QPoint pppt = event->globalPos();
-            QPoint ppp = ui->img_label->mapFromGlobal(pppt);
-
-            float ppx = ppp.x();
-            float ppy = ppp.y();
-            ppx = ppx * SCALE;
-            ppy = ppy * SCALE;
-
             switch (position % 2) {
                 case 0:
                     ui->l1_p1x->setText(QString::number(ppx));
@@ -123,14 +123,6 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
 
     if (sep_enable) {
         if (event->QEvent::MouseButtonPress) {
-            QPoint pppt = event->globalPos();
-            QPoint ppp = ui->img_label->mapFromGlobal(pppt);
-
-            float ppx = ppp.x();
-            float ppy = ppp.y();
-            ppx = ppx * SCALE;
-            ppy = ppy * SCALE;
-
             switch (position % 2) {
                 case 0:
                     ui->sep1x->setText(QString::number(ppx));
@@ -171,18 +163,8 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
     }
 
     if (roi_enable) {
-        if (event->QEvent::MouseButtonPress) {
-            QPoint pppt = event->globalPos();
-            QPoint ppp = ui->img_label->mapFromGlobal(pppt);
-
-            float ppx = ppp.x();
-            float ppy = ppp.y();
-            ppx = ppx * SCALE;
-            ppy = ppy * SCALE;
-
-            g_roi.push_back(std::pair(ppx, ppy));
-            spdlog::info("roi point ({:.2f},{:.2f})", ppx, ppy);
-        }
+        g_roi.push_back(std::pair(ppx, ppy));
+        spdlog::info("roi point ({:.2f},{:.2f})", ppx, ppy);
     }
 }
 

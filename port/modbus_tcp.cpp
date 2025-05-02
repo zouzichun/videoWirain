@@ -9,7 +9,7 @@
 ModbusTcp::ModbusTcp(QWidget *parent) :
     Port(parent),
     tcp_ip("192.168.1.111"),
-    tcp_port(520) {
+    tcp_port(502) {
     m_modbustcp = new QModbusTcpClient(this);
     
     // 连接状态变化和错误信号
