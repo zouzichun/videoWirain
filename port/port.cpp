@@ -10,14 +10,16 @@
 Port::Port(QWidget *parent): QObject(parent)
 {
     pWidget =  parent;
-    mIoTimer = new QTimer(parent);
-    mIoTimer->setSingleShot(true);
-    connect(mIoTimer, SIGNAL(timeout()), this, SLOT(onIoTimeout()));
+    comTimer = new QTimer(parent);
+    comTimer->setSingleShot(true);
+    connect(comTimer, SIGNAL(timeout()), this, SLOT(onIoTimeout()));
+    comTimer->stop();
     msgBoxIoTimeout = new QMessageBox(QMessageBox::Critical, "ERROR", "Wait Peply Timeout.");
     msgBoxIoTimeout->setModal(false);
     send_buff_mgr = std::make_shared<BufferManager>(8);
     recv_buff_mgr = std::make_shared<BufferManager>(16);
 }
+
 Port::~Port()
 {
 }
@@ -43,8 +45,7 @@ int Port::sendMsg(int idx)
 
 void Port::onIoTimeout()
 {
-    qDebug()<<"Wait Peply TimeOut";
-    //参考//QMessageBox::critical(mainWindow, tr("ERROR"), tr("I/O Timeout."));
+    qDebug("Wait Peply TimeOut, %d", timerCnt++);
     msgBoxIoTimeout->show();
 //    mutex.lock();
 //    recvData.clear();
@@ -106,8 +107,8 @@ int Port::formFrame(unsigned char command, unsigned int size, void * buff)
 
     if(configData.isReplyTimeout)
     {
-        if(!mIoTimer->isActive())
-            mIoTimer->start(5000);
+        if(!comTimer->isActive())
+            comTimer->start(5000);
     }
 
     send_buff_mgr->IncCounter();
@@ -164,7 +165,7 @@ void Port::parseMsg(int buff_idx)
 //        qDebug("rcrc check pass!");
 //    }
 
-    mIoTimer->stop();
+    comTimer->stop();
     emit receivedSignal(buff_idx);
 }
 

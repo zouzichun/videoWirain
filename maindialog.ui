@@ -115,18 +115,8 @@
       <item row="1" column="3">
        <widget class="QLineEdit" name="hgline3"/>
       </item>
-      <item row="9" column="2">
-       <widget class="QLineEdit" name="line2_ang_delta"/>
-      </item>
       <item row="1" column="1">
        <widget class="QLineEdit" name="hgline1"/>
-      </item>
-      <item row="9" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>角度修正</string>
-        </property>
-       </widget>
       </item>
       <item row="0" column="2">
        <widget class="QLineEdit" name="canny2"/>
@@ -136,9 +126,6 @@
       </item>
       <item row="6" column="1">
        <widget class="QLineEdit" name="line1_ang"/>
-      </item>
-      <item row="9" column="1">
-       <widget class="QLineEdit" name="line1_ang_delta"/>
       </item>
       <item row="6" column="2">
        <widget class="QLineEdit" name="line1_roh"/>
@@ -164,13 +151,6 @@
        <widget class="QLabel" name="Encoder_3">
         <property name="text">
          <string>模糊</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="3">
-       <widget class="QPushButton" name="saveImg">
-        <property name="text">
-         <string>保存</string>
         </property>
        </widget>
       </item>
@@ -220,6 +200,13 @@
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>距离误差</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="3">
+       <widget class="QPushButton" name="saveImg">
+        <property name="text">
+         <string>保存</string>
         </property>
        </widget>
       </item>
@@ -309,7 +296,7 @@
       <item row="0" column="0">
        <widget class="QLineEdit" name="test_addr">
         <property name="text">
-         <string/>
+         <string>500</string>
         </property>
        </widget>
       </item>
@@ -388,7 +375,7 @@
      <x>10</x>
      <y>10</y>
      <width>721</width>
-     <height>196</height>
+     <height>202</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -482,9 +469,6 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="4">
-       <widget class="QLineEdit" name="d_ang"/>
-      </item>
       <item row="4" column="3">
        <widget class="QLabel" name="label_6">
         <property name="text">
@@ -545,6 +529,13 @@
       </item>
       <item row="1" column="4">
        <widget class="QLineEdit" name="start_delta"/>
+      </item>
+      <item row="4" column="4">
+       <widget class="QPushButton" name="trigger">
+        <property name="text">
+         <string>trigger</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>

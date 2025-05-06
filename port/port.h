@@ -7,6 +7,7 @@
 #include <QHostAddress>
 #include <memory>
 #include <mutex>
+#include <QThread>
 
 class QTcpSocket;
 class QTimer;
@@ -113,17 +114,22 @@ public:
     virtual bool writeModbusData(int startAdd, int numbers, float val) = 0;
     virtual bool waitDataReady() {return true;};
     void ClearFlagData();
+    virtual float getRdyData(float & val) {
+        
+    };
     void thd_msleep(uint32_t ms);
-    
+
     QWidget* pWidget;
-    // QMutex  mtx;
     std::mutex mtx;
-    QTimer* mIoTimer;
-    QMessageBox* msgBoxIoTimeout;
-    bool isOpened = false;
+
+    int timerCnt = 0;
+    QTimer* comTimer;
+    QThread* comToThread;
 
     volatile bool rdy_flag;
     volatile float rdy_data;
+    QMessageBox* msgBoxIoTimeout;
+    bool isOpened = false;
 
     std::shared_ptr<BufferManager> send_buff_mgr;
     std::shared_ptr<BufferManager> recv_buff_mgr;

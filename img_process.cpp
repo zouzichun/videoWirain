@@ -4,12 +4,15 @@
 #include <QDateTime>
 #include <opencv2/opencv.hpp>
 #include <sstream>
+#include <limits>
 #include "crcalgorithm.h"
 #include "maindialog.h"
 #include "img_process.h"
 
 using namespace std;
 using namespace cv;
+
+#define ImgTurn 1
 
 ImgProcess::ImgProcess(QString dev_name, int img_height, int img_width, bool color_img) :
 IMG_HEIGHT(img_height),
@@ -396,8 +399,18 @@ std::pair<double, double> PointsToHoughParams(cv::Point2f p1, cv::Point2f p2) {
     double A = p2.y - p1.y;
     double B = p1.x - p2.x;
     double C = p2.x * p1.y - p1.x * p2.y;
-    double theta_rad = atan2(B, A); // 正确获取法线方向角度
-    double rho = C / sqrt(A * A + B * B);
+
+    if (std::abs(B) < 1e-6) {
+        return std::pair<double, double>(99999.9, 0.0);
+    }
+
+    double theta_rad = atan2(B, A);
+    double rho = 0.0;
+    if ((A * A + B * B) < 1.0e-6) {
+        rho = C / 1.0e-3;
+    } else {
+        rho = C / sqrt(A * A + B * B);
+    }
     // std::cout << "PointsToHoughParams rho "<< rho << ", theta "<< theta_rad << std::endl;
     double k = 0.0;
     if (p2.x == p1.x) {
@@ -419,12 +432,6 @@ std::pair<double, double> PointsToHoughParams(cv::Point2f p1, cv::Point2f p2) {
     } else {
         rho = abs(rho);
     }
-
-    // OpenCV规范化处理
-    // if(rho < 0) {
-    // rho = -rho;
-    // theta_rad += CV_PI;
-    // }
 
     theta_rad = fmod(theta_rad + 2*CV_PI, CV_PI);
     return std::pair<double, double>(rho, theta_rad);
@@ -472,32 +479,30 @@ bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p) {
 }
 
 extern std::vector<std::string> split(const std::string & str, char dim);
+extern std::vector<cv::Point> roi_points;
 
 bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) {
     cv::Mat hsv;
     cv::Mat processed;
     cv::Mat edge_img;
     cv::Mat grayimg;
-    // cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
+    cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
 
-    // std::vector<cv::Point> points;
-    // std::vector<std::string> rois = split(configData.roi.toStdString(),';');
-    // for (int pos =0; pos < rois.size(); pos++) {
-    //     std::vector<std::string> point = split(rois[pos],',');
-    //     int x = std::atoi(point[0].c_str());
-    //     int y = std::atof(point[1].c_str());
-    //     points.push_back(cv::Point(x,y));
-    // }
+    if (roi_points.size() < 3) {
+     cv::cvtColor(img, hsv, COLOR_RGB2HSV);
+    } else {
+     cv::fillPoly(mask, {roi_points}, cv::Scalar(255,255,255));
+     cv::Mat roi;
+     img.copyTo(roi, mask);
+     cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
+    }
 
-    // if (points.size() < 3) {
-    //     cv::cvtColor(img, hsv, COLOR_RGB2HSV);
-    // } else {
-    //     cv::fillPoly(mask, {points}, cv::Scalar(255,255,255));
-    //     cv::Mat roi;
-    //     img.copyTo(roi, mask);
-    //     cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
-    // }
-
+#if ImgTurn
+    cv::Mat ott;
+    hsv.copyTo(ott);
+    cv::resize(ott, ott, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+    imshow("o_img", ott);
+#endif
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     // qDebug("in img depth %d, type %d, ", img.depth(), img.type());
@@ -506,15 +511,30 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     
    // 白色阈值范围
-//    cv::inRange(hsv, Scalar(0, 0, 40), Scalar(200, 60, 255), hsv);
+    cv::inRange(hsv, Scalar(0, 0, 50), Scalar(200, 60, 255), hsv);
+
+#if ImgTurn
+    cv::Mat ott2;
+    hsv.copyTo(ott2);
+    cv::resize(ott2, ott2, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+    imshow("o_img2", ott2);
+#endif
     
     // 建议2：添加kernel验证
-//    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(configData.blur_kernel,configData.blur_kernel));
-//    cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
-//    cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(configData.blur_kernel,configData.blur_kernel));
+    cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
+    cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
 
-    cv::Mat img_tt;
-    cv::cvtColor(img, img_tt, COLOR_RGB2GRAY);
+#if ImgTurn
+    cv::Mat ott3;
+    grayimg.copyTo(ott3);
+    cv::resize(ott3, ott3, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+    imshow("o_img3", ott3);
+#endif
+
+
+//    cv::Mat img_tt;
+//    cv::cvtColor(img, img_tt, COLOR_RGB2GRAY);
 
     // cv::bilateralFilter(img, img_tt, 0, 200, 10);
     // cv::GaussianBlur(img, img, Size(configData.blur_kernel,configData.blur_kernel), 0);
@@ -522,14 +542,14 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::medianBlur(img_tt, img_tt, configData.blur_kernel);
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
-    cv::Canny(img_tt, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
-//   if (points.size() >= 2) {
-//       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
-//       for (auto it = points.begin()+1; it < points.end(); it++)
-//           cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
-////        cv::bitwise_and(edge_img, mask, edge_img);
-//       cv::line(edge_img, *points.begin(), *points.rbegin(), Scalar(0), 15);
-//   }
+    cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
+   if (roi_points.size() >= 2) {
+       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
+       for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
+           cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
+       cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
+                Scalar(0), 15);
+   }
 
     edge_up = edge_img.clone();
     edge_down = edge_img.clone();
@@ -545,42 +565,114 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
             }
         }
     }
-//    cv::resize(edge_up, edge_up, cv::Size(600, 600));
-//    cv::resize(edge_down, edge_down, cv::Size(600, 600));
-
-//    imshow("edge_up", edge_up);
-//    imshow("edge_down", edge_down);
+#if ImgTurn
+    cv::Mat uptt;
+    cv::Mat downtt;
+    edge_up.copyTo(uptt);
+    edge_down.copyTo(downtt);
+    cv::resize(uptt, uptt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+    cv::resize(downtt, downtt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+    imshow("edge_up", uptt);
+    imshow("edge_down", downtt);
+#endif
 }
 
-bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found) {
-//    std::vector<vector<Point>> contours;
-//    std::vector<Point> hull_points;
-//    std::vector<cv::Vec4i> hierarchy;
+#define CONTOUR_MODE 0
 
-//    cv::findContours(edge_img, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_NONE);
-//    // spdlog::debug("findContours num {}", contours.size());
-//    // cv::Mat contour_img(edge_img.size(), CV_8UC1, Scalar(0));
-//    for (size_t i = 0; i < contours.size(); i++)
-//    {
-//        // spdlog::debug("  findContours {} {}", i, contours[i].size());
-//        if(contours[i].size() > 3000) {
-//            // cv::drawContours(contours_img, contours, static_cast<int>(i), Scalar(255), 2, LINE_8, hierarchy, 0);
-//            // spdlog::debug("  findContours {} {}", i, contours[i].size());
-//            cv::convexHull(contours[i], hull_points, false, true);
-//            // spdlog::debug("convhull points {}", hull_points.size());
-//            std::vector<vector<Point>> hullv;
-//            hullv.push_back((hull_points));
-//            cv::drawContours(contour_img, hullv, 0, Scalar(255), 2, LINE_8, hierarchy, 0);
-//        }
-//    }
-    cv::HoughLines(edge_img, lines_found,
+bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found, bool up) {
+
+        #if CONTOUR_MODE
+        // 轮廓检测
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(edge_img, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+        // 筛选最上面的边
+        std::vector<cv::Point> top_edge;
+        double min_y_center = numeric_limits<double>::max();
+
+        #if ImgTurn
+        cv::Mat image = Mat::zeros(edge_img.size(), CV_8UC3);
+        #endif
+
+        for (auto& contour : contours) {
+            std::vector<cv::Point> approx;        
+            double epsilon = 0.02 * cv::arcLength(contour, true);
+            cv::approxPolyDP(contour, approx, epsilon, true);
+            // 计算凸包
+            // cv::convexHull(contour, approx);
+            #if ImgTurn
+            cv::polylines(image, approx, true, Scalar(0, 255, 255), 2); // 蓝色多边形
+            #endif
+
+            if (approx.size() >= 2) {
+                // 计算边的中心点Y坐标
+                int y_min = contour[0].y;
+                int y_max = contour[0].y;
+                for (auto& p : approx) {
+                    if (!up) {
+                        if (p.y < y_min) y_min = p.y;
+                        if (p.y > y_max) y_max = p.y;
+                    } else {
+                        if (p.y > y_min) y_min = p.y;
+                        if (p.y < y_max) y_max = p.y;
+                    }
+                }
+                double y_center = (y_min + y_max) / 2.0;
+
+                if (!up) {
+                    if (y_center < min_y_center) {
+                        min_y_center = y_center;
+                        top_edge = approx;
+                    }
+                } else {
+                    if (y_center > min_y_center) {
+                        min_y_center = y_center;
+                        top_edge = approx;
+                    }
+                }
+            }
+        }
+
+        #if ImgTurn
+        if (!top_edge.empty()) {
+            for (auto& p : top_edge) {
+                cv::circle(image, p, 5, Scalar(0, 255, 0), -1);
+            }
+            cv::polylines(image, top_edge, true, Scalar(0, 0, 255), 2);
+        }
+        cv::resize(image, image, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+
+        if (!up) {
+            imshow("Result up", image);
+        } else {
+            imshow("Result down", image);
+        }
+        #endif
+    #else
+    // cv::HoughLines(edge_img, lines_found,
+    //     configData.hgline_1,
+    //     configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
+    //     configData.hgline_3);
+
+    std::vector<cv::Vec4i> lines;
+    cv::HoughLinesP(edge_img, lines,
         configData.hgline_1,
         configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
-        configData.hgline_3);
+        configData.hgline_3,
+        configData.hgline_3, 50);
+    for(const auto& line : lines) {
+        Point pt1(line[0], line[1]);
+        Point pt2(line[2], line[3]);
+        if (sqrtf(pow(pt1.x - pt2.x, 2) + pow(pt1.y - pt2.y, 2)) < configData.hgline_3)
+            continue;
+        auto pa = PointsToHoughParams(pt1, pt2);
+        // qDebug("houghlinesP %d rho %.2f ang %.2f", pos++, pa.first, pa.second);
+        lines_found.push_back(cv::Vec2f(pa.first, pa.second));
+    }
+    #endif
 }
 
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
-        
 
 bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found, bool up) {
     const int IMG_HEIGHT = rows;
@@ -684,18 +776,8 @@ bool ImgProcess::FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_f
     return true;
 }
 
-
-bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
-    std::vector<float> & rhos, std::vector<float> & thetas) {
-    if (rhos.size() != thetas.size() || thetas.size() == 0) {
-        spdlog::debug("invalid find lines param size!");
-        return false;
-    }
-
-    const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
-    const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
-    const float ang_abs = configData.line_ang_abs * CV_PI;
-    const float roh_abs = configData.line_roh_abs * 2800;
+bool ImgProcess::AdaptLines(std::vector<cv::Vec2f> &lines_found,
+    std::vector<std::vector<std::pair<double, double>>> &lines_filtered) {
 
     if (lines_found.size() > 1000 || lines_found.size() < configData.lines_num) {
         spdlog::debug("lines found {} invalid!", lines_found.size());
@@ -705,26 +787,22 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
 //            spdlog::debug("rho {:.2f}, theta {:.2f}", v[0], v[1]);
 //        }
     }
-    
-    std::vector<int> cnts;
-    for (const auto v : thetas) {
-        cnts.push_back(0);
-    }
 
     cv::Mat kmeans(lines_found.size(), 2, CV_32F, Scalar(0));
     cv::Mat bestlabels;
-    cv::Mat centers(configData.lines_num, 1000, CV_32F, Scalar(0));
+    cv::Mat centers(configData.lines_num, 2, CV_32F, Scalar(0));
     for (int pos=0; pos < lines_found.size();pos++) {
         kmeans.at<float>(pos, 0) = lines_found[pos][0];
         kmeans.at<float>(pos, 1) = lines_found[pos][1];
     }
 
     for (int pos=0; pos < configData.lines_num;pos++) {
-        centers.at<float>(pos, 0) = 1000;
-        centers.at<float>(pos, 1) = 0;
+        centers.at<float>(pos, 0) = 0;
+        centers.at<float>(pos, 1) = 2.5;
     }
 
     cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 20, 0.02);
+    // spdlog::debug("kmeans start");
     cv::kmeans(kmeans,
          configData.lines_num,
          bestlabels,
@@ -732,25 +810,83 @@ bool ImgProcess::AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
          configData.lines_num,
          cv::KMEANS_PP_CENTERS,
          centers);
-    // spdlog::debug("lines found {}, center size {}:{}", lines_found.size(), centers.rows, centers.cols);
-    if (centers.rows < configData.lines_num) {
-        spdlog::debug("no valid center found!");
+        //  spdlog::debug("kmeans end");
+
+    // if (centers.rows < configData.lines_num) {
+    //     spdlog::debug("no valid center found!");
+    //     return false;
+    // }
+    std::vector<std::pair<double, double>> lines;
+    for (int row = 0; row < configData.lines_num; row++) {
+        std::pair<double, double> line = std::pair<double, double>(centers.at<float>(row, 0), centers.at<float>(row, 1));
+        lines.push_back(line);
+    }
+    lines_filtered.push_back(lines);
+
+    return true;
+}
+
+bool GetCentralLines(const std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
+    std::vector<cv::Point2f> &line1,
+    std::vector<cv::Point2f> &line2) {
+    if (lines_filtered.size() != 2) {
+            spdlog::debug("lines filtered size {} invalid!", lines_filtered.size());
         return false;
     }
 
-    for (int pos=0; pos < centers.rows; pos++) {
-        cv::Mat roww = centers.row(pos);
-        if (abs(roww.at<float>(1) - ang1) < ang_abs) {
-            rhos[0] = roww.at<float>(0);
-            thetas[0] = roww.at<float>(1);
-//            spdlog::debug("center {}, {:.2f}:{:.2f}", pos, rhos[0], thetas[0]);
-        } else if (abs(roww.at<float>(1) - ang2) < ang_abs) {
-            rhos[1] = roww.at<float>(0);
-            thetas[1] = roww.at<float>(1);
-//            spdlog::debug("center {}, {:.2f}:{:.2f}", pos, rhos[1], thetas[1]);
-        } else {
-            continue;
+    auto findOutlier = [] (float a, float b, float c) -> int {
+        // 方法一：差值对比法
+        float aa = sin(a);
+        float bb = sin(b);
+        float cc = sin(c);
+        float d1 = fabs(aa - bb);
+        float d2 = fabs(aa - cc);
+        float d3 = fabs(bb - cc);
+        
+        // 找出最大差值对
+        if (d1 > d2 && d1 > d3) {         // a-b差异最大
+            return (fabs(aa - cc) < fabs(bb - cc)) ? 1 : 0;
+        } else if (d2 > d3) {             // a-c差异最大
+            return (fabs(aa - bb) < fabs(cc - bb)) ? 2 : 0;
+        } else {                          // b-c差异最大
+            return (fabs(bb - aa) < fabs(cc - aa)) ? 2 : 1;
         }
+    };
+    
+    int line_pos = 0;
+    for (const auto &v : lines_filtered) {
+        if (v.size() != 3) {
+            spdlog::debug("line size {} invalid!", v.size());
+            return false;
+        }
+
+        double l0_ang = v[0].second;
+        double l1_ang = v[1].second;
+        double l2_ang = v[2].second;
+        int tgt_ang = findOutlier(l0_ang, l1_ang, l2_ang);
+        std::pair<double, double> p0, p_mid, p1;
+        if (tgt_ang == 0) {
+            p0 = getCrossPoint(v[0], v[1]);
+            p1 = getCrossPoint(v[0], v[2]);
+        } else if (tgt_ang == 1) {
+            p0 = getCrossPoint(v[1], v[0]);
+            p1 = getCrossPoint(v[1], v[2]);
+        } else {
+            p0 = getCrossPoint(v[2], v[0]);
+            p1 = getCrossPoint(v[2], v[1]);
+        }
+        p_mid.first = (p1.first + p0.first) / 2;
+        p_mid.second = (p1.second + p0.second) / 2;
+        if (line_pos == 0) {
+            line1.push_back(cv::Point2f(p0.first, p0.second));
+            line1.push_back(cv::Point2f(p_mid.first, p_mid.second));
+            line1.push_back(cv::Point2f(p1.first, p1.second));
+        } else {
+            line2.push_back(cv::Point2f(p0.first, p0.second));
+            line2.push_back(cv::Point2f(p_mid.first, p_mid.second));
+            line2.push_back(cv::Point2f(p1.first, p1.second));
+        }
+        line_pos++;
     }
 
     return true;

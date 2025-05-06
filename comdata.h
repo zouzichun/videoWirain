@@ -21,6 +21,7 @@ typedef struct {
 
     QString modbusTcpIp;
     qint32 modbusTcpPort;
+    qint32 modbusDelay;
 
     float camera_height;
     float camera_angle;

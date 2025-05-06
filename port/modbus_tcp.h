@@ -29,13 +29,14 @@ public:
     virtual bool writeModbusData(int startAdd, int numbers, float val);
     virtual bool waitDataReady();
 
-//  signals:
-    // // void signal_stateChanged(bool flag);
-    // void signal_readRegisters(int resultNum);
+ signals:
+    // void signal_stateChanged(bool flag);
+    void signal_UpdateReadData(float val);
 
 private slots:
     void handleStateChanged(QModbusDevice::State state);
     void handleErrorOccurred(QModbusDevice::Error error);
+    void handleDataReady(float & val);
 
 private:
     QString tcp_ip;

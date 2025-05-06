@@ -21,11 +21,15 @@ std::pair<cv::Point2f, cv::Point2f> HoughToPoints(double rho, double theta);
 std::pair<cv::Point2f, cv::Point2f> HoughToPointsInImg(double rho, double theta, int width, int height);
 std::pair<double, double> PointsToHoughParams(cv::Point2f p1, cv::Point2f p2);
 std::pair<double, double> rotateHoughLine(double rho, double theta, double rotate_rad, std::pair<double, double> center);
-cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
+
 std::pair<cv::Point2f, cv::Point2f> PointsImg2Mach(cv::Point2f p1, cv::Point2f p2);
 std::pair<cv::Point2f, cv::Point2f> PointsMach2Img(cv::Point2f p1, cv::Point2f p2);
 bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p);
+cv::Point2f getCrossPoint(cv::Vec4i LineA, cv::Vec4i LineB);
 std::pair<double, double> getCrossPoint(std::pair<double, double> line1, std::pair<double, double> line2);
+bool GetCentralLines(const std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
+    std::vector<cv::Point2f> &line1,
+    std::vector<cv::Point2f> &line2);
 
 enum {
     UP_LINE = 0,
@@ -71,16 +75,18 @@ public:
     bool Deinit();
     void imgProcTimeout();
     bool PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
-    bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found);
+    bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found, bool up = true);
     bool FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found, bool up = true);
-    bool AdaptLines(cv::Mat &img, std::vector<cv::Vec2f> &lines_found,
-        std::vector<float> & rhos,
-        std::vector<float> & thetas);
+    bool AdaptLines(std::vector<cv::Vec2f> &lines_found,
+                    std::vector<std::vector<std::pair<double, double>>> &lines_filtered);
+    bool GetCentralLine(std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
+                    std::vector<cv::Point2f> &line1,
+                    std::vector<cv::Point2f> &line2);
 
     int max_hash_win_x = 0;
     int max_hash_win_y = 0;
 
-    volatile bool camera_enable;
+    volatile bool camera_enable = false;
     int IMG_HEIGHT = 2048;
     int IMG_WIDTH = 2048;
     bool color_img = false;

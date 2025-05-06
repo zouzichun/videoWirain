@@ -13,10 +13,8 @@ ModbusTcp::ModbusTcp(QWidget *parent) :
     m_modbustcp = new QModbusTcpClient(this);
     
     // 连接状态变化和错误信号
-    connect(m_modbustcp, &QModbusClient::stateChanged,
-            this, &ModbusTcp::handleStateChanged);
-    connect(m_modbustcp, &QModbusClient::errorOccurred,
-            this, &ModbusTcp::handleErrorOccurred);
+    connect(m_modbustcp, &QModbusClient::stateChanged, this, &ModbusTcp::handleStateChanged);
+    connect(m_modbustcp, &QModbusClient::errorOccurred, this, &ModbusTcp::handleErrorOccurred);
 }
 
 ModbusTcp::~ModbusTcp(){
@@ -83,7 +81,12 @@ void ModbusTcp::closePort() {
     m_modbustcp->disconnectDevice();
 }
 
+void ModbusTcp::handleDataReady(float & val) {
+
+}
+
 bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
+//    qDebug("ConnectedState %d", m_modbustcp->state());
     if (!m_modbustcp || m_modbustcp->state() != QModbusDevice::ConnectedState)
         return false;
     QModbusDataUnit readUnit(QModbusDataUnit::HoldingRegisters, startAdd, numbers);
@@ -111,13 +114,13 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
 
                         // Debug("read register h: %x, l: %x, val %x", resultNum >> 16, resultNum & 0xffff, resultNum);
                         float val = 0.0;
-                        memcpy(&val, &resultNum, sizeof(float));                        
+                        memcpy(&val, &resultNum, sizeof(float));
                         {
                             std::lock_guard<std::mutex> lg(mtx);
                             rdy_data = val;
                             rdy_flag = true;
                         }
-
+                        // signal_UpdateReadData(val);
                         spdlog::info("read register h: {:#x}, l: {:#x}, val {:.2f}", resultNum >> 16, resultNum & 0xffff, val);
                     } else {
                         spdlog::info("保持寄存器返回数据错误,个数: {}", nSize);
@@ -132,16 +135,6 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
         spdlog::info("读取请求失败");
         return false;
     }
-
-    mtx.lock();
-        while (!rdy_flag) {
-            mtx.unlock();
-            QThread::msleep(10);
-            mtx.lock();
-        }
-    mtx.unlock();
-    spdlog::info("readModbusData start addr {}, numbers {}, get {:.2f}", startAdd, numbers, rdy_data);
-    val = rdy_data;
 
     return true;
 }

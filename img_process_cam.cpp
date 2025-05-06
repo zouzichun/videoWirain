@@ -12,15 +12,10 @@
 
 using namespace cv;
 
-//cv::Point2f X21(-1959.74, -1716.01);
-//cv::Point2f X22(-1970.84, 12.132);
-
-//cv::Point2f X11(-1959.74, -1716.01);
-//cv::Point2f X12(-1970.84, 12.132);
-
 extern std::pair<double, double> X2_MACH;
 extern std::pair<double, double> X1_MACH;
 extern DataPkt data_pkt;
+extern bool enable_process;
 
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
@@ -60,17 +55,18 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
     const int IMG_WIDTH = frame.stFrameInfo.nWidth;
     while (camera_enable) {
-        {
-            std::lock_guard<std::mutex> lg(p_port->mtx);
-            p_port->rdy_flag = false;
-            p_port->rdy_data = 0.0f;
-        }
-        
+
         // do {
         //     p_port->readModbusData(3, 700, 2);
         //     p_port->thd_msleep(100);
         // } while(!p_port->rdy_flag && p_port->rdy_data != 1.0f);
-    
+
+        if (enable_process) {
+            std::lock_guard<std::mutex> lg(p_port->mtx);
+            p_port->rdy_flag = false;
+            p_port->rdy_data = 0.0f;
+        }
+
         ret = p_cam->GetImageBuffer(&frame, 1000);
         if (ret != MV_OK) {
             spdlog::debug("No data {:#x}", ret);
@@ -80,67 +76,47 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
         cv::Mat color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3);
+
+        cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
+
+        const int IMG_HEIGHT = color_img.rows;
+        const int IMG_WIDTH = color_img.cols;
         cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
         cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
         std::vector<cv::Vec2f> lines_found_up;
         std::vector<cv::Vec2f> lines_found_down;
-
-        cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
+        std::vector<std::vector<std::pair<double, double>>> lines_filtered;
 
         PreProcess(color_img, edge_up, edge_down);
-        ret = p_cam->FreeImageBuffer(&frame);
-        if (ret != MV_OK) {
-            spdlog::debug("free img buffer failed!");
-            p_cam->StopGrabbing();
-            return;
+        bool valid_flag = true;
+        Process(edge_up, lines_found_up, true);
+        if (!AdaptLines(lines_found_up, lines_filtered)) {
+            valid_flag = false;
+        }
+        Process(edge_down, lines_found_down, false);
+        if (!AdaptLines(lines_found_down, lines_filtered)) {
+            valid_flag = false;
         }
 
-        Process(edge_up, lines_found_up);
-        if (!FilterLines(edge_up.rows, edge_up.cols, lines_found_up, true)) {
+        if (!valid_flag) {
             frame_cnt++;
+            continue;
         }
-        Process(edge_down, lines_found_down);
-        if (!FilterLines(edge_down.rows, edge_down.cols, lines_found_down, false)) {
+
+        std::vector<cv::Point2f> line1;
+        std::vector<cv::Point2f> line2;
+        if (!GetCentralLines(lines_filtered, line1, line2)) {
             frame_cnt++;
+            continue;
         }
+        cv::Point2f p1 = line1[0];
+        cv::Point2f p_mid = line1[1];
+        cv::Point2f p2 = line1[2];
 
-        cv::Point2f p1, p2;
-        float dist = 0.0, delta_x = 0.0, delta_x2 = 0.0;
-        cv::Point2f p_mid;
-        if (g_lines[0].points_in_img.size() >= 2 &&
-            g_lines[1].points_in_img.size() >= 2 &&
-            g_lines[2].points_in_img.size() >= 2) {
-            p1 = getCrossPoint(
-                cv::Vec4i(g_lines[0].points_in_img[0].first, g_lines[0].points_in_img[0].second,
-                    g_lines[0].points_in_img[1].first, g_lines[0].points_in_img[1].second),
-                cv::Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
-                    g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second));
-            p2 = getCrossPoint(
-                cv::Vec4i(g_lines[1].points_in_img[0].first, g_lines[1].points_in_img[0].second,
-                    g_lines[1].points_in_img[1].first, g_lines[1].points_in_img[1].second),
-                cv::Vec4i(g_lines[2].points_in_img[0].first, g_lines[2].points_in_img[0].second,
-                    g_lines[2].points_in_img[1].first, g_lines[2].points_in_img[1].second));
-        }
+        cv::Point2f p21 = line2[0];
+        cv::Point2f p_mid2 = line2[1];
+        cv::Point2f p22 = line2[2];
 
-        cv::Point2f p21, p22;
-        cv::Point2f p_mid2;
-        if (g_lines[3].points_in_img.size() >= 2 &&
-            g_lines[4].points_in_img.size() >= 2 &&
-            g_lines[5].points_in_img.size() >= 2) {
-            p21 = getCrossPoint(
-                cv::Vec4i(g_lines[3].points_in_img[0].first, g_lines[3].points_in_img[0].second,
-                    g_lines[3].points_in_img[1].first, g_lines[3].points_in_img[1].second),
-                cv::Vec4i(g_lines[4].points_in_img[0].first, g_lines[4].points_in_img[0].second,
-                    g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second));
-            p22 = getCrossPoint(
-                cv::Vec4i(g_lines[4].points_in_img[0].first, g_lines[4].points_in_img[0].second,
-                    g_lines[4].points_in_img[1].first, g_lines[4].points_in_img[1].second),
-                cv::Vec4i(g_lines[5].points_in_img[0].first, g_lines[5].points_in_img[0].second,
-                    g_lines[5].points_in_img[1].first, g_lines[5].points_in_img[1].second));
-        }
-
-        p_mid = cv::Point2f((p1.x + p2.x)/2, (p1.y + p2.y) /2);
-        p_mid2 = cv::Point2f((p21.x + p22.x)/2, (p21.y + p22.y) /2);
         // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
         cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
         cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
@@ -195,13 +171,10 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
             dist_x1 = -dist_x1;
         }
 
-//        data_pkt.x1_start = 1023 - x1_start.second;
-        data_pkt.x1_fetch = 1023 + configData.motor_rho - x1_corss_down.second;
-        data_pkt.x1_target = 1023 +  configData.motor_rho - x1_corss_up.second;
-
-        //        data_pkt.x2_start = 435 - x2_start.second;
-        data_pkt.x2_fetch = 435 + configData.motor_rho - x2_corss_down.second;
-        data_pkt.x2_target = 435 + configData.motor_rho - x2_corss_up.second;
+        data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second;
+        data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second;
+        data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second;
+        data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second;
 
         data_pkt.x1_delta = dist_x1;
         data_pkt.x2_delta = dist_x2;
