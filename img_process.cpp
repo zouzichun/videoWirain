@@ -12,7 +12,7 @@
 using namespace std;
 using namespace cv;
 
-#define ImgTurn 1
+extern bool debug_win_enable;
 
 ImgProcess::ImgProcess(QString dev_name, int img_height, int img_width, bool color_img) :
 IMG_HEIGHT(img_height),
@@ -33,10 +33,6 @@ bool ImgProcess::Deinit() {
 }
 
 void ImgProcess::imgProcTimeout() {
-}
-
-void ImgProcess::ChangeCalImageMode(int mode) {
-    cal_img_mode = mode;
 }
 
 float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB) {
@@ -497,12 +493,13 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
      cv::cvtColor(roi, hsv, COLOR_RGB2HSV);
     }
 
-#if ImgTurn
-    cv::Mat ott;
-    hsv.copyTo(ott);
-    cv::resize(ott, ott, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
-    imshow("o_img", ott);
-#endif
+    if (debug_win_enable) {
+        cv::Mat ott;
+        hsv.copyTo(ott);
+        cv::resize(ott, ott, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+        imshow("hsv_img", ott);
+    }
+
     // cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     // qDebug("in img depth %d, type %d, ", img.depth(), img.type());
@@ -511,26 +508,27 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::cvtColor(color_img, grayimg, COLOR_RGB2GRAY);
     
    // 白色阈值范围
-    cv::inRange(hsv, Scalar(0, 0, 50), Scalar(200, 60, 255), hsv);
+    cv::inRange(hsv, Scalar(configData.hsv_low1, configData.hsv_low2, configData.hsv_low3),
+                Scalar(configData.hsv_high1, configData.hsv_high2, configData.hsv_high3), hsv);
 
-#if ImgTurn
-    cv::Mat ott2;
-    hsv.copyTo(ott2);
-    cv::resize(ott2, ott2, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
-    imshow("o_img2", ott2);
-#endif
+    // if (debug_win_enable) {
+    //     cv::Mat ott2;
+    //     hsv.copyTo(ott2);
+    //     cv::resize(ott2, ott2, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+    //     imshow("gray_img", ott2);
+    // }
     
     // 建议2：添加kernel验证
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, Size(configData.blur_kernel,configData.blur_kernel));
     cv::morphologyEx(hsv, processed, MORPH_CLOSE, kernel, Point(-1,-1), 1);
     cv::morphologyEx(processed, grayimg, MORPH_OPEN, kernel, Point(-1,-1), 2);
 
-#if ImgTurn
-    cv::Mat ott3;
-    grayimg.copyTo(ott3);
-    cv::resize(ott3, ott3, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
-    imshow("o_img3", ott3);
-#endif
+    if (debug_win_enable) {
+        cv::Mat ott3;
+        grayimg.copyTo(ott3);
+        cv::resize(ott3, ott3, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+        imshow("gray_img", ott3);
+    }
 
 
 //    cv::Mat img_tt;
@@ -565,16 +563,16 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
             }
         }
     }
-#if ImgTurn
-    cv::Mat uptt;
-    cv::Mat downtt;
-    edge_up.copyTo(uptt);
-    edge_down.copyTo(downtt);
-    cv::resize(uptt, uptt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
-    cv::resize(downtt, downtt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
-    imshow("edge_up", uptt);
-    imshow("edge_down", downtt);
-#endif
+    if (debug_win_enable) {
+        cv::Mat uptt;
+        cv::Mat downtt;
+        edge_up.copyTo(uptt);
+        edge_down.copyTo(downtt);
+        cv::resize(uptt, uptt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+        cv::resize(downtt, downtt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+        imshow("edge_up", uptt);
+        imshow("edge_down", downtt);
+    }
 }
 
 #define CONTOUR_MODE 0
@@ -590,9 +588,9 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
         std::vector<cv::Point> top_edge;
         double min_y_center = numeric_limits<double>::max();
 
-        #if ImgTurn
-        cv::Mat image = Mat::zeros(edge_img.size(), CV_8UC3);
-        #endif
+        if (debug_win_enable) {
+            cv::Mat image = Mat::zeros(edge_img.size(), CV_8UC3);
+        }
 
         for (auto& contour : contours) {
             std::vector<cv::Point> approx;        
@@ -600,9 +598,9 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
             cv::approxPolyDP(contour, approx, epsilon, true);
             // 计算凸包
             // cv::convexHull(contour, approx);
-            #if ImgTurn
-            cv::polylines(image, approx, true, Scalar(0, 255, 255), 2); // 蓝色多边形
-            #endif
+            if (debug_win_enable) {
+                cv::polylines(image, approx, true, Scalar(0, 255, 255), 2); // 蓝色多边形
+            }
 
             if (approx.size() >= 2) {
                 // 计算边的中心点Y坐标
@@ -633,21 +631,21 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
             }
         }
 
-        #if ImgTurn
-        if (!top_edge.empty()) {
-            for (auto& p : top_edge) {
-                cv::circle(image, p, 5, Scalar(0, 255, 0), -1);
+        if (debug_win_enable) {
+            if (!top_edge.empty()) {
+                for (auto& p : top_edge) {
+                    cv::circle(image, p, 5, Scalar(0, 255, 0), -1);
+                }
+                cv::polylines(image, top_edge, true, Scalar(0, 0, 255), 2);
             }
-            cv::polylines(image, top_edge, true, Scalar(0, 0, 255), 2);
-        }
-        cv::resize(image, image, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+            cv::resize(image, image, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
 
-        if (!up) {
-            imshow("Result up", image);
-        } else {
-            imshow("Result down", image);
+            if (!up) {
+                imshow("Result up", image);
+            } else {
+                imshow("Result down", image);
+            }
         }
-        #endif
     #else
     // cv::HoughLines(edge_img, lines_found,
     //     configData.hgline_1,

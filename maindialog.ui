@@ -25,10 +25,215 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>721</width>
+     <height>233</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>摄像头参数:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="ComboDevices"/>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bnOpen">
+          <property name="text">
+           <string>打开</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="Calibration">
+          <property name="text">
+           <string>校准</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLineEdit" name="tbExposure"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="tbFrameRate"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="tbGain"/>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="frames"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>X2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLineEdit" name="x2_target"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="x2_fetch"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="x1_start"/>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLineEdit" name="start_delta"/>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLineEdit" name="x2_delta"/>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="motor_rho"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>中心偏差</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="p_y"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLineEdit" name="x1_target"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="x2_rho"/>
+      </item>
+      <item row="4" column="4">
+       <widget class="QPushButton" name="trigger">
+        <property name="text">
+         <string>trigger</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="5">
+       <layout class="QHBoxLayout" name="horizontalLayout"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Motor RHO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>角度</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>X2 RHO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="p_x">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QLineEdit" name="x1_delta"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="x2_start"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="x1_fetch"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>X1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QPushButton" name="saveImg">
+        <property name="text">
+         <string>保存</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>250</y>
+     <width>721</width>
+     <height>371</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <item>
+     <widget class="QLabel" name="painter_2">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="painter">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
      <x>740</x>
      <y>10</y>
-     <width>531</width>
-     <height>651</height>
+     <width>511</width>
+     <height>611</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -104,116 +309,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="7" column="0">
-       <widget class="QLabel" name="Encoder_5">
-        <property name="text">
-         <string>X2修正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="hgline3"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="hgline1"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="canny2"/>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="canny1"/>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="line1_ang"/>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLineEdit" name="line1_roh"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="PulseNum_2">
-        <property name="text">
-         <string>Canny</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="Encoder_2">
-        <property name="text">
-         <string>线条参数</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="canny3"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="Encoder_3">
-        <property name="text">
-         <string>模糊</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="Encoder_4">
-        <property name="text">
-         <string>X1修正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="hgline2"/>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLineEdit" name="inv_thd"/>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLineEdit" name="line2_ang"/>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>反转阀值</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="2">
-       <widget class="QLineEdit" name="line2_roh"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="blur_kernel"/>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>角度误差</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLineEdit" name="line_ang_abs"/>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="line_roh_abs"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>距离误差</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="3">
-       <widget class="QPushButton" name="saveImg">
-        <property name="text">
-         <string>保存</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <spacer name="verticalSpacer_2">
+     <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
@@ -358,210 +454,25 @@
      </layout>
     </item>
     <item>
+     <spacer name="verticalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
      <widget class="QTextBrowser" name="txbRecv">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>721</width>
-     <height>202</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>摄像头参数:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="ComboDevices"/>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bnOpen">
-          <property name="text">
-           <string>打开</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="Calibration">
-          <property name="text">
-           <string>校准</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLineEdit" name="tbExposure"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="tbFrameRate"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="tbGain"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="frames"/>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="p_y"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>中心偏差</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>X2 RHO</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="5">
-       <layout class="QHBoxLayout" name="horizontalLayout"/>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="p_x">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>角度</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>X1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="x1_start"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>X2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="x2_start"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="x2_rho"/>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>Motor RHO</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="motor_rho"/>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="x1_fetch"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="x2_fetch"/>
-      </item>
-      <item row="2" column="4">
-       <widget class="QLineEdit" name="x1_delta"/>
-      </item>
-      <item row="3" column="4">
-       <widget class="QLineEdit" name="x2_delta"/>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLineEdit" name="x1_target"/>
-      </item>
-      <item row="3" column="3">
-       <widget class="QLineEdit" name="x2_target"/>
-      </item>
-      <item row="1" column="4">
-       <widget class="QLineEdit" name="start_delta"/>
-      </item>
-      <item row="4" column="4">
-       <widget class="QPushButton" name="trigger">
-        <property name="text">
-         <string>trigger</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>250</y>
-     <width>721</width>
-     <height>371</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_4">
-    <item>
-     <widget class="QLabel" name="painter_2">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="painter">
-      <property name="text">
-       <string/>
       </property>
      </widget>
     </item>

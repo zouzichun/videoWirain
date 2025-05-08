@@ -16,6 +16,7 @@ extern std::pair<double, double> X2_MACH;
 extern std::pair<double, double> X1_MACH;
 extern DataPkt data_pkt;
 extern bool enable_process;
+extern bool img_sw_status;
 
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
@@ -299,7 +300,7 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
 
             emit signal_refresh_img(color_img);
 
-            if (cal_img_mode == 0)
+            if (img_sw_status)
                 emit signal_refresh_cal_img(edge);
             else
                 emit signal_refresh_cal_img(color_img);

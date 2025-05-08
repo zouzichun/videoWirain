@@ -103,8 +103,6 @@ public slots:
     void ImageTest(CMvCamera* p_cam, Port * p_port);
     void ImageCalTest(CMvCamera* p_cam);
 
-    void ChangeCalImageMode(int mode);
-
 private:
     QString m_dev_name;
     int cal_img_mode = 1;

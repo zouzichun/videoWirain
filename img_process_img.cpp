@@ -13,6 +13,7 @@
 using namespace cv;
 
 extern std::vector<Lines> g_lines;
+extern bool img_sw_status;
 
 cv::Point2f X21(-1959.74, -1716.01);
 cv::Point2f X22(-1970.84, 12.132);
@@ -273,7 +274,7 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
 
             emit signal_refresh_img(color_img);
 
-            if (cal_img_mode == 0) {
+            if (img_sw_status) {
                 emit signal_refresh_cal_img(edge);
             } else {
                 emit signal_refresh_cal_img(color_img);

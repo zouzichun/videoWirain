@@ -74,6 +74,12 @@ const ConfigData defaultSetting {
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
     .roi="0,0;0,2047;2047,2047;2047,0",
+    .hsv_low1=0,
+    .hsv_low2=0,
+    .hsv_low3=50,
+    .hsv_high1=200,
+    .hsv_high2=60,
+    .hsv_high3=255,
 };
 
 typedef struct {

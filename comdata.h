@@ -72,6 +72,13 @@ typedef struct {
     QString line_angs;
     QString line_rhos;
     QString roi;
+
+    int hsv_low1;
+    int hsv_low2;
+    int hsv_low3;
+    int hsv_high1;
+    int hsv_high2;
+    int hsv_high3;
 } ConfigData;
 
 extern ConfigData configData;

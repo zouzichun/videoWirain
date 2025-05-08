@@ -33,6 +33,9 @@ std::pair<double, double> X2_MACH;
 std::pair<double, double> X1_MACH;
 bool enable_process = false;
 
+extern bool debug_win_enable;
+extern bool img_sw_status;
+
 std::vector<cv::Point> roi_points;
 
 #define TEST_CAMERA 1
@@ -98,24 +101,7 @@ MainDialog::MainDialog(QWidget *parent) :
     #endif
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::calibration_refresh, Qt::QueuedConnection);
 
-    // change img display mode
-    connect(imgw, &imgWindow::img_sw_status_changed, m_imgproc, &ImgProcess::ChangeCalImageMode, Qt::QueuedConnection);
-
     m_hWnd = (void*)m_ui->painter->winId();
-    connect(m_ui->inv_thd,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->canny1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->canny2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->canny3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->hgline1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->hgline2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->hgline3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->blur_kernel,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line1_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line1_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line2_ang,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line2_roh,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line_roh_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->line_ang_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->x1_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->x2_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
     connect(m_ui->motor_rho,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
@@ -184,42 +170,21 @@ void MainDialog::saveImgParam()
     sets.setValue("point1_y",configData.point1_y);
     sets.setValue("point2_x",configData.point2_x);
     sets.setValue("point2_y",configData.point2_y);
-
-    // Canny and hglines
-    sets.setValue("inv_thd",configData.inv_thd);
-    sets.setValue("canny_1",configData.canny_1);
-    sets.setValue("canny_2",configData.canny_2);
-    sets.setValue("canny_3",configData.canny_3);
-    sets.setValue("hgline_1",configData.hgline_1);
-    sets.setValue("hgline_2",configData.hgline_2);
-    sets.setValue("hgline_3",configData.hgline_3);
-    sets.setValue("blur_kernel",configData.blur_kernel);
-
-    // target lines info
-    sets.setValue("line1_ang",configData.line1_ang);
-    sets.setValue("line1_roh",configData.line1_roh);
-    // sets.setValue("line1_ang_delta",QString::number(configData.line1_ang_delta, 'f', 2));
-    sets.setValue("line2_ang",configData.line2_ang);
-    sets.setValue("line2_roh",configData.line2_roh);
-    // sets.setValue("line2_ang_delta",QString::number(configData.line2_ang_delta, 'f', 2));
-    sets.setValue("line_roh_abs",QString::number(configData.line_roh_abs, 'f', 3));
-    sets.setValue("line_ang_abs",QString::number(configData.line_ang_abs, 'f', 3));
-
-    sets.setValue("line_angs",configData.line_angs);
-    sets.setValue("line_rhos",configData.line_rhos);
-    sets.setValue("roi",configData.roi);
-    sets.setValue("a",QString::number(configData.a, 'f', 6));
-    sets.setValue("b",QString::number(configData.b, 'f', 6));
-    sets.setValue("c",QString::number(configData.c, 'f', 6));
-    sets.setValue("d",QString::number(configData.d, 'f', 6));
-    sets.setValue("seprate_rho",QString::number(configData.seprate_rho, 'f', 3));
-    sets.setValue("seprate_theta",QString::number(configData.seprate_theta, 'f', 3));
     sets.setValue("x1_start",QString::number(configData.x1_start, 'f', 2));
     sets.setValue("x2_start",QString::number(configData.x2_start, 'f', 2));
     sets.setValue("x2_rho",QString::number(configData.x2_rho, 'f', 2));
     sets.setValue("motor_rho",QString::number(configData.motor_rho, 'f', 2));
 
     sets.sync();
+}
+
+void MainDialog::on_saveImg_clicked()
+{
+    // ui->saveImg->setText("saving...");
+    m_ui->saveImg->setDisabled(true);
+    saveImgParam();
+    m_ui->saveImg->setDisabled(false);
+    // ui->saveImg->setText("save param");
 }
 
 std::vector<std::string> split(const std::string & str, char dim) {
@@ -301,6 +266,13 @@ void MainDialog::loadConfigFile()
     configData.x2_start = sets.value("x2_start",defaultSetting.x2_start).toFloat();
     spdlog::info("config x1_start {}, x2_start {}", configData.x1_start, configData.x2_start);
 
+    configData.hsv_low1 = sets.value("hsv_low1",defaultSetting.hsv_low1).toInt();
+    configData.hsv_low2 = sets.value("hsv_low2",defaultSetting.hsv_low2).toInt();
+    configData.hsv_low3 = sets.value("hsv_low3",defaultSetting.hsv_low3).toInt();
+    configData.hsv_high1 = sets.value("hsv_high1",defaultSetting.hsv_high1).toInt();
+    configData.hsv_high2 = sets.value("hsv_high2",defaultSetting.hsv_high2).toInt();
+    configData.hsv_high3 = sets.value("hsv_high3",defaultSetting.hsv_high3).toInt();
+
     std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
     std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
     // g_lines.clear();
@@ -344,21 +316,6 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
 
     m_ui->modbus->setText(configData.modbusTcpIp+":"+QString::number(configData.modbusTcpPort));
 
-    m_ui->inv_thd->setText(QString::number(configData.inv_thd));
-    m_ui->canny1->setText(QString::number(configData.canny_1));
-    m_ui->canny2->setText(QString::number(configData.canny_2));
-    m_ui->canny3->setText(QString::number(configData.canny_3));
-    m_ui->hgline1->setText(QString::number(configData.hgline_1));
-    m_ui->hgline2->setText(QString::number(configData.hgline_2));
-    m_ui->hgline3->setText(QString::number(configData.hgline_3));
-    m_ui->blur_kernel->setText(QString::number(configData.blur_kernel));
-
-    m_ui->line1_ang->setText(QString::number(configData.line1_ang));
-    m_ui->line1_roh->setText(QString::number(configData.line1_roh));
-    m_ui->line2_ang->setText(QString::number(configData.line2_ang));
-    m_ui->line2_roh->setText(QString::number(configData.line2_roh));
-    m_ui->line_roh_abs->setText(QString::number(configData.line_roh_abs));
-    m_ui->line_ang_abs->setText(QString::number(configData.line_ang_abs));
     m_ui->x1_start->setText(QString::number(configData.x1_start));
     m_ui->x2_start->setText(QString::number(configData.x2_start));
     m_ui->x2_rho->setText(QString::number(configData.x2_rho));
@@ -786,32 +743,8 @@ void MainDialog::ImageCallBackInner(unsigned char * pData, MV_FRAME_OUT_INFO_EX*
     // m_pcMyCamera->DisplayOneFrame(&stDisplayInfo);
 }
 
-void MainDialog::on_saveImg_clicked()
-{
-    // m_ui->saveImg->setText("saving...");
-    m_ui->saveImg->setDisabled(true);
-    saveImgParam();
-    m_ui->saveImg->setDisabled(false);
-    // m_ui->saveImg->setText("save param");
-}
-
-
 void MainDialog::on_cal_editingFinished()
 {
-    configData.inv_thd = m_ui->inv_thd->text().toInt();
-    configData.canny_1 = m_ui->canny1->text().toInt();
-    configData.canny_2 = m_ui->canny2->text().toInt();
-    configData.canny_3 = m_ui->canny3->text().toInt();
-    configData.hgline_1 = m_ui->hgline1->text().toInt();
-    configData.hgline_2 = m_ui->hgline2->text().toInt();
-    configData.hgline_3 = m_ui->hgline3->text().toInt();
-    configData.blur_kernel = m_ui->blur_kernel->text().toInt();
-    configData.line1_ang = m_ui->line1_ang->text().toInt();
-    configData.line1_roh = m_ui->line1_roh->text().toInt();
-    configData.line2_ang = m_ui->line2_ang->text().toInt();
-    configData.line2_roh = m_ui->line2_roh->text().toInt();
-    configData.line_roh_abs = m_ui->line_roh_abs->text().toFloat();
-    configData.line_ang_abs = m_ui->line_ang_abs->text().toFloat();
     configData.x1_start = m_ui->x1_start->text().toFloat();
     configData.x2_start = m_ui->x2_start->text().toFloat();
     configData.x2_rho = m_ui->x2_rho->text().toFloat();

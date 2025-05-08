@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>1017</width>
     <height>800</height>
    </rect>
   </property>
@@ -188,14 +188,14 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>635</x>
+     <x>640</x>
      <y>20</y>
-     <width>161</width>
-     <height>384</height>
+     <width>361</width>
+     <height>291</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_5">
+    <item row="0" column="0" rowspan="2">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -232,7 +232,7 @@
       </item>
      </layout>
     </item>
-    <item>
+    <item row="0" column="1">
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
        <widget class="QLineEdit" name="sep1x"/>
@@ -259,7 +259,7 @@
       </item>
      </layout>
     </item>
-    <item>
+    <item row="1" column="1">
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
        <widget class="QLineEdit" name="roi_x"/>
@@ -276,15 +276,177 @@
       </item>
      </layout>
     </item>
-    <item>
-     <widget class="QPushButton" name="img_sw">
+    <item row="2" column="0" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QPushButton" name="img_sw">
+        <property name="text">
+         <string>img SW</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="mouse_pos"/>
+      </item>
+     </layout>
+    </item>
+    <item row="3" column="0">
+     <widget class="QPushButton" name="dbg_win">
       <property name="text">
-       <string>img SW</string>
+       <string>dbg win</string>
       </property>
      </widget>
     </item>
-    <item>
-     <widget class="QLineEdit" name="mouse_pos"/>
+    <item row="4" column="0" colspan="2">
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>HSV LOW</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="hsv_low1">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="hsv_low2">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="hsv_low3">
+        <property name="text">
+         <string>50</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>HSV HIGH</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="hsv_high1">
+        <property name="text">
+         <string>200</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="hsv_high2">
+        <property name="text">
+         <string>60</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="hsv_high3">
+        <property name="text">
+         <string>255</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>320</y>
+     <width>361</width>
+     <height>157</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_6">
+    <item row="0" column="0">
+     <widget class="QLabel" name="PulseNum_2">
+      <property name="text">
+       <string>Canny</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLineEdit" name="canny3"/>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="hgline2"/>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="line_roh_abs"/>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLineEdit" name="canny2"/>
+    </item>
+    <item row="6" column="3">
+     <widget class="QPushButton" name="saveImg">
+      <property name="text">
+       <string>保存</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="3">
+     <widget class="QLineEdit" name="line_ang_abs"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="Encoder_2">
+      <property name="text">
+       <string>线条参数</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="hgline1"/>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLineEdit" name="hgline3"/>
+    </item>
+    <item row="2" column="2">
+     <widget class="QLabel" name="label_11">
+      <property name="text">
+       <string>反转阀值</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>距离误差</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="canny1"/>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLineEdit" name="inv_thd"/>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="Encoder_3">
+      <property name="text">
+       <string>模糊</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLineEdit" name="blur_kernel"/>
+    </item>
+    <item row="4" column="2">
+     <widget class="QLabel" name="label_9">
+      <property name="text">
+       <string>角度误差</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

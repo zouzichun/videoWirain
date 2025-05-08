@@ -21,6 +21,8 @@ public:
     bool sep_enable = false;
     bool roi_enable = false;
 
+void saveImgParam();
+
 signals:
     void img_sw_status_changed(int mode);
 
@@ -31,6 +33,7 @@ private slots:
     void on_sel1_clicked();
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent* event);
+    void on_cal_editingFinished();
 
     void on_img2mach_clicked();
 
@@ -44,10 +47,13 @@ private slots:
 
     void on_img_sw_clicked();
 
+    void on_dbg_win_clicked();
+
+    void on_saveImg_clicked();
+
 private:
     Ui::imgWindow *ui;
     const float SCALE = (2048.0f / 600.0f);
-    int img_sw_status = 0;
 };
 
 #endif // IMGWINDOW_H

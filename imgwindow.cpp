@@ -5,6 +5,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <QMouseEvent>
+#include <QSettings>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -14,6 +15,7 @@ extern ConfigData configData;
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
 extern std::vector<Lines> g_lines;
 extern std::vector<std::pair<double, double>> g_roi;
+bool img_sw_status = false;
 
 imgWindow::imgWindow(QWidget *parent) :
     QWidget(parent),
@@ -25,11 +27,114 @@ imgWindow::imgWindow(QWidget *parent) :
     ui->b->setText(QString::number(configData.b));
     ui->c->setText(QString::number(configData.c));
     ui->d->setText(QString::number(configData.d));
+
+    ui->inv_thd->setText(QString::number(configData.inv_thd));
+    ui->canny1->setText(QString::number(configData.canny_1));
+    ui->canny2->setText(QString::number(configData.canny_2));
+    ui->canny3->setText(QString::number(configData.canny_3));
+    ui->hgline1->setText(QString::number(configData.hgline_1));
+    ui->hgline2->setText(QString::number(configData.hgline_2));
+    ui->hgline3->setText(QString::number(configData.hgline_3));
+    ui->blur_kernel->setText(QString::number(configData.blur_kernel));
+    ui->line_roh_abs->setText(QString::number(configData.line_roh_abs));
+    ui->line_ang_abs->setText(QString::number(configData.line_ang_abs));
+
+    ui->hsv_low1->setText(QString::number(configData.hsv_low1));
+    ui->hsv_low2->setText(QString::number(configData.hsv_low2));
+    ui->hsv_low3->setText(QString::number(configData.hsv_low3));
+    ui->hsv_high1->setText(QString::number(configData.hsv_high1));
+    ui->hsv_high2->setText(QString::number(configData.hsv_high2));
+    ui->hsv_high3->setText(QString::number(configData.hsv_high3));
+
+    connect(ui->inv_thd,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->canny1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->canny2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->canny3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hgline1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hgline2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hgline3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->blur_kernel,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->line_roh_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->line_ang_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+
+    connect(ui->hsv_low1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hsv_low2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hsv_low3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hsv_high1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hsv_high2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hsv_high3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
 }
 
 imgWindow::~imgWindow()
 {
     delete ui;
+}
+
+
+void imgWindow::on_cal_editingFinished()
+{
+    configData.inv_thd = ui->inv_thd->text().toInt();
+    configData.canny_1 = ui->canny1->text().toInt();
+    configData.canny_2 = ui->canny2->text().toInt();
+    configData.canny_3 = ui->canny3->text().toInt();
+    configData.hgline_1 = ui->hgline1->text().toInt();
+    configData.hgline_2 = ui->hgline2->text().toInt();
+    configData.hgline_3 = ui->hgline3->text().toInt();
+    configData.blur_kernel = ui->blur_kernel->text().toInt();
+    configData.line_roh_abs = ui->line_roh_abs->text().toFloat();
+    configData.line_ang_abs = ui->line_ang_abs->text().toFloat();
+    configData.hsv_low1 = ui->hsv_low1->text().toInt();
+    configData.hsv_low2 = ui->hsv_low2->text().toInt();
+    configData.hsv_low3 = ui->hsv_low3->text().toInt();
+    configData.hsv_high1 = ui->hsv_high1->text().toInt();
+    configData.hsv_high2 = ui->hsv_high2->text().toInt();
+    configData.hsv_high3 = ui->hsv_high3->text().toInt();
+}
+
+
+void imgWindow::saveImgParam()
+{
+    QSettings sets(QCoreApplication::applicationName()+".ini",QSettings::IniFormat);
+    // Canny and hglines
+    sets.setValue("inv_thd",configData.inv_thd);
+    sets.setValue("canny_1",configData.canny_1);
+    sets.setValue("canny_2",configData.canny_2);
+    sets.setValue("canny_3",configData.canny_3);
+    sets.setValue("hgline_1",configData.hgline_1);
+    sets.setValue("hgline_2",configData.hgline_2);
+    sets.setValue("hgline_3",configData.hgline_3);
+    sets.setValue("blur_kernel",configData.blur_kernel);
+
+    // target lines info
+    sets.setValue("line_roh_abs",QString::number(configData.line_roh_abs, 'f', 3));
+    sets.setValue("line_ang_abs",QString::number(configData.line_ang_abs, 'f', 3));
+    sets.setValue("line_angs",configData.line_angs);
+    sets.setValue("line_rhos",configData.line_rhos);
+    sets.setValue("roi",configData.roi);
+    sets.setValue("a",QString::number(configData.a, 'f', 6));
+    sets.setValue("b",QString::number(configData.b, 'f', 6));
+    sets.setValue("c",QString::number(configData.c, 'f', 6));
+    sets.setValue("d",QString::number(configData.d, 'f', 6));
+    sets.setValue("seprate_rho",QString::number(configData.seprate_rho, 'f', 3));
+    sets.setValue("seprate_theta",QString::number(configData.seprate_theta, 'f', 3));
+
+    sets.setValue("hsv_low1",configData.hsv_low1);
+    sets.setValue("hsv_low2",configData.hsv_low2);
+    sets.setValue("hsv_low3",configData.hsv_low3);
+    sets.setValue("hsv_high1",configData.hsv_high1);
+    sets.setValue("hsv_high2",configData.hsv_high2);
+    sets.setValue("hsv_high3",configData.hsv_high3);
+
+    sets.sync();
+}
+
+void imgWindow::on_saveImg_clicked()
+{
+    // ui->saveImg->setText("saving...");
+    ui->saveImg->setDisabled(true);
+    saveImgParam();
+    ui->saveImg->setDisabled(false);
+    // ui->saveImg->setText("save param");
 }
 
 int position;
@@ -170,7 +275,7 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
 
 void imgWindow::calibration_refresh(cv::Mat img) {
     QImage qimg;
-    if (img_sw_status == 0) {
+    if (img_sw_status) {
         qimg = QImage((const unsigned char*)(img.data),
                            img.cols,
                            img.rows,
@@ -293,10 +398,29 @@ void imgWindow::on_roi_sel_clicked()
     roi_enable = !roi_enable;
 }
 
-
 void imgWindow::on_img_sw_clicked()
 {
-    img_sw_status = (img_sw_status + 1) % 3;
-    emit img_sw_status_changed(img_sw_status);
+    img_sw_status = !img_sw_status;
+    spdlog::info("img sw sts {}", img_sw_status);
+}
+
+bool debug_win_enable = false;
+void imgWindow::on_dbg_win_clicked()
+{
+    debug_win_enable = !debug_win_enable;
+    spdlog::info("debug win {}", debug_win_enable);
+    if (debug_win_enable) {
+        ui->dbg_win->setText(QString("debug win off"));
+        cv::namedWindow("hsv_img", cv::WINDOW_AUTOSIZE);
+        cv::namedWindow("gray_img", cv::WINDOW_AUTOSIZE);
+        cv::namedWindow("edge_up", cv::WINDOW_AUTOSIZE);
+        cv::namedWindow("edge_up", cv::WINDOW_AUTOSIZE);
+    } else {
+        ui->dbg_win->setText(QString("debug win on"));
+        cv::destroyWindow("hsv_img");
+        cv::destroyWindow("gray_img");
+        cv::destroyWindow("edge_up");
+        cv::destroyWindow("edge_down");
+    }
 }
 
