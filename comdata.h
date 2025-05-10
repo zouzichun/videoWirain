@@ -39,6 +39,7 @@ typedef struct {
     int hgline_1;
     int hgline_2;
     int hgline_3;
+    int hgline_4;
     int blur_kernel;
 
     int line1_ang;

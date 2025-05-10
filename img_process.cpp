@@ -657,7 +657,7 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
         configData.hgline_1,
         configData.hgline_2 == 0 ? CV_PI/180 : CV_PI/360,
         configData.hgline_3,
-        configData.hgline_3, 50);
+        configData.hgline_3, configData.hgline_4);
     for(const auto& line : lines) {
         Point pt1(line[0], line[1]);
         Point pt2(line[2], line[3]);

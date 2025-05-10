@@ -230,6 +230,7 @@ void MainDialog::loadConfigFile()
     configData.hgline_1 = sets.value("hgline_1",defaultSetting.hgline_1).toInt();
     configData.hgline_2 = sets.value("hgline_2",defaultSetting.hgline_2).toInt();
     configData.hgline_3 = sets.value("hgline_3",defaultSetting.hgline_3).toInt();
+    configData.hgline_4 = sets.value("hgline_4",defaultSetting.hgline_4).toInt();
     configData.blur_kernel = sets.value("blur_kernel",defaultSetting.blur_kernel).toInt();
 
     configData.line1_ang = sets.value("line1_ang",defaultSetting.line1_ang).toInt();

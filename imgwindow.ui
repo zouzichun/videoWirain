@@ -365,7 +365,7 @@
      <x>640</x>
      <y>320</y>
      <width>361</width>
-     <height>157</height>
+     <height>186</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_6">
@@ -376,45 +376,20 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="3">
-     <widget class="QLineEdit" name="canny3"/>
-    </item>
-    <item row="1" column="2">
-     <widget class="QLineEdit" name="hgline2"/>
-    </item>
-    <item row="4" column="1">
-     <widget class="QLineEdit" name="line_roh_abs"/>
-    </item>
-    <item row="0" column="2">
-     <widget class="QLineEdit" name="canny2"/>
-    </item>
-    <item row="6" column="3">
-     <widget class="QPushButton" name="saveImg">
-      <property name="text">
-       <string>保存</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="3">
-     <widget class="QLineEdit" name="line_ang_abs"/>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="Encoder_2">
-      <property name="text">
-       <string>线条参数</string>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="1">
      <widget class="QLineEdit" name="hgline1"/>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLineEdit" name="hgline3"/>
     </item>
     <item row="2" column="2">
      <widget class="QLabel" name="label_11">
       <property name="text">
        <string>反转阀值</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="Encoder_3">
+      <property name="text">
+       <string>模糊</string>
       </property>
      </widget>
     </item>
@@ -425,26 +400,67 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QLineEdit" name="canny1"/>
-    </item>
-    <item row="2" column="3">
-     <widget class="QLineEdit" name="inv_thd"/>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="Encoder_3">
-      <property name="text">
-       <string>模糊</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QLineEdit" name="blur_kernel"/>
+    <item row="6" column="2">
+     <widget class="QLineEdit" name="linenum_down"/>
     </item>
     <item row="4" column="2">
      <widget class="QLabel" name="label_9">
       <property name="text">
        <string>角度误差</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="3">
+     <widget class="QLineEdit" name="line_ang_abs"/>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLineEdit" name="canny2"/>
+    </item>
+    <item row="6" column="1">
+     <widget class="QLineEdit" name="linenum_up"/>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="line_roh_abs"/>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLineEdit" name="inv_thd"/>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="hgline2"/>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="canny1"/>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLineEdit" name="hgline3"/>
+    </item>
+    <item row="2" column="1">
+     <widget class="QLineEdit" name="blur_kernel"/>
+    </item>
+    <item row="1" column="4">
+     <widget class="QLineEdit" name="hgline4"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="Encoder_2">
+      <property name="text">
+       <string>线条参数</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLineEdit" name="canny3"/>
+    </item>
+    <item row="6" column="0">
+     <widget class="QLabel" name="label_12">
+      <property name="text">
+       <string>线数量</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="4">
+     <widget class="QPushButton" name="saveImg">
+      <property name="text">
+       <string>保存</string>
       </property>
      </widget>
     </item>

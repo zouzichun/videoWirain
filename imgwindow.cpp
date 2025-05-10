@@ -35,6 +35,7 @@ imgWindow::imgWindow(QWidget *parent) :
     ui->hgline1->setText(QString::number(configData.hgline_1));
     ui->hgline2->setText(QString::number(configData.hgline_2));
     ui->hgline3->setText(QString::number(configData.hgline_3));
+    ui->hgline4->setText(QString::number(configData.hgline_4));
     ui->blur_kernel->setText(QString::number(configData.blur_kernel));
     ui->line_roh_abs->setText(QString::number(configData.line_roh_abs));
     ui->line_ang_abs->setText(QString::number(configData.line_ang_abs));
@@ -80,6 +81,7 @@ void imgWindow::on_cal_editingFinished()
     configData.hgline_1 = ui->hgline1->text().toInt();
     configData.hgline_2 = ui->hgline2->text().toInt();
     configData.hgline_3 = ui->hgline3->text().toInt();
+    configData.hgline_4 = ui->hgline4->text().toInt();
     configData.blur_kernel = ui->blur_kernel->text().toInt();
     configData.line_roh_abs = ui->line_roh_abs->text().toFloat();
     configData.line_ang_abs = ui->line_ang_abs->text().toFloat();
@@ -103,6 +105,7 @@ void imgWindow::saveImgParam()
     sets.setValue("hgline_1",configData.hgline_1);
     sets.setValue("hgline_2",configData.hgline_2);
     sets.setValue("hgline_3",configData.hgline_3);
+    sets.setValue("hgline_4",configData.hgline_4);
     sets.setValue("blur_kernel",configData.blur_kernel);
 
     // target lines info
@@ -268,7 +271,7 @@ void imgWindow::mousePressEvent(QMouseEvent *event) {
     }
 
     if (roi_enable) {
-        g_roi.push_back(std::pair(ppx, ppy));
+        g_roi.push_back(std::pair<double, double>(ppx, ppy));
         spdlog::info("roi point ({:.2f},{:.2f})", ppx, ppy);
     }
 }

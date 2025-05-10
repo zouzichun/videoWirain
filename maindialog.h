@@ -51,6 +51,7 @@ const ConfigData defaultSetting {
     .hgline_1=300,
     .hgline_2=100,
     .hgline_3=50,
+    .hgline_4=20,
     .blur_kernel=3,
     .line1_ang=35,
     .line1_roh=400,

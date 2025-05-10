@@ -39,23 +39,13 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     MV_FRAME_OUT frame;
     memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
-    ret = p_cam->GetImageBuffer(&frame, 1000);
-    if (ret != MV_OK) {
-        spdlog::debug("No data {:#x}", ret);
-        p_cam->StopGrabbing();
-        return;
-    }
-
-    ret = p_cam->FreeImageBuffer(&frame);
-    if (ret != MV_OK) {
-        spdlog::debug("free img buffer failed!");
-        p_cam->StopGrabbing();
-        return;
-    }
-
-    const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
-    const int IMG_WIDTH = frame.stFrameInfo.nWidth;
     while (camera_enable) {
+        // ret = p_cam->GetImageBuffer(&frame, 1000);
+        // if (ret != MV_OK) {
+        //     spdlog::debug("No data {:#x}", ret);
+        //     p_cam->StopGrabbing();
+        //     return;
+        // }
 
         // do {
         //     p_port->readModbusData(3, 700, 2);
@@ -75,13 +65,21 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
             return;
         }
 
+        const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
+        const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+
         cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
         cv::Mat color_img(IMG_HEIGHT, IMG_WIDTH, CV_8UC3);
 
         cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
 
-        const int IMG_HEIGHT = color_img.rows;
-        const int IMG_WIDTH = color_img.cols;
+         ret = p_cam->FreeImageBuffer(&frame);
+         if (ret != MV_OK) {
+             spdlog::debug("free img buffer failed!");
+             p_cam->StopGrabbing();
+             return;
+         }
+
         cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
         cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
         std::vector<cv::Vec2f> lines_found_up;
@@ -196,121 +194,99 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
 void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
     int frame_cnt = 0;
-    if (camera_enable) {
-        std::vector<std::vector<cv::Point2i> > pgp;
-        int ret = p_cam->StartGrabbing();
-        if (ret) {
-            qDebug("set StartGrabbing mode failed!");
+    int ret = p_cam->StartGrabbing();
+    if (ret) {
+        qDebug("set StartGrabbing mode failed!");
+        return;
+    }
+
+    // ch:获取数据包大小 | en:Get payload size
+    MVCC_INTVALUE_EX stParam;
+    memset(&stParam, 0, sizeof(MVCC_INTVALUE_EX));
+    ret = p_cam->GetIntValue("PayloadSize", &stParam);
+    if (MV_OK != ret)
+    {
+        qDebug("Get PayloadSize fail! [%d]\n", ret);
+        p_cam->StopGrabbing();
+        return;
+    } else {
+        qDebug("Get PayloadSize %d", stParam.nCurValue);
+    }
+    MV_FRAME_OUT frame;
+    memset(&frame, 0, sizeof(MV_FRAME_OUT));
+
+    std::vector<std::vector<cv::Point2i> > pgp;
+    qDebug("inv_thd %d", configData.inv_thd);
+    qDebug("canny %d %d %d", configData.canny_1, configData.canny_2, configData.canny_3);
+    qDebug("houghline %d %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3, configData.hgline_4);
+
+    for(;;) {
+        if (!camera_enable) {
+            p_cam->StopGrabbing();
+            spdlog::debug("video exit, frames {}", frame_cnt);
             return;
         }
 
-        // ch:获取数据包大小 | en:Get payload size
-        MVCC_INTVALUE_EX stParam;
-        memset(&stParam, 0, sizeof(MVCC_INTVALUE_EX));
-        ret = p_cam->GetIntValue("PayloadSize", &stParam);
-        if (MV_OK != ret)
+        ret = p_cam->GetImageBuffer(&frame, 1000);
+        if (ret != MV_OK)
         {
-            qDebug("Get PayloadSize fail! [%d]\n", ret);
+            qDebug("No data[%x]\n", ret);
             p_cam->StopGrabbing();
             return;
-        } else {
-            qDebug("Get PayloadSize %d", stParam.nCurValue);
         }
-        MV_FRAME_OUT frame;
-        memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
-        qDebug("inv_thd %d", configData.inv_thd);
-        qDebug("canny %d %d %d", configData.canny_1, configData.canny_2, configData.canny_3);
-        qDebug("houghline %d %d %d", configData.hgline_1, configData.hgline_2, configData.hgline_3);
-        const float ang1 = ((90 + configData.line1_ang) % 180) * CV_PI / 180;
-        const float ang2 = ((90 + configData.line2_ang) % 180) * CV_PI / 180;
-        const float ang_abs = configData.line_ang_abs * 180;
-        const float roh_abs = configData.line_roh_abs * 2800;
-        // spdlog::debug("ang1 {}.C:{:.2f}, ang2 {}.C:{:.2f}, abs {:.2f} sel_low {} {}",
-        //             configData.line1_ang, ang1, configData.line2_ang, ang2, configData.line_roh_abs,
-        //             configData.line1_sel_low,
-        //             configData.line2_sel_low);
-        for(;;) {
-            if (!camera_enable) {
-                p_cam->StopGrabbing();
-                spdlog::debug("video exit, frames {}", frame_cnt);
-                return;
-            }
+        const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
+        const int IMG_WIDTH = frame.stFrameInfo.nWidth;
+        cv::Mat grayimg, color_img;
+        cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
+        cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
+        std::vector<cv::Vec2f> lines_found_up;
+        std::vector<cv::Vec2f> lines_found_down;
+        std::vector<std::vector<std::pair<double, double>>> lines_filtered;
 
-            ret = p_cam->GetImageBuffer(&frame, 1000);
-            if (ret != MV_OK)
-            {
-                qDebug("No data[%x]\n", ret);
-                p_cam->StopGrabbing();
-                return;
-            }
+        cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
 
-            const int IMG_HEIGHT = frame.stFrameInfo.nHeight;
-            const int IMG_WIDTH = frame.stFrameInfo.nWidth;
-            cv::Mat grayimg, color_img;
-            cv::Mat edge_up(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
-            cv::Mat img(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, frame.pBufAddr);
-            std::vector<cv::Vec2f> lines_found_up;
-            std::vector<cv::Vec2f> lines_found_down;
+        ret = p_cam->FreeImageBuffer(&frame);
+        if (ret != MV_OK) {
+            qDebug("free img buffer failed!");
+            p_cam->StopGrabbing();
+            return;
+        }
 
-            cv::cvtColor(img, color_img, COLOR_BayerBG2RGB);
-            PreProcess(color_img, edge_up, edge_down);
+        PreProcess(color_img, edge_up, edge_down);
+        bool valid_flag = true;
+        Process(edge_up, lines_found_up, true);
+        if (!AdaptLines(lines_found_up, lines_filtered)) {
+            valid_flag = false;
+        }
+        Process(edge_down, lines_found_down, false);
+        if (!AdaptLines(lines_found_down, lines_filtered)) {
+            valid_flag = false;
+        }
 
-            ret = p_cam->FreeImageBuffer(&frame);
-            if (ret != MV_OK) {
-                qDebug("free img buffer failed!");
-                p_cam->StopGrabbing();
-                return;
-            }
-
-            bool valid_flag = true;
-            Process(edge_up, lines_found_up);
-            if (!FilterLines(edge_up.rows, edge_up.cols, lines_found_up, true)) {
-                qDebug() << "up lines not enough";
-                valid_flag = false;
-            }
-            Process(edge_down, lines_found_down);
-            if (!FilterLines(edge_down.rows, edge_down.cols, lines_found_down, false)) {
-                qDebug() << "down lines not enough";
-                valid_flag = false;
-            }
-
-            if (!valid_flag) {
-                frame_cnt++;
-                continue;
-            }
-
-            for (const auto & v : lines_found_up) {
-                float rho = v[0];
-                float theta = v[1];
-                auto pts = HoughToPoints(rho, theta);
-                    cv::line(color_img, pts.first, pts.second, cv::Scalar(255, 255, 255), 2);
-            }
-
-            for (const auto & v : lines_found_down) {
-                float rho = v[0];
-                float theta = v[1];
-                auto pts = HoughToPoints(rho, theta);
-                    cv::line(color_img, pts.first, pts.second, cv::Scalar(255, 255, 255), 2);
-            }
-
-            cv::Mat edge;
-            cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);
-
-            emit signal_refresh_img(color_img);
-
-            if (img_sw_status)
-                emit signal_refresh_cal_img(edge);
-            else
-                emit signal_refresh_cal_img(color_img);
-
+        if (!valid_flag) {
             frame_cnt++;
+            continue;
         }
-    } else {
-        p_cam->StopGrabbing();
-        qDebug() << "video exit, frames " <<  frame_cnt;
+
+        qDebug("found lines num up %d, down %d", lines_found_up.size(), lines_found_down.size());
+
+        cv::Mat edge;
+        cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);
+
+        emit signal_refresh_img(color_img);
+
+        if (img_sw_status)
+            emit signal_refresh_cal_img(edge);
+        else
+            emit signal_refresh_cal_img(color_img);
+
+        frame_cnt++;
     }
+
+    p_cam->StopGrabbing();
+    qDebug() << "video exit, frames " <<  frame_cnt;
     return;
 }
 
