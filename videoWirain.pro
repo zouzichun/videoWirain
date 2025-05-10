@@ -14,6 +14,8 @@ TEMPLATE = app
 
 INCLUDEPATH += /opt/opencv/include
 INCLUDEPATH += /opt/MVS/include
+INCLUDEPATH += /usr/local/include
+
 LIBS += /opt/opencv/lib/libopencv*.so
 
 contains(QT_ARCH, arm64){

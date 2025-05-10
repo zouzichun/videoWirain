@@ -67,6 +67,7 @@ typedef struct {
     float motor_rho;
     float x1_start;
     float x2_start;
+    float y1_start;
 
     // configured store lines for img filter
     // could be changed during calibration

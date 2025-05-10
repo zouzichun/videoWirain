@@ -146,10 +146,6 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 //            std::pair<double, double> x1_start = getCrossPoint(mach_start, X1_MACH);
 //            std::pair<double, double> x2_start = getCrossPoint(mach_start, X2_MACH);
 
-//            double start_delta2 = sqrtf(pow(x2_start.first - x2_corss_down.first, 2) + pow(x2_start.second - x2_corss_down.second, 2));
-//            double start_delta1 = sqrtf(pow(x1_start.first - x1_corss_down.first, 2) + pow(x1_start.second - x1_corss_down.second, 2));
-            // qDebug("start_delta2 %.2f, start_delta1 %.2f", start_delta2, start_delta1);
-
             double dist_x2 = sqrtf(pow(x2_corss_up.first - x2_corss_down.first, 2) + pow(x2_corss_up.second - x2_corss_down.second, 2));
             double dist_x1 = sqrtf(pow(x1_corss_up.first - x1_corss_down.first, 2) + pow(x1_corss_up.second - x1_corss_down.second, 2));
             if (x2_corss_up.second < x2_corss_down.second) {
@@ -164,9 +160,6 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second;
             data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second;
             data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second;
-
-            data_pkt.x1_delta = dist_x1;
-            data_pkt.x2_delta = dist_x2;
 
             data_pkt.frames = frame_cnt;
             data_pkt.valid = true;

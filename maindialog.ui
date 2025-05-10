@@ -102,86 +102,26 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
-       <widget class="QLineEdit" name="x2_target"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="x2_fetch"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="x1_start"/>
-      </item>
-      <item row="1" column="4">
-       <widget class="QLineEdit" name="start_delta"/>
-      </item>
       <item row="3" column="4">
-       <widget class="QLineEdit" name="x2_delta"/>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="motor_rho"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>中心偏差</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="p_y"/>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLineEdit" name="x1_target"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="x2_rho"/>
-      </item>
-      <item row="4" column="4">
-       <widget class="QPushButton" name="trigger">
-        <property name="text">
-         <string>trigger</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="5">
-       <layout class="QHBoxLayout" name="horizontalLayout"/>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>Motor RHO</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>角度</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>X2 RHO</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="p_x">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="4">
-       <widget class="QLineEdit" name="x1_delta"/>
+       <widget class="QLineEdit" name="y1_target"/>
       </item>
       <item row="3" column="1">
        <widget class="QLineEdit" name="x2_start"/>
       </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="x1_start"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="x2_rho"/>
+      </item>
       <item row="2" column="2">
        <widget class="QLineEdit" name="x1_fetch"/>
+      </item>
+      <item row="2" column="4">
+       <widget class="QLineEdit" name="y1_fetch"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLineEdit" name="x1_target"/>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label">
@@ -190,7 +130,50 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="2" column="5">
+       <layout class="QHBoxLayout" name="horizontalLayout"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLineEdit" name="x2_target"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="x2_fetch"/>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="motor_rho"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>X2 RHO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Motor RHO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="y1_start"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Y1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QPushButton" name="trigger">
+        <property name="text">
+         <string>trigger</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
        <widget class="QPushButton" name="saveImg">
         <property name="text">
          <string>保存</string>
@@ -227,7 +210,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>740</x>

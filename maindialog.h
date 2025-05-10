@@ -72,6 +72,7 @@ const ConfigData defaultSetting {
     .motor_rho = 21.6,
     .x1_start = 1023.0,
     .x2_start = 435.0,
+    .y1_start = 80.0,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
     .roi="0,0;0,2047;2047,2047;2047,0",
@@ -132,11 +133,8 @@ signals:
 
 private slots:
     void on_SerialOpen_clicked();
-    void on_SerialSend_clicked();
     void on_cal_editingFinished();
-
     void on_Calibration_clicked();
-
     void on_bnOpen_clicked();
 
     void on_saveImg_clicked();

@@ -39,20 +39,12 @@ enum {
 
 typedef struct DataPkt_ {
     bool valid = false;
-    float x1_start = 0.0;
     float x1_fetch = 0.0;
     float x1_target = 0.0;
-    float x1_delta = 0.0;
-    float x2_start = 0.0;
     float x2_fetch = 0.0;
     float x2_target = 0.0;
-    float x2_delta = 0.0;
-    float y1_start = 0.0;
     float y1_fetch = 0.0;
     float y1_target = 0.0;
-    float y1_delta = 0.0;
-
-    float start_delta = 0.0;
     uint64_t frames = 0;
 } DataPkt;
 
