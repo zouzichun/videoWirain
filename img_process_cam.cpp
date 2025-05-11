@@ -246,12 +246,8 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
         //     valid_flag = false;
         // }
         ProcessCountor(edge_up, lines_filtered);
-        ProcessCountor(edge_down, lines_filtered);
+//        ProcessCountor(edge_down, lines_filtered);
 
-        if (!valid_flag) {
-            frame_cnt++;
-            continue;
-        }
 
         // qDebug("found lines num up %d, down %d", lines_found_up.size(), lines_found_down.size());
 
@@ -264,6 +260,11 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
             emit signal_refresh_cal_img(edge);
         else
             emit signal_refresh_cal_img(color_img);
+
+        if (!valid_flag) {
+            frame_cnt++;
+            continue;
+        }
 
         frame_cnt++;
     }
