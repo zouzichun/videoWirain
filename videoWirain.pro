@@ -7,7 +7,7 @@
 QT       += core gui network serialport serialbus
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += console c++11
+CONFIG += console c++14
 
 TARGET = videoWirain
 TEMPLATE = app

@@ -88,14 +88,17 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         PreProcess(color_img, edge_up, edge_down);
         bool valid_flag = true;
-        Process(edge_up, lines_found_up, true);
-        if (!AdaptLines(lines_found_up, lines_filtered)) {
-            valid_flag = false;
-        }
-        Process(edge_down, lines_found_down, false);
-        if (!AdaptLines(lines_found_down, lines_filtered)) {
-            valid_flag = false;
-        }
+        // Process(edge_up, lines_found_up, true);
+        // if (!AdaptLines(lines_found_up, lines_filtered)) {
+        //     valid_flag = false;
+        // }
+        // Process(edge_down, lines_found_down, false);
+        // if (!AdaptLines(lines_found_down, lines_filtered)) {
+        //     valid_flag = false;
+        // }
+
+        ProcessCountor(edge_up, lines_filtered);
+        // ProcessCountor(edge_down, lines_filtered);
 
         if (!valid_flag) {
             frame_cnt++;
@@ -104,7 +107,7 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         std::vector<cv::Point2f> line1;
         std::vector<cv::Point2f> line2;
-        if (!GetCentralLines(lines_filtered, line1, line2)) {
+        if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
             frame_cnt++;
             continue;
         }
@@ -234,21 +237,23 @@ void ImgProcess::CameraCalTest(CMvCamera* p_cam) {
 
         PreProcess(color_img, edge_up, edge_down);
         bool valid_flag = true;
-        Process(edge_up, lines_found_up, true);
-        if (!AdaptLines(lines_found_up, lines_filtered)) {
-            valid_flag = false;
-        }
-        Process(edge_down, lines_found_down, false);
-        if (!AdaptLines(lines_found_down, lines_filtered)) {
-            valid_flag = false;
-        }
+        // Process(edge_up, lines_found_up, true);
+        // if (!AdaptLines(lines_found_up, lines_filtered)) {
+        //     valid_flag = false;
+        // }
+        // Process(edge_down, lines_found_down, false);
+        // if (!AdaptLines(lines_found_down, lines_filtered)) {
+        //     valid_flag = false;
+        // }
+        ProcessCountor(edge_up, lines_filtered);
+        ProcessCountor(edge_down, lines_filtered);
 
         if (!valid_flag) {
             frame_cnt++;
             continue;
         }
 
-        qDebug("found lines num up %d, down %d", lines_found_up.size(), lines_found_down.size());
+        // qDebug("found lines num up %d, down %d", lines_found_up.size(), lines_found_down.size());
 
         cv::Mat edge;
         cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);

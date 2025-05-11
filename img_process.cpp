@@ -541,28 +541,28 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
-   if (roi_points.size() >= 2) {
-       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
-       for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
-           cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
-       cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
-                Scalar(0), 15);
-   }
+//   if (roi_points.size() >= 2) {
+//       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
+//       for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
+//           cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
+//       cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
+//                Scalar(0), 15);
+//   }
 
     edge_up = edge_img.clone();
     edge_down = edge_img.clone();
 
-    for (int i = 0; i < edge_img.rows; i++) {
-        for (int j = 0; j < edge_img.cols; j++) {
-            double result = PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
-            cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i));
-            if (result <= 0) {
-                edge_down.at<uchar>(i, j) = 0;
-            } else {
-                edge_up.at<uchar>(i, j) = 0;
-            }
-        }
-    }
+    // for (int i = 0; i < edge_img.rows; i++) {
+    //     for (int j = 0; j < edge_img.cols; j++) {
+    //         double result = PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
+    //         cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i));
+    //         if (result <= 0) {
+    //             edge_down.at<uchar>(i, j) = 0;
+    //         } else {
+    //             edge_up.at<uchar>(i, j) = 0;
+    //         }
+    //     }
+    // }
     if (debug_win_enable) {
         cv::Mat uptt;
         cv::Mat downtt;
@@ -582,8 +582,13 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
         #if CONTOUR_MODE
         // 轮廓检测
         std::vector<std::vector<cv::Point>> contours;
-        cv::findContours(edge_img, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+        std::vector<cv::Vec4i> hierarchy;
+        // cv::findContours(edge_img, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+        cv::findContours(edge_img, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
 
+        std::vector<std::vector<cv::Point>> all_edges;
+        std::vector<std::tuple<cv::Point, cv::Point, double>> line_segments; 
+        
         // 筛选最上面的边
         std::vector<cv::Point> top_edge;
         double min_y_center = numeric_limits<double>::max();
@@ -592,45 +597,87 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
             cv::Mat image = Mat::zeros(edge_img.size(), CV_8UC3);
         }
 
-        for (auto& contour : contours) {
-            std::vector<cv::Point> approx;        
-            double epsilon = 0.02 * cv::arcLength(contour, true);
-            cv::approxPolyDP(contour, approx, epsilon, true);
-            // 计算凸包
-            // cv::convexHull(contour, approx);
-            if (debug_win_enable) {
-                cv::polylines(image, approx, true, Scalar(0, 255, 255), 2); // 蓝色多边形
-            }
+        if (!contours.empty()) {
+            double min_area = height * width * 0.015;
+            
+            // Sort contours by area (descending)
+            std::sort(contours.begin(), contours.end(), 
+                     [](const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
+                         return cv::contourArea(a) > cv::contourArea(b);
+                     });
+            for (const auto& cnt : contours) {
+                if (cv::contourArea(cnt) > min_area) {
+                    double epsilon = 0.0088 * cv::arcLength(cnt, true);
+                    std::vector<cv::Point> approx;
+                    cv::approxPolyDP(cnt, approx, epsilon, true);
 
-            if (approx.size() >= 2) {
-                // 计算边的中心点Y坐标
-                int y_min = contour[0].y;
-                int y_max = contour[0].y;
-                for (auto& p : approx) {
-                    if (!up) {
-                        if (p.y < y_min) y_min = p.y;
-                        if (p.y > y_max) y_max = p.y;
-                    } else {
-                        if (p.y > y_min) y_min = p.y;
-                        if (p.y < y_max) y_max = p.y;
+                    // Filter points that are inside the polygon
+                    std::vector<cv::Point> filtered;
+                    for (const auto& p : approx) {
+                        if (cv::pointPolygonTest(roi_points, p, false) >= 0) {
+                            filtered.push_back(p);
+                        }
+                    }
+
+                    if (!filtered.empty()) {
+                        all_edges.push_back(filtered);
+
+                        // Convert contour to line segments
+                        for (size_t i = 0; i < filtered.size() - 1; i++) {
+                            cv::Point pt1 = filtered[i];
+                            cv::Point pt2 = filtered[i+1];
+                            double length = cv::norm(pt2 - pt1);
+                            line_segments.emplace_back(pt1, pt2, length);
+                        }
                     }
                 }
-                double y_center = (y_min + y_max) / 2.0;
 
-                if (!up) {
-                    if (y_center < min_y_center) {
-                        min_y_center = y_center;
-                        top_edge = approx;
-                    }
-                } else {
-                    if (y_center > min_y_center) {
-                        min_y_center = y_center;
-                        top_edge = approx;
+                if (line_segments.size() >= 2) {
+                    // Sort by length (descending)
+                    std::sort(line_segments.begin(), line_segments.end(),
+                            [](const auto& a, const auto& b) {
+                                return std::get<2>(a) > std::get<2>(b);
+                            });
+        
+                    // Get the two longest lines
+                    auto line1 = line_segments[0];
+                    auto line2 = line_segments[1];
+        
+                    std::vector<cv::Point> centers;
+                    std::vector<cv::Point2f> line_vectors; // For angle calculation
+                    // Process both lines
+                    for (int i = 0; i < 2; i++) {
+                        const auto& line = (i == 0) ? line1 : line2;
+                        cv::Point pt1 = std::get<0>(line);
+                        cv::Point pt2 = std::get<1>(line);
+                        double length = std::get<2>(line);
+
+
+
+                        // // Draw the line
+                        // cv::line(result.processed_frame, pt1, pt2, cv::Scalar(0, 97, 255), 3, cv::LINE_AA);
+                        
+                        // // Add label
+                        // cv::Point text_pos((pt1.x + pt2.x) / 3, (pt1.y + pt2.y) / 3);
+                        // cv::putText(result.processed_frame, "Line " + std::to_string(i+1), text_pos,
+                        //         cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 97, 255), 2);
+
+                        // // Calculate center point
+                        // cv::Point center((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2);
+                        // centers.push_back(center);
+
+                        // // Store line vector for angle calculation
+                        // line_vectors.emplace_back(pt1.x - pt2.x, pt1.y - pt2.y);
+
+                        // // Mark center point
+                        // cv::circle(result.processed_frame, center, 8, cv::Scalar(0, 255, 255), -1);
+                        // cv::putText(result.processed_frame, "C" + std::to_string(i+1), 
+                        //         cv::Point(center.x + 10, center.y - 10),
+                        //         cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 255), 2);
                     }
                 }
             }
         }
-
         if (debug_win_enable) {
             if (!top_edge.empty()) {
                 for (auto& p : top_edge) {
@@ -668,6 +715,164 @@ bool ImgProcess::Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found
         lines_found.push_back(cv::Vec2f(pa.first, pa.second));
     }
     #endif
+}
+
+
+bool ImgProcess::ProcessCountor(cv::Mat &edge_img, std::vector<std::vector<std::pair<double, double>>> & lines_found) {
+    // 轮廓检测
+    std::vector<std::vector<cv::Point>> contours;
+    std::vector<cv::Vec4i> hierarchy;
+    // cv::findContours(edge_img, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    cv::findContours(edge_img, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+
+    std::vector<std::vector<cv::Point>> all_edges;
+    std::vector<std::tuple<cv::Point, cv::Point, double, double, double>> line_segments; 
+    
+    // 筛选最上面的边
+    std::vector<cv::Point> top_edge;
+    double min_y_center = numeric_limits<double>::max();
+
+    cv::Mat image;
+    if (debug_win_enable) {
+        edge_img.copyTo(image);
+    }
+
+    if (!contours.empty()) {
+        double min_area = 2048 * 2048 * 0.015;
+        // Sort contours by area (descending)
+        std::sort(contours.begin(), contours.end(), 
+                 [](const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
+                     return cv::contourArea(a) > cv::contourArea(b);
+                 });
+        // qDebug("contours num %d", contours.size());
+        for (const auto& cnt : contours) {
+            if (cv::contourArea(cnt) > min_area) {
+                double epsilon = 0.0088 * cv::arcLength(cnt, true);
+                std::vector<cv::Point> approx;
+                cv::approxPolyDP(cnt, approx, epsilon, true);
+
+                // Filter points that are inside the polygon
+                std::vector<cv::Point> filtered;
+                for (const auto& p : approx) {
+                    if (cv::pointPolygonTest(roi_points, p, false) >= 0) {
+                        filtered.push_back(p);
+                    }
+                }
+
+                if (!filtered.empty()) {
+                    all_edges.push_back(filtered);
+                    // Convert contour to line segments
+                    for (size_t i = 0; i < filtered.size() - 1; i++) {
+                        cv::Point pt1 = filtered[i];
+                        cv::Point pt2 = filtered[i+1];
+                        double length = cv::norm(pt2 - pt1);
+                        std::pair<double, double> hgp = PointsToHoughParams(pt1, pt2);
+                        line_segments.emplace_back(pt1, pt2, length, hgp.first, hgp.second);
+                        // qDebug("line segment rho %.2f, %.2f", hgp.first, hgp.second);
+                    }
+                }
+            }
+        }
+        
+        // qDebug("line_segments size %d", line_segments.size());
+
+        if (line_segments.size() >= 4) {
+            auto it = line_segments.begin();
+            for(; it != line_segments.end()-1;it++) {
+                auto it_next = it+1;
+                for (; it_next != line_segments.end();) {
+                    double rho = std::get<3>(*it);
+                    double ang = std::get<4>(*it);
+                    double rho1 = std::get<3>(*it_next);
+                    double ang1 = std::get<4>(*it_next);
+                    if (abs(rho - rho1) < 10 && abs(ang - ang1) < 0.05) {
+                        line_segments.erase(it_next);
+                    } else {
+                        it_next++;
+                    }
+                }
+            }
+        }
+            // qDebug("line_segments new size %d", line_segments.size());
+        if (line_segments.size() >= 2) {
+            // Sort by length (descending)
+            std::sort(line_segments.begin(), line_segments.end(),
+                    [](const auto& a, const auto& b) {
+                        return std::get<2>(a) > std::get<2>(b);
+                    });
+
+            // Get the two longest lines
+            auto line1 = line_segments[0];
+            auto line2 = line_segments[1];
+
+            std::vector<cv::Point> centers;
+            std::vector<cv::Point2f> line_vectors; // For angle calculation
+            // Process both lines
+            for (const auto & v: line_segments) {
+                if (debug_win_enable) {
+                    cv::line(image, std::get<0>(v), std::get<1>(v), cv::Scalar(255), 3, cv::LINE_AA);
+                    // qDebug("p1 %d:%d, p2 %d:%d, length %.2f", std::get<0>(v).x, std::get<0>(v).y, std::get<1>(v).x, std::get<1>(v).y, std::get<2>(v));
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                const auto& line = (i == 0) ? line1 : line2;
+                cv::Point pt1 = std::get<0>(line);
+                cv::Point pt2 = std::get<1>(line);
+                double length = std::get<2>(line);
+
+                // auto pa = PointsToHoughParams(pt1, pt2);
+//                    qDebug("houghlinesP rho %.2f ang %.2f", pa.first, pa.second);
+                std::vector<std::pair<double, double>> tt;
+                tt.push_back(std::make_pair(pt1.x, pt1.y));
+                tt.push_back(std::make_pair(pt2.x, pt2.y));
+                // qDebug("houghlinesP %d rho %.2f ang %.2f", pos++, pa.first, pa.second);
+                lines_found.push_back(tt);
+
+                if (debug_win_enable) {
+                    // // Draw the line
+                    cv::line(image, pt1, pt2, cv::Scalar(255), 3, cv::LINE_AA);
+                    // // Add label
+                    // cv::Point text_pos((pt1.x + pt2.x) / 3, (pt1.y + pt2.y) / 3);
+                    // cv::putText(result.processed_frame, "Line " + std::to_string(i+1), text_pos,
+                    //         cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 97, 255), 2);
+
+                    // // Calculate center point
+                    // cv::Point center((pt1.x + pt2.x) / 2, (pt1.y + pt2.y) / 2);
+                    // centers.push_back(center);
+
+                    // // Store line vector for angle calculation
+                    // line_vectors.emplace_back(pt1.x - pt2.x, pt1.y - pt2.y);
+
+                    // // Mark center point
+                    // cv::circle(result.processed_frame, center, 8, cv::Scalar(0, 255, 255), -1);
+                    // cv::putText(result.processed_frame, "C" + std::to_string(i+1), 
+                    //         cv::Point(center.x + 10, center.y - 10),
+                    //         cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 255), 2);
+                }
+            }
+        }
+        if (debug_win_enable) {
+            cv::resize(image, image, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+            imshow("cnt_img", image);
+        }
+    }
+
+    if (debug_win_enable) {
+//        if (!top_edge.empty()) {
+//            for (auto& p : top_edge) {
+//                cv::circle(image, p, 5, Scalar(0, 255, 0), -1);
+//            }
+//            cv::polylines(image, top_edge, true, Scalar(0, 0, 255), 2);
+//        }
+//        cv::resize(image, image, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+
+//        if (!up) {
+//            imshow("Result up", image);
+//        } else {
+//            imshow("Result down", image);
+//        }
+    }
 }
 
 extern float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
@@ -820,6 +1025,57 @@ bool ImgProcess::AdaptLines(std::vector<cv::Vec2f> &lines_found,
         lines.push_back(line);
     }
     lines_filtered.push_back(lines);
+
+    return true;
+}
+
+bool ImgProcess::GetCentralLinesCountor(const std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
+    std::vector<cv::Point2f> &line1,
+    std::vector<cv::Point2f> &line2) {
+
+    if (lines_filtered.size() != 2) {
+            spdlog::debug("lines filtered size {} invalid!", lines_filtered.size());
+        return false;
+    }
+
+    std::pair<double, double> p0, p_mid, p1;
+    std::pair<double, double> p10, p_mid1, p11;
+
+    p0.first = lines_filtered[0][0].first;
+    p0.second = lines_filtered[0][0].second;
+
+    p1.first = lines_filtered[0][1].first;
+    p1.second = lines_filtered[0][1].second;
+
+    p_mid.first = (p1.first + p0.first) / 2;
+    p_mid.second = (p1.second + p0.second) / 2;
+
+    p10.first = lines_filtered[1][0].first;
+    p10.second = lines_filtered[1][0].second;
+
+    p11.first = lines_filtered[1][1].first;
+    p11.second = lines_filtered[1][1].second;
+
+    p_mid1.first = (p11.first + p10.first) / 2;
+    p_mid1.second = (p11.second + p10.second) / 2;
+
+    if (p_mid.second < p_mid1.second) {
+        line1.push_back(cv::Point2f(p0.first, p0.second));
+        line1.push_back(cv::Point2f(p_mid.first, p_mid.second));
+        line1.push_back(cv::Point2f(p1.first, p1.second));
+
+        line2.push_back(cv::Point2f(p10.first, p10.second));
+        line2.push_back(cv::Point2f(p_mid1.first, p_mid1.second));
+        line2.push_back(cv::Point2f(p11.first, p11.second));
+    } else {
+        line1.push_back(cv::Point2f(p10.first, p10.second));
+        line1.push_back(cv::Point2f(p_mid1.first, p_mid1.second));
+        line1.push_back(cv::Point2f(p11.first, p11.second));
+
+        line2.push_back(cv::Point2f(p0.first, p0.second));
+        line2.push_back(cv::Point2f(p_mid.first, p_mid.second));
+        line2.push_back(cv::Point2f(p1.first, p1.second));
+    }
 
     return true;
 }

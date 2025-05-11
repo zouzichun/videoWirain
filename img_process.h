@@ -68,12 +68,16 @@ public:
     void imgProcTimeout();
     bool PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
     bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found, bool up = true);
+    bool ProcessCountor(cv::Mat &edge_img, std::vector<std::vector<std::pair<double, double>>> & lines_found);
     bool FilterLines(int rows, int cols, std::vector<cv::Vec2f> &lines_found, bool up = true);
     bool AdaptLines(std::vector<cv::Vec2f> &lines_found,
                     std::vector<std::vector<std::pair<double, double>>> &lines_filtered);
     bool GetCentralLine(std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
                     std::vector<cv::Point2f> &line1,
                     std::vector<cv::Point2f> &line2);
+    bool GetCentralLinesCountor(const std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
+        std::vector<cv::Point2f> &line1,
+        std::vector<cv::Point2f> &line2);
 
     int max_hash_win_x = 0;
     int max_hash_win_y = 0;

@@ -417,13 +417,15 @@ void imgWindow::on_dbg_win_clicked()
         cv::namedWindow("hsv_img", cv::WINDOW_AUTOSIZE);
         cv::namedWindow("gray_img", cv::WINDOW_AUTOSIZE);
         cv::namedWindow("edge_up", cv::WINDOW_AUTOSIZE);
-        cv::namedWindow("edge_up", cv::WINDOW_AUTOSIZE);
+        cv::namedWindow("edge_down", cv::WINDOW_AUTOSIZE);
+        cv::namedWindow("cnt_img", cv::WINDOW_AUTOSIZE);
     } else {
         ui->dbg_win->setText(QString("debug win on"));
         cv::destroyWindow("hsv_img");
         cv::destroyWindow("gray_img");
         cv::destroyWindow("edge_up");
         cv::destroyWindow("edge_down");
+        cv::destroyWindow("cnt_img");
     }
 }
 
