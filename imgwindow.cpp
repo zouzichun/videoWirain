@@ -47,23 +47,23 @@ imgWindow::imgWindow(QWidget *parent) :
     ui->hsv_high2->setText(QString::number(configData.hsv_high2));
     ui->hsv_high3->setText(QString::number(configData.hsv_high3));
 
-    connect(ui->inv_thd,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->canny1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->canny2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->canny3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hgline1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hgline2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hgline3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->blur_kernel,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->line_roh_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->line_ang_abs,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->inv_thd,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->canny1,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->canny2,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->canny3,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hgline1,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hgline2,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hgline3,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->blur_kernel,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->line_roh_abs,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->line_ang_abs,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
 
-    connect(ui->hsv_low1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hsv_low2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hsv_low3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hsv_high1,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hsv_high2,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(ui->hsv_high3,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(ui->hsv_low1,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hsv_low2,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hsv_low3,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hsv_high1,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hsv_high2,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->hsv_high3,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
 }
 
 imgWindow::~imgWindow()

@@ -102,11 +102,11 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::calibration_refresh, Qt::QueuedConnection);
 
     m_hWnd = (void*)m_ui->painter->winId();
-    connect(m_ui->x1_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->x2_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->motor_rho,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->x2_rho,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
-    connect(m_ui->y1_start,SIGNAL(editingFinished()),this,SLOT(on_cal_editingFinished()));
+    connect(m_ui->x1_start,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->x2_start,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->motor_rho,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->x2_rho,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->y1_start,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
 
     CameraInit();
 

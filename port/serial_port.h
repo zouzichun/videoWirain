@@ -156,8 +156,8 @@ public:
 
     TxProcessThread * m_tx_thread = nullptr;
 
-    QMutex m_mutex = {};
-    QWaitCondition m_cond = {};
+    QMutex m_mutex;
+    QWaitCondition m_cond;
 
 public slots:
     void sendMsgWait(const QByteArray &data);
