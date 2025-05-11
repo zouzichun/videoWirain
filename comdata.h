@@ -68,6 +68,8 @@ typedef struct {
     float x1_start;
     float x2_start;
     float y1_start;
+    float up_delta;
+    float down_delta;
 
     // configured store lines for img filter
     // could be changed during calibration

@@ -124,18 +124,6 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             auto mach_p_down = PointsImg2Mach(p21, p22);
             auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
 
-            // auto mach_start = PointsToHoughParams(cv::Point2f(0, configData.x2_start),
-            //     cv::Point2f(315, configData.x1_start));
-
-            // auto img_points = PointsMach2Img(cv::Point2f(0, configData.x2_start), cv::Point2f(315, configData.x1_start));
-            // auto mach_pp = PointsImg2Mach(img_points.first, img_points.second);
-            // auto mach_start_pp = PointsToHoughParams(mach_pp.first, mach_pp.second);
-
-            // auto img_start = PointsMach2Img(cv::Point2f(0, configData.x2_start),
-            //                                 cv::Point2f(315, configData.x1_start));
-            // cv::line(color_img, img_start.first, img_start.second,
-            //         cv::Scalar(255,255,255), 4);
-
             mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
             mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
 
@@ -143,8 +131,6 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
             std::pair<double, double> x1_corss_up = getCrossPoint(mach_hline_up, X1_MACH);
             std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
-//            std::pair<double, double> x1_start = getCrossPoint(mach_start, X1_MACH);
-//            std::pair<double, double> x2_start = getCrossPoint(mach_start, X2_MACH);
 
             double dist_x2 = sqrtf(pow(x2_corss_up.first - x2_corss_down.first, 2) + pow(x2_corss_up.second - x2_corss_down.second, 2));
             double dist_x1 = sqrtf(pow(x1_corss_up.first - x1_corss_down.first, 2) + pow(x1_corss_up.second - x1_corss_down.second, 2));
@@ -156,10 +142,10 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
                 dist_x1 = -dist_x1;
             }
 
-            data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second;
-            data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second;
-            data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second;
-            data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second;
+            data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.down_delta;
+            data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.up_delta;
+            data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.down_delta;
+            data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.up_delta;
 
             data_pkt.frames = frame_cnt;
             data_pkt.valid = true;

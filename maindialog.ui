@@ -95,34 +95,6 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>X2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="4">
-       <widget class="QLineEdit" name="y1_target"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="x2_start"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="x1_start"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="x2_rho"/>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="x1_fetch"/>
-      </item>
-      <item row="2" column="4">
-       <widget class="QLineEdit" name="y1_fetch"/>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLineEdit" name="x1_target"/>
-      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -130,22 +102,13 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="5">
-       <layout class="QHBoxLayout" name="horizontalLayout"/>
+      <item row="5" column="2">
+       <widget class="QLineEdit" name="y1_fetch"/>
       </item>
-      <item row="3" column="3">
-       <widget class="QLineEdit" name="x2_target"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="x2_fetch"/>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="motor_rho"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>X2 RHO</string>
+         <string>Y1</string>
         </property>
        </widget>
       </item>
@@ -156,24 +119,74 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="y1_start"/>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="x2_rho"/>
+      </item>
+      <item row="2" column="5">
+       <layout class="QHBoxLayout" name="horizontalLayout"/>
       </item>
       <item row="4" column="0">
-       <widget class="QLabel" name="label_7">
+       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Y1</string>
+         <string>X2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>delta</string>
         </property>
        </widget>
       </item>
       <item row="4" column="3">
+       <widget class="QLineEdit" name="x2_target"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="x1_start"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="x1_fetch"/>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLineEdit" name="y1_target"/>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="x2_start"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLineEdit" name="x1_target"/>
+      </item>
+      <item row="5" column="4">
        <widget class="QPushButton" name="trigger">
         <property name="text">
          <string>trigger</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="4">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>X2 RHO</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="motor_rho"/>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="x2_fetch"/>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="y1_start"/>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="up_delta"/>
+      </item>
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="down_delta"/>
+      </item>
+      <item row="6" column="4">
        <widget class="QPushButton" name="saveImg">
         <property name="text">
          <string>保存</string>

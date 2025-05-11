@@ -107,6 +107,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->motor_rho,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
     connect(m_ui->x2_rho,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
     connect(m_ui->y1_start,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->up_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->down_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
 
     CameraInit();
 
@@ -176,7 +178,8 @@ void MainDialog::saveImgParam()
     sets.setValue("x2_rho",QString::number(configData.x2_rho, 'f', 2));
     sets.setValue("motor_rho",QString::number(configData.motor_rho, 'f', 2));
     sets.setValue("y1_start",QString::number(configData.y1_start, 'f', 2));
-
+    sets.setValue("up_delta",QString::number(configData.up_delta, 'f', 2));
+    sets.setValue("down_delta",QString::number(configData.down_delta, 'f', 2));
     sets.sync();
 }
 
@@ -268,8 +271,10 @@ void MainDialog::loadConfigFile()
     configData.x1_start = sets.value("x1_start",defaultSetting.x1_start).toFloat();
     configData.x2_start = sets.value("x2_start",defaultSetting.x2_start).toFloat();
     configData.y1_start = sets.value("y1_start",defaultSetting.x2_start).toFloat();
-    spdlog::info("config x1_start {}, x2_start {}, y1_start {}",
-        configData.x1_start, configData.x2_start, configData.y1_start);
+    configData.up_delta = sets.value("up_delta",defaultSetting.up_delta).toFloat();
+    configData.down_delta = sets.value("down_delta",defaultSetting.down_delta).toFloat();
+    spdlog::info("config x1_start {}, x2_start {}, y1_start {}, up_delta {}, down_delta {}",
+        configData.x1_start, configData.x2_start, configData.y1_start, configData.up_delta, configData.down_delta);
 
     configData.hsv_low1 = sets.value("hsv_low1",defaultSetting.hsv_low1).toInt();
     configData.hsv_low2 = sets.value("hsv_low2",defaultSetting.hsv_low2).toInt();
@@ -326,6 +331,8 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->x2_rho->setText(QString::number(configData.x2_rho));
     m_ui->motor_rho->setText(QString::number(configData.motor_rho));
     m_ui->y1_start->setText(QString::number(configData.y1_start));
+    m_ui->up_delta->setText(QString::number(configData.up_delta));
+    m_ui->down_delta->setText(QString::number(configData.down_delta));
 }
 
 void MainDialog::main_img_refresh(cv::Mat img) {
@@ -755,6 +762,8 @@ void MainDialog::on_cal_editingFinished()
     configData.x2_rho = m_ui->x2_rho->text().toFloat();
     configData.motor_rho = m_ui->motor_rho->text().toFloat();
     configData.y1_start = m_ui->y1_start->text().toFloat();
+    configData.up_delta = m_ui->up_delta->text().toFloat();
+    configData.down_delta = m_ui->down_delta->text().toFloat();
 }
 
 void MainDialog::on_modbusSend_clicked()
