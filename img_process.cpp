@@ -777,22 +777,22 @@ bool ImgProcess::ProcessCountor(cv::Mat &edge_img, std::vector<std::vector<std::
         // qDebug("line_segments size %d", line_segments.size());
 
         if (line_segments.size() >= 4) {
-            auto it = line_segments.begin();
-            for(; it != line_segments.end()-1;it++) {
-                auto it_next = it+1;
-                for (; it_next != line_segments.end();) {
+            for(auto it = line_segments.begin(); it != line_segments.end(); ++it) {
+                auto it_next = it + 1;
+                while (it_next != line_segments.end()) {
                     double rho = std::get<3>(*it);
                     double ang = std::get<4>(*it);
                     double rho1 = std::get<3>(*it_next);
                     double ang1 = std::get<4>(*it_next);
                     if (abs(rho - rho1) < 10 && abs(ang - ang1) < 0.05) {
-                        line_segments.erase(it_next);
+                        it_next = line_segments.erase(it_next);
                     } else {
-                        it_next++;
+                        ++it_next;
                     }
                 }
             }
         }
+
             // qDebug("line_segments new size %d", line_segments.size());
         if (line_segments.size() >= 2) {
             // Sort by length (descending)
