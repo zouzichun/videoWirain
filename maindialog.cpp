@@ -38,7 +38,7 @@ extern bool img_sw_status;
 
 std::vector<cv::Point> roi_points;
 
-#define TEST_CAMERA 1
+#define TEST_CAMERA 0
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),

@@ -77,14 +77,15 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             cv::cvtColor(color_img, color_img, COLOR_BGR2RGB);
             PreProcess(color_img, edge_up, edge_down);
             bool valid_flag = true;
-            Process(edge_up, lines_found_up, true);
-            if (!AdaptLines(lines_found_up, lines_filtered)) {
-                valid_flag = false;
-            }
-            Process(edge_down, lines_found_down, false);
-            if (!AdaptLines(lines_found_down, lines_filtered)) {
-                valid_flag = false;
-            }
+            // Process(edge_up, lines_found_up, true);
+            // if (!AdaptLines(lines_found_up, lines_filtered)) {
+            //     valid_flag = false;
+            // }
+            // Process(edge_down, lines_found_down, false);
+            // if (!AdaptLines(lines_found_down, lines_filtered)) {
+            //     valid_flag = false;
+            // }
+            ProcessCountor(edge_up, lines_filtered);
 
             if (!valid_flag) {
                 frame_cnt++;
@@ -93,7 +94,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
             std::vector<cv::Point2f> line1;
             std::vector<cv::Point2f> line2;
-            if (!GetCentralLines(lines_filtered, line1, line2)) {
+            if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
                 frame_cnt++;
                 continue;
             }
@@ -118,35 +119,33 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             cv::line(color_img, p21, p22, cv::Scalar(255,255,0), 4);
             cv::line(color_img, p_mid, p_mid2, cv::Scalar(0,255,255), 4);
 
-
             auto mach_p_up = PointsImg2Mach(p1, p2);
-            auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
             auto mach_p_down = PointsImg2Mach(p21, p22);
+
+            auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
             auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
 
             mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
             mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
+    //        qDebug("up roh %f, down rho %f", mach_hline_up.first, mach_hline_down.first);
 
             std::pair<double, double> x2_corss_up = getCrossPoint(mach_hline_up, X2_MACH);
             std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
             std::pair<double, double> x1_corss_up = getCrossPoint(mach_hline_up, X1_MACH);
             std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
 
-            double dist_x2 = sqrtf(pow(x2_corss_up.first - x2_corss_down.first, 2) + pow(x2_corss_up.second - x2_corss_down.second, 2));
-            double dist_x1 = sqrtf(pow(x1_corss_up.first - x1_corss_down.first, 2) + pow(x1_corss_up.second - x1_corss_down.second, 2));
-            if (x2_corss_up.second < x2_corss_down.second) {
-                dist_x2 = -dist_x2;
-            }
-
-            if (x1_corss_up.second < x1_corss_up.second) {
-                dist_x1 = -dist_x1;
-            }
+            double zero_y = configData.y1_start - (185 - configData.x2_rho);
+            double y_down = sqrtf(pow((x2_corss_down.first - (mach_p_down.first.x + mach_p_down.second.x) / 2),2) +
+                                pow((x2_corss_down.second - (mach_p_down.first.y + mach_p_down.second.y) / 2),2)) + zero_y;
+            double y_up = sqrtf(pow((x2_corss_up.first - (mach_p_up.first.x + mach_p_up.second.x) / 2),2) +
+                                pow((x2_corss_up.second - (mach_p_up.first.y + mach_p_up.second.y) / 2),2)) + zero_y;
 
             data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.down_delta;
             data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.up_delta;
             data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.down_delta;
             data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.up_delta;
-
+            data_pkt.y1_fetch = y_down;
+            data_pkt.y1_target = y_up;
             data_pkt.frames = frame_cnt;
             data_pkt.valid = true;
 
@@ -211,42 +210,19 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
             cv::Mat edge_down(IMG_HEIGHT, IMG_WIDTH, CV_8UC1, Scalar(0));
             std::vector<cv::Vec2f> lines_found_up;
             std::vector<cv::Vec2f> lines_found_down;
+            std::vector<std::vector<std::pair<double, double>>> lines_filtered;
 
             PreProcess(color_img, edge_up, edge_down);
-            Process(edge_up, lines_found_up, true);
-            if (!FilterLines(edge_up.rows, edge_up.cols, lines_found_up, true)) {
-                frame_cnt++;
-            }
-            Process(edge_down, lines_found_down, false);
-            if (!FilterLines(edge_down.rows, edge_down.cols, lines_found_down, false)) {
-                frame_cnt++;
-            }
+            // Process(edge_up, lines_found_up, true);
+            // if (!FilterLines(edge_up.rows, edge_up.cols, lines_found_up, true)) {
+            //     frame_cnt++;
+            // }
+            // Process(edge_down, lines_found_down, false);
+            // if (!FilterLines(edge_down.rows, edge_down.cols, lines_found_down, false)) {
+            //     frame_cnt++;
+            // }
 
-            for (const auto & v : lines_found_up) {
-                float rho = v[0];
-                float theta = v[1];
-                // spdlog::debug("line {} rho {:.2f}, theta {:.2f}, cnt {}", pos, rho, theta, cnts[pos]);
-                    //直线与第一行的交叉点
-                    cv::Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
-                    //直线与最后一行的交叉点
-                    cv::Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
-                    cv::line(color_img, pt1, pt2, cv::Scalar(255, 255, 255), 2);
-                    // if (cv::clipLine(Size(IMG_WIDTH, IMG_HEIGHT), pt1, pt2)) {
-                    //     if (pt1.y > pt2.y) {
-                    //         lines.push_back(cv::Vec4i(pt2.x, pt2.y, pt1.x, pt1.y));
-                    //     } else {
-                    //         lines.push_back(cv::Vec4i(pt1.x, pt1.y, pt2.x, pt2.y));
-                    //     }
-                    // }
-            }
-
-            for (const auto & v : lines_found_down) {
-                float rho = v[0];
-                float theta = v[1];
-                    cv::Point2i pt1(static_cast<int>(rho / cos(theta)), 0);
-                    cv::Point2i pt2(static_cast<int>(rho / cos(theta) - IMG_HEIGHT*sin(theta) / cos(theta)), IMG_HEIGHT);
-                    cv::line(color_img, pt1, pt2, cv::Scalar(255, 255, 255), 2);
-            }
+            ProcessCountor(edge_up, lines_filtered);
             
             cv::Mat edge;
             cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);

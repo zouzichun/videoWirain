@@ -541,13 +541,13 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
-//   if (roi_points.size() >= 2) {
-//       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
-//       for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
-//           cv::line(edge_img, *(it - 1), *it, Scalar(0), 15);
-//       cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
-//                Scalar(0), 15);
-//   }
+   if (roi_points.size() >= 2) {
+       cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
+       for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
+           cv::line(edge_img, *(it - 1), *it, Scalar(255), 15);
+       cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
+                Scalar(255), 15);
+   }
 
     edge_up = edge_img.clone();
     edge_down = edge_img.clone();
