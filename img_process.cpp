@@ -474,6 +474,20 @@ bool PointRelativeToLineUp(cv::Point pt1, cv::Point pt2, cv::Point p) {
     return (cross > 0) ? true : false;
 }
 
+// 目标点 (x0, y0)
+std::pair<float, float> calcNormalLineParams(float rho, float theta, float x0, float y0) {
+    // 计算法线角度
+    float theta_normal = theta + CV_PI/2;
+    if(theta_normal >= CV_PI) {
+        theta_normal -= CV_PI;
+    }
+
+    // 计算新rho
+    float rho_normal = x0 * cos(theta_normal) + y0 * sin(theta_normal);
+
+    return {rho_normal, theta_normal};
+}
+
 extern std::vector<std::string> split(const std::string & str, char dim);
 extern std::vector<cv::Point> roi_points;
 

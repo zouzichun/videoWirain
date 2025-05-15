@@ -30,6 +30,7 @@ std::pair<double, double> getCrossPoint(std::pair<double, double> line1, std::pa
 bool GetCentralLines(const std::vector<std::vector<std::pair<double, double>>> &lines_filtered,
     std::vector<cv::Point2f> &line1,
     std::vector<cv::Point2f> &line2);
+std::pair<float, float> calcNormalLineParams(float rho, float theta, float x0, float y0);
 
 enum {
     UP_LINE = 0,

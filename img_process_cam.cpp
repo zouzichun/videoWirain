@@ -138,9 +138,19 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
         auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
 
+        auto vetical_line_up_left = calcNormalLineParams(mach_hline_up.first, mach_hline_up.second, mach_p_up.first.x, mach_p_up.first.y);
+        auto vetical_line_up_right = calcNormalLineParams(mach_hline_up.first, mach_hline_up.second, mach_p_up.second.x, mach_p_up.second.y);
+        auto vetical_line_down_left = calcNormalLineParams(mach_hline_down.first, mach_hline_down.second, mach_p_down.first.x, mach_p_down.first.y);
+        auto vetical_line_down_right = calcNormalLineParams(mach_hline_down.first, mach_hline_down.second, mach_p_down.second.x, mach_p_down.second.y);
+
         mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
         mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
 //        qDebug("up roh %f, down rho %f", mach_hline_up.first, mach_hline_down.first);
+
+        auto mach_motor_up_left = getCrossPoint(vetical_line_up_left, mach_hline_up);
+        auto mach_motor_up_right = getCrossPoint(vetical_line_up_right, mach_hline_up);
+        auto mach_motor_down_left = getCrossPoint(vetical_line_down_left, mach_hline_down);
+        auto mach_motor_down_right = getCrossPoint(vetical_line_down_right, mach_hline_down);
 
         std::pair<double, double> x2_corss_up = getCrossPoint(mach_hline_up, X2_MACH);
         std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
@@ -148,10 +158,10 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
 
         double zero_y = configData.y1_start - (185 - configData.x2_rho);
-        double y_down = sqrtf(pow((x2_corss_down.first - (mach_p_down.first.x + mach_p_down.second.x) / 2),2) +
-                              pow((x2_corss_down.second - (mach_p_down.first.y + mach_p_down.second.y) / 2),2)) + zero_y;
-        double y_up = sqrtf(pow((x2_corss_up.first - (mach_p_up.first.x + mach_p_up.second.x) / 2),2) +
-                              pow((x2_corss_up.second - (mach_p_up.first.y + mach_p_up.second.y) / 2),2)) + zero_y;
+        double y_down = sqrtf(pow((x2_corss_down.first - (mach_motor_down_left.first + mach_motor_down_right.first) / 2),2) +
+                              pow((x2_corss_down.second - (mach_motor_down_left.second + mach_motor_down_right.second) / 2),2)) + zero_y;
+        double y_up = sqrtf(pow((x2_corss_up.first - (mach_motor_up_left.first + mach_motor_up_right.first) / 2),2) +
+                              pow((x2_corss_up.second - (mach_motor_up_left.second + mach_motor_up_right.second) / 2),2)) + zero_y;
 
         data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.down_delta;
         data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.up_delta;
