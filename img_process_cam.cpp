@@ -163,12 +163,12 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         double y_up = sqrtf(pow((x2_corss_up.first - (mach_motor_up_left.first + mach_motor_up_right.first) / 2),2) +
                               pow((x2_corss_up.second - (mach_motor_up_left.second + mach_motor_up_right.second) / 2),2)) + zero_y;
 
-        data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.down_delta;
-        data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.up_delta;
-        data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.down_delta;
-        data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.up_delta;
-        data_pkt.y1_fetch = y_down;
-        data_pkt.y1_target = y_up;
+        data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.fetch_delta;
+        data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.target_delta;
+        data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.fetch_delta;
+        data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.target_delta;
+        data_pkt.y1_fetch = y_down + configData.y_delta;
+        data_pkt.y1_target = y_up + configData.y_delta;
         data_pkt.frames = frame_cnt;
         data_pkt.valid = true;
 

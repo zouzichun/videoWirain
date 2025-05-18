@@ -73,6 +73,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="Calibration_2">
+          <property name="text">
+           <string>ModbusTCP</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -181,10 +188,10 @@
        <widget class="QLineEdit" name="y1_start"/>
       </item>
       <item row="6" column="1">
-       <widget class="QLineEdit" name="up_delta"/>
+       <widget class="QLineEdit" name="target_delta"/>
       </item>
       <item row="6" column="2">
-       <widget class="QLineEdit" name="down_delta"/>
+       <widget class="QLineEdit" name="fetch_delta"/>
       </item>
       <item row="6" column="4">
        <widget class="QPushButton" name="saveImg">
@@ -192,6 +199,9 @@
          <string>保存</string>
         </property>
        </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLineEdit" name="y_delta"/>
       </item>
      </layout>
     </item>
@@ -223,18 +233,34 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QTextBrowser" name="txbRecv">
    <property name="geometry">
     <rect>
      <x>740</x>
+     <y>350</y>
+     <width>509</width>
+     <height>192</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget_3">
+   <property name="geometry">
+    <rect>
+     <x>750</x>
      <y>10</y>
-     <width>511</width>
-     <height>611</height>
+     <width>491</width>
+     <height>301</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QGridLayout" name="gridLayout">
+     <layout class="QGridLayout" name="gridLayout_7">
       <item row="0" column="0">
        <widget class="QLabel" name="LSerialName">
         <property name="text">
@@ -305,20 +331,7 @@
      </layout>
     </item>
     <item>
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
-     <layout class="QGridLayout" name="gridLayout_2">
+     <layout class="QGridLayout" name="gridLayout_8">
       <item row="3" column="0">
        <widget class="QLineEdit" name="ceil">
         <property name="text">
@@ -448,29 +461,6 @@
        </widget>
       </item>
      </layout>
-    </item>
-    <item>
-     <spacer name="verticalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
-     <widget class="QTextBrowser" name="txbRecv">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
     </item>
    </layout>
   </widget>
