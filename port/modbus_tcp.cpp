@@ -89,7 +89,7 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
 //    qDebug("ConnectedState %d", m_modbustcp->state());
     if (!m_modbustcp || m_modbustcp->state() != QModbusDevice::ConnectedState)
         return false;
-    QModbusDataUnit readUnit(QModbusDataUnit::HoldingRegisters, startAdd, numbers);
+    QModbusDataUnit readUnit(QModbusDataUnit::InputRegisters, startAdd, numbers);
     {
         std::lock_guard<std::mutex> lg(mtx);
         rdy_data = 0;
