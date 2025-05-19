@@ -1160,3 +1160,8 @@ bool GetCentralLines(const std::vector<std::vector<std::pair<double, double>>> &
     return true;
 }
 
+void ImgProcess::AutoRunSlot(bool status) {
+    auto_run_status = status;
+    qDebug("auto run status %d", status);
+}
+

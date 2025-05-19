@@ -86,6 +86,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_imgproc, &ImgProcess::signal_refresh_delta,
         this, &MainDialog::calibration_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::main_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
+
+    connect(this, &MainDialog::signal_auto_run, m_imgproc, &ImgProcess::AutoRunSlot, Qt::QueuedConnection);
     
     #if TEST_CAMERA
         connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection);
@@ -109,7 +111,8 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_ui->y1_start,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
     connect(m_ui->target_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
     connect(m_ui->fetch_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
-    connect(m_ui->y_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->y_fetch_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
+    connect(m_ui->y_target_delta,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
     CameraInit();
 
     mWorkerThread.start();
@@ -180,7 +183,8 @@ void MainDialog::saveImgParam()
     sets.setValue("y1_start",QString::number(configData.y1_start, 'f', 2));
     sets.setValue("target_delta",QString::number(configData.target_delta, 'f', 2));
     sets.setValue("fetch_delta",QString::number(configData.fetch_delta, 'f', 2));
-    sets.setValue("y_delta",QString::number(configData.y_delta, 'f', 2));
+    sets.setValue("y_fetch_delta",QString::number(configData.y_fetch_delta, 'f', 2));
+    sets.setValue("y_target_delta",QString::number(configData.y_target_delta, 'f', 2));
     sets.sync();
 }
 
@@ -274,9 +278,12 @@ void MainDialog::loadConfigFile()
     configData.y1_start = sets.value("y1_start",defaultSetting.x2_start).toFloat();
     configData.target_delta = sets.value("target_delta",defaultSetting.target_delta).toFloat();
     configData.fetch_delta = sets.value("fetch_delta",defaultSetting.fetch_delta).toFloat();
-    configData.y_delta = sets.value("y_delta",defaultSetting.y_delta).toFloat();
-    spdlog::info("config x1_start {}, x2_start {}, y1_start {}, target_delta {}, fetch_delta {}, y delta {}",
-        configData.x1_start, configData.x2_start, configData.y1_start, configData.target_delta, configData.fetch_delta, configData.y_delta);
+    configData.y_fetch_delta = sets.value("y_fetch_delta",defaultSetting.y_fetch_delta).toFloat();
+    configData.y_target_delta = sets.value("y_target_delta",defaultSetting.y_target_delta).toFloat();
+    spdlog::info("config x1_start {}, x2_start {}, y1_start {}",
+        configData.x1_start, configData.x2_start, configData.y1_start);
+    spdlog::info("config target_delta {}, fetch_delta {}, y fetch delta {}, y target delta {}",
+        configData.target_delta, configData.fetch_delta, configData.y_fetch_delta, configData.y_target_delta);
 
     configData.hsv_low1 = sets.value("hsv_low1",defaultSetting.hsv_low1).toInt();
     configData.hsv_low2 = sets.value("hsv_low2",defaultSetting.hsv_low2).toInt();
@@ -335,7 +342,8 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->y1_start->setText(QString::number(configData.y1_start));
     m_ui->target_delta->setText(QString::number(configData.target_delta));
     m_ui->fetch_delta->setText(QString::number(configData.fetch_delta));
-    m_ui->y_delta->setText(QString::number(configData.y_delta));
+    m_ui->y_fetch_delta->setText(QString::number(configData.y_fetch_delta));
+    m_ui->y_target_delta->setText(QString::number(configData.y_target_delta));
 }
 
 void MainDialog::main_img_refresh(cv::Mat img) {
@@ -410,6 +418,10 @@ void MainDialog::on_SerialOpen_clicked()
         m_port->isOpened = false;
         m_ui->SerialOpen->setText("打开串口");
     }
+}
+
+void MainDialog::on_auto_run_stateChanged() {
+    emit signal_auto_run(m_ui->auto_run->checkState());
 }
 
 QString MainDialog::toString(unsigned char*buf, unsigned int bufLen)
@@ -767,7 +779,8 @@ void MainDialog::on_cal_editingFinished()
     configData.y1_start = m_ui->y1_start->text().toFloat();
     configData.target_delta = m_ui->target_delta->text().toFloat();
     configData.fetch_delta = m_ui->fetch_delta->text().toFloat();
-    configData.y_delta = m_ui->y_delta->text().toFloat();
+    configData.y_fetch_delta = m_ui->y_fetch_delta->text().toFloat();
+    configData.y_target_delta = m_ui->y_target_delta->text().toFloat();
 }
 
 void MainDialog::on_modbusSend_clicked()

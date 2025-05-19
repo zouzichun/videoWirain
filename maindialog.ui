@@ -28,7 +28,7 @@
      <x>10</x>
      <y>10</y>
      <width>721</width>
-     <height>233</height>
+     <height>268</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -102,106 +102,179 @@
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout_4">
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>X2取料</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>X1</string>
+         <string>X1归零常量</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="2">
-       <widget class="QLineEdit" name="y1_fetch"/>
+      <item row="6" column="4">
+       <widget class="QLineEdit" name="fetch_delta"/>
       </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_7">
+      <item row="2" column="6">
+       <widget class="QLineEdit" name="x1_target"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="label_9">
         <property name="text">
-         <string>Y1</string>
+         <string>X1取料</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_12">
+      <item row="6" column="3">
+       <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Motor RHO</string>
+         <string>X取料校正</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="x2_rho"/>
-      </item>
-      <item row="2" column="5">
+      <item row="2" column="8">
        <layout class="QHBoxLayout" name="horizontalLayout"/>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Y取料</string>
+        </property>
+       </widget>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>X2</string>
+         <string>X2归零常量</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>delta</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLineEdit" name="x2_target"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="x1_start"/>
-      </item>
-      <item row="2" column="2">
+      <item row="2" column="4">
        <widget class="QLineEdit" name="x1_fetch"/>
       </item>
-      <item row="5" column="3">
-       <widget class="QLineEdit" name="y1_target"/>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="x2_start"/>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLineEdit" name="x1_target"/>
-      </item>
-      <item row="5" column="4">
-       <widget class="QPushButton" name="trigger">
+      <item row="4" column="5">
+       <widget class="QLabel" name="label_14">
         <property name="text">
-         <string>trigger</string>
+         <string>X2放料</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
+      <item row="5" column="6">
+       <widget class="QLineEdit" name="y1_target"/>
+      </item>
+      <item row="2" column="5">
+       <widget class="QLabel" name="label_13">
         <property name="text">
-         <string>X2 RHO</string>
+         <string>X1放料</string>
         </property>
        </widget>
       </item>
       <item row="1" column="3">
-       <widget class="QLineEdit" name="motor_rho"/>
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>超声与电机轴间距</string>
+        </property>
+       </widget>
       </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="x2_fetch"/>
-      </item>
-      <item row="5" column="1">
+      <item row="5" column="2">
        <widget class="QLineEdit" name="y1_start"/>
       </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="target_delta"/>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="x2_start"/>
       </item>
-      <item row="6" column="2">
-       <widget class="QLineEdit" name="fetch_delta"/>
+      <item row="4" column="4">
+       <widget class="QLineEdit" name="x2_fetch"/>
       </item>
-      <item row="6" column="4">
+      <item row="1" column="4">
+       <widget class="QLineEdit" name="motor_rho"/>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="x1_start"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Y归零常量</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="6">
+       <widget class="QLineEdit" name="x2_target"/>
+      </item>
+      <item row="1" column="7">
        <widget class="QPushButton" name="saveImg">
         <property name="text">
          <string>保存</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="3">
-       <widget class="QLineEdit" name="y_delta"/>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="x2_rho"/>
+      </item>
+      <item row="5" column="4">
+       <widget class="QLineEdit" name="y1_fetch"/>
+      </item>
+      <item row="5" column="5">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>Y放料</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>X2零点距离</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="7">
+       <widget class="QPushButton" name="trigger">
+        <property name="text">
+         <string>trigger</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="7">
+       <widget class="QCheckBox" name="auto_run">
+        <property name="text">
+         <string>自动</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="6">
+       <widget class="QLineEdit" name="y_target_delta"/>
+      </item>
+      <item row="7" column="5">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Y放料校正</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="3">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Y取料校正</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="4">
+       <widget class="QLineEdit" name="y_fetch_delta"/>
+      </item>
+      <item row="6" column="6">
+       <widget class="QLineEdit" name="target_delta"/>
+      </item>
+      <item row="6" column="5">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>X放料校正</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -211,7 +284,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>250</y>
+     <y>280</y>
      <width>721</width>
      <height>371</height>
     </rect>
@@ -237,9 +310,9 @@
    <property name="geometry">
     <rect>
      <x>740</x>
-     <y>350</y>
+     <y>321</y>
      <width>509</width>
-     <height>192</height>
+     <height>291</height>
     </rect>
    </property>
    <property name="sizePolicy">

@@ -144,8 +144,8 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.target_delta;
             data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.fetch_delta;
             data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.target_delta;
-            data_pkt.y1_fetch = y_down + configData.y_delta;
-            data_pkt.y1_target = y_up + configData.y_delta;
+            data_pkt.y1_fetch = y_down + configData.y_fetch_delta;
+            data_pkt.y1_target = y_up + configData.y_target_delta;
             data_pkt.frames = frame_cnt;
             data_pkt.valid = true;
 

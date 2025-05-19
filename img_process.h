@@ -99,10 +99,12 @@ public slots:
     void CameraCalTest(CMvCamera* p_cam);
     void ImageTest(CMvCamera* p_cam, Port * p_port);
     void ImageCalTest(CMvCamera* p_cam);
+    void AutoRunSlot(bool auto_run);
 
 private:
     QString m_dev_name;
     int cal_img_mode = 1;
+    bool auto_run_status = false;
 };
 
 #endif // IMGPROCESS_H

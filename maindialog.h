@@ -75,7 +75,8 @@ const ConfigData defaultSetting {
     .y1_start = 80.0,
     .target_delta = 2.0,
     .fetch_delta = 0.0,
-    .y_delta = 0.0,
+    .y_fetch_delta = 0.0,
+    .y_target_delta = 0.0,
     .line_angs="0,0,0",
     .line_rhos="0,0,0",
     .roi="0,0;0,2047;2047,2047;2047,0",
@@ -133,6 +134,7 @@ signals:
     void sendMsgWait(const QByteArray &val);
     void cameraStart(CMvCamera* handler, Port * p_port);
     void cameraCalStart(CMvCamera* handler);
+    void signal_auto_run(bool auto_run_status);
 
 private slots:
     void on_SerialOpen_clicked();
@@ -152,6 +154,8 @@ private slots:
     void on_write_clicked();
 
     void on_trigger_clicked();
+
+    void on_auto_run_stateChanged();
 
 private:
     Ui::MainDialog *m_ui;
