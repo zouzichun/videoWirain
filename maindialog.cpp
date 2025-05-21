@@ -65,12 +65,9 @@ MainDialog::MainDialog(QWidget *parent) :
     // if (configData.netType == 3) {
     // m_port = new ModbusPort(parent);
     m_port = new ModbusTcp(parent);
-    // m_port->moveToThread(&mmodbusthd);
-    // connect(&mmodbusthd, &QThread::finished, m_port, &QObject::deleteLater);
     m_port->startPort(configData);
-    // } else if (configData.netType == 3) {
-    //     m_serial = new SerialPort();
-    // }
+//     m_port->moveToThread(&mmodbusthd);
+//     connect(&mmodbusthd, &QThread::finished, m_port, &QObject::deleteLater);
 
 //    connect(this, SIGNAL(sendMsgWait(const QByteArray&)),
 //                m_serial, SLOT(sendMsgWait(const QByteArray&)));
@@ -83,16 +80,18 @@ MainDialog::MainDialog(QWidget *parent) :
     m_imgproc->moveToThread(&mWorkerThread); //把数据处理类移到线程
     connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
 
-    connect(m_imgproc, &ImgProcess::signal_refresh_delta,
-        this, &MainDialog::calibration_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
+
+    connect(m_imgproc, &ImgProcess::signal_refresh_delta, this, &MainDialog::calibration_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::main_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
 
-    connect(this, &MainDialog::signal_auto_run, m_imgproc, &ImgProcess::AutoRunSlot, Qt::QueuedConnection);
+    connect(this, &MainDialog::signal_auto_run, m_imgproc, &ImgProcess::AutoRunSlot);
+    connect(this, &MainDialog::signal_trigger, m_imgproc, &ImgProcess::TriggerSlot);
+    connect(m_imgproc, &ImgProcess::signal_read_modbus_data, this, &MainDialog::read_modbus_data);
     
     #if TEST_CAMERA
-        connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest, Qt::QueuedConnection);
+        connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest);
     #else
-        connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::ImageTest, Qt::QueuedConnection);
+        connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::ImageTest);
     #endif
 
     imgw = new imgWindow();
@@ -116,7 +115,7 @@ MainDialog::MainDialog(QWidget *parent) :
     CameraInit();
 
     mWorkerThread.start();
-    // mmodbusthd.start();
+//     mmodbusthd.start();
 
     qDebug()<< "MainDialog thd id: " << QThread::currentThreadId();
 }
@@ -147,8 +146,8 @@ MainDialog::~MainDialog()
 
     mWorkerThread.quit();
     mWorkerThread.wait();
-    // mmodbusthd.quit();
-    // mmodbusthd.wait();
+//     mmodbusthd.quit();
+//     mmodbusthd.wait();
     m_monitor_timer->stop();
     delete m_monitor_timer;
 }
@@ -389,22 +388,46 @@ void MainDialog::calibration_refresh_delta() {
     m_ui->frames->setText(QString::number(data_pkt.frames));
 
     if (enable_process) {
-        m_port->writeModbusData(500, 2, data_pkt.x1_fetch);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(504, 2, data_pkt.x2_fetch);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(508, 2, data_pkt.y1_fetch);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(520, 2, data_pkt.x1_target);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(524, 2, data_pkt.x2_target);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(528, 2, data_pkt.y1_target);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(700, 2, 0.0f);
-        m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(500, 2, data_pkt.x1_fetch);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(504, 2, data_pkt.x2_fetch);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(508, 2, data_pkt.y1_fetch);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(520, 2, data_pkt.x1_target);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(524, 2, data_pkt.x2_target);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(528, 2, data_pkt.y1_target);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(700, 2, 0.0f);
+        // m_port->thd_msleep(configData.modbusDelay);
+
+         m_port->writeModbusData(600, 2, 0.0f);
+        // m_port->thd_msleep(configData.modbusDelay);
+        spdlog::info("trigger test d600 wto 0");
+
         enable_process = false;
         m_ui->trigger->setDisabled(false);
+    } else if (m_ui->auto_run->checkState() == Qt::Checked) {
+        // m_port->writeModbusData(500, 2, data_pkt.x1_fetch);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(504, 2, data_pkt.x2_fetch);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(508, 2, data_pkt.y1_fetch);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(520, 2, data_pkt.x1_target);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(524, 2, data_pkt.x2_target);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(528, 2, data_pkt.y1_target);
+        // m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(700, 2, 0.0f);
+        // m_port->thd_msleep(configData.modbusDelay);
+
+         m_port->writeModbusData(600, 2, 0.0f);
+        // m_port->thd_msleep(configData.modbusDelay);
+        spdlog::info("checkbox test d600 wto 0");
     }
 }
 void MainDialog::on_SerialOpen_clicked()
@@ -862,6 +885,11 @@ void MainDialog::on_trigger_clicked()
     if (m_ui->trigger->isEnabled()) {
         m_ui->trigger->setEnabled(false);
         enable_process = true;
+        emit signal_trigger();
     }
 }
 
+void MainDialog::read_modbus_data(int startAdd, int numbers) {
+    float data = 0.0;
+    m_port->readModbusData(startAdd, numbers, data);
+}

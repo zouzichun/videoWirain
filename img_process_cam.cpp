@@ -18,6 +18,17 @@ extern DataPkt data_pkt;
 extern bool enable_process;
 extern bool img_sw_status;
 
+void syncDelay(int milliseconds) {
+    QEventLoop loop;
+    QTimer timer;
+
+    // 绑定定时器超时信号与事件循环退出
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+    timer.start(milliseconds);  // 启动定时器
+    loop.exec();                 // 进入事件循环等待
+}
+
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
     int ret = p_cam->StartGrabbing();
@@ -40,22 +51,21 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
     while (camera_enable) {
-        // ret = p_cam->GetImageBuffer(&frame, 1000);
-        // if (ret != MV_OK) {
-        //     spdlog::debug("No data {:#x}", ret);
-        //     p_cam->StopGrabbing();
-        //     return;
-        // }
 
-        // do {
-        //     p_port->readModbusData(3, 700, 2);
-        //     p_port->thd_msleep(100);
-        // } while(!p_port->rdy_flag && p_port->rdy_data != 1.0f);
-
-        if (enable_process) {
-            std::lock_guard<std::mutex> lg(p_port->mtx);
+        if (auto_run_status || trigger_status) {
+            float ttv;
             p_port->rdy_flag = false;
             p_port->rdy_data = 0.0f;
+
+            emit signal_read_modbus_data(600, 2);
+            syncDelay(configData.modbusDelay);
+            spdlog::info("get d600 {:.2f}", p_port->rdy_data);
+
+            if (p_port->rdy_flag) {
+                spdlog::info("get d600 ready, val {:.2f}", p_port->rdy_data);
+            } else {
+                spdlog::info("get d600 not ready");
+            }
         }
 
         ret = p_cam->GetImageBuffer(&frame, 1000);
@@ -168,13 +178,19 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.fetch_delta;
         data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.target_delta;
         data_pkt.y1_fetch = y_down + configData.y_fetch_delta;
-        data_pkt.y1_target = y_up + configData.y_fetch_delta;
+        data_pkt.y1_target = y_up + configData.y_target_delta;
         data_pkt.frames = frame_cnt;
         data_pkt.valid = true;
 
         emit signal_refresh_img(color_img);
 
-        emit signal_refresh_delta();
+        if (auto_run_status || trigger_status) {
+            emit signal_refresh_delta();
+        }
+
+        if (trigger_status) {
+            trigger_status = false;
+        }
         
         frame_cnt++;
     }

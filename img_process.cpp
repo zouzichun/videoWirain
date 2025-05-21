@@ -1048,7 +1048,7 @@ bool ImgProcess::GetCentralLinesCountor(const std::vector<std::vector<std::pair<
     std::vector<cv::Point2f> &line2) {
 
     if (lines_filtered.size() != 2) {
-            spdlog::debug("lines filtered size {} invalid!", lines_filtered.size());
+            // spdlog::debug("lines filtered size {} invalid!", lines_filtered.size());
         return false;
     }
 
@@ -1098,7 +1098,7 @@ bool GetCentralLines(const std::vector<std::vector<std::pair<double, double>>> &
     std::vector<cv::Point2f> &line1,
     std::vector<cv::Point2f> &line2) {
     if (lines_filtered.size() != 2) {
-            spdlog::debug("lines filtered size {} invalid!", lines_filtered.size());
+            // spdlog::debug("lines filtered size {} invalid!", lines_filtered.size());
         return false;
     }
 
@@ -1162,6 +1162,10 @@ bool GetCentralLines(const std::vector<std::vector<std::pair<double, double>>> &
 
 void ImgProcess::AutoRunSlot(bool status) {
     auto_run_status = status;
-    qDebug("auto run status %d", status);
+    spdlog::info("auto run status {}", status);
 }
 
+void ImgProcess::TriggerSlot() {
+    trigger_status = true;
+    spdlog::info("trigger status {}", trigger_status);
+}

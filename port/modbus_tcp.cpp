@@ -90,11 +90,11 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
     if (!m_modbustcp || m_modbustcp->state() != QModbusDevice::ConnectedState)
         return false;
     QModbusDataUnit readUnit(QModbusDataUnit::InputRegisters, startAdd, numbers);
-    {
-        std::lock_guard<std::mutex> lg(mtx);
-        rdy_data = 0;
-        rdy_flag = false;
-    }
+//    {
+//        std::lock_guard<std::mutex> lg(mtx);
+//        rdy_data = 0;
+//        rdy_flag = false;
+//    }
 
     if (auto *reply = m_modbustcp->sendReadRequest(readUnit, 1)) {
         if (!reply->isFinished()) {
@@ -123,10 +123,10 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
                         // signal_UpdateReadData(val);
                         spdlog::info("read register h: {:#x}, l: {:#x}, val {:.2f}", resultNum >> 16, resultNum & 0xffff, val);
                     } else {
-                        spdlog::info("保持寄存器返回数据错误,个数: {}", nSize);
+//                        spdlog::info("保持寄存器返回数据错误,个数: {}", nSize);
                     }
                 } else {
-                    spdlog::info("read failed! {}", reply->errorString().toStdString().c_str());
+//                    spdlog::info("read failed! {}", reply->errorString().toStdString().c_str());
                 }
                 reply->deleteLater();
             });
