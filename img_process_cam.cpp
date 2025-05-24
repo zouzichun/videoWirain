@@ -52,21 +52,21 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
     while (camera_enable) {
 
-        if (auto_run_status || trigger_status) {
-            float ttv;
-            p_port->rdy_flag = false;
-            p_port->rdy_data = 0.0f;
+        // if (auto_run_status || trigger_status) {
+        //     float ttv;
+        //     p_port->rdy_flag = false;
+        //     p_port->rdy_data = 0.0f;
 
-            emit signal_read_modbus_data(600, 2);
-            syncDelay(configData.modbusDelay);
-            spdlog::info("get d600 {:.2f}", p_port->rdy_data);
+        //     emit signal_read_modbus_data(600, 2);
+        //     syncDelay(configData.modbusDelay);
+        //     spdlog::info("get d600 {:.2f}", p_port->rdy_data);
 
-            if (p_port->rdy_flag) {
-                spdlog::info("get d600 ready, val {:.2f}", p_port->rdy_data);
-            } else {
-                spdlog::info("get d600 not ready");
-            }
-        }
+        //     if (p_port->rdy_flag) {
+        //         spdlog::info("get d600 ready, val {:.2f}", p_port->rdy_data);
+        //     } else {
+        //         spdlog::info("get d600 not ready");
+        //     }
+        // }
 
         ret = p_cam->GetImageBuffer(&frame, 1000);
         if (ret != MV_OK) {
@@ -184,9 +184,9 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         emit signal_refresh_img(color_img);
 
-        if (auto_run_status || trigger_status) {
+        // if (auto_run_status || trigger_status) {
             emit signal_refresh_delta();
-        }
+        // }
 
         if (trigger_status) {
             trigger_status = false;
