@@ -156,9 +156,10 @@ private slots:
 
     void on_trigger_clicked();
 
-    void on_auto_run_stateChanged();
-
     void read_modbus_data(int startAdd, int numbers);
+
+    void on_auto_run_stateChanged(int arg1);
+    void monitor_modbus_hdl();
 
 private:
     Ui::MainDialog *m_ui;

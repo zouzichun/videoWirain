@@ -84,9 +84,9 @@ MainDialog::MainDialog(QWidget *parent) :
     connect(m_imgproc, &ImgProcess::signal_refresh_delta, this, &MainDialog::calibration_refresh_delta, Qt::QueuedConnection); // 或 QueuedConnection
     connect(m_imgproc, &ImgProcess::signal_refresh_img, this, &MainDialog::main_img_refresh, Qt::QueuedConnection); // 或 QueuedConnection
 
-    connect(this, &MainDialog::signal_auto_run, m_imgproc, &ImgProcess::AutoRunSlot);
-    connect(this, &MainDialog::signal_trigger, m_imgproc, &ImgProcess::TriggerSlot);
-    connect(m_imgproc, &ImgProcess::signal_read_modbus_data, this, &MainDialog::read_modbus_data);
+    connect(this, &MainDialog::signal_auto_run, m_imgproc, &ImgProcess::AutoRunSlot, Qt::DirectConnection);
+    connect(this, &MainDialog::signal_trigger, m_imgproc, &ImgProcess::TriggerSlot, Qt::DirectConnection);
+    connect(m_imgproc, &ImgProcess::signal_read_modbus_data, this, &MainDialog::read_modbus_data, Qt::DirectConnection);
     
     #if TEST_CAMERA
         connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest);
@@ -443,7 +443,7 @@ void MainDialog::on_SerialOpen_clicked()
     }
 }
 
-void MainDialog::on_auto_run_stateChanged() {
+void MainDialog::on_auto_run_stateChanged(int arg1) {
     emit signal_auto_run(m_ui->auto_run->checkState());
 }
 
@@ -520,6 +520,15 @@ void MainDialog::on_bnOpen_clicked()
             m_ui->tbFrameRate->setEnabled(true);
             v.timer->stop();
             m_imgproc->camera_enable = true;
+
+            if (m_ui->auto_run->checkState()) {
+                m_monitor_timer->setInterval(200);
+                m_monitor_timer->setTimerType(Qt::PreciseTimer);
+                connect(m_monitor_timer, &QTimer::timeout, this, &MainDialog::monitor_modbus_hdl);
+                m_monitor_timer->start();
+            } else {
+                m_monitor_timer->stop();
+            }
             emit cameraStart(v.handler, m_port);
         }
     }
@@ -541,6 +550,12 @@ void MainDialog::on_bnOpen_clicked()
         }
     #endif
 }
+
+void MainDialog::monitor_modbus_hdl() {
+    float val;
+    m_port->readModbusData(600, 2, val);
+}
+
 extern std::vector<std::pair<double, double>> g_roi;
 void MainDialog::on_Calibration_clicked()
 {
@@ -884,8 +899,12 @@ void MainDialog::on_trigger_clicked()
 {
     if (m_ui->trigger->isEnabled()) {
         m_ui->trigger->setEnabled(false);
-        enable_process = true;
-        emit signal_trigger();
+        if (m_imgproc->camera_enable) {
+            enable_process = true;
+            emit signal_trigger();
+        } else {
+            m_ui->trigger->setEnabled(true);
+        }
     }
 }
 
@@ -893,3 +912,5 @@ void MainDialog::read_modbus_data(int startAdd, int numbers) {
     float data = 0.0;
     m_port->readModbusData(startAdd, numbers, data);
 }
+
+

@@ -120,7 +120,7 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
                             rdy_data = val;
                             rdy_flag = true;
                         }
-                        // signal_UpdateReadData(val);
+//                        emit signal_UpdateReadData(val);
                         spdlog::info("read register h: {:#x}, l: {:#x}, val {:.2f}", resultNum >> 16, resultNum & 0xffff, val);
                     } else {
 //                        spdlog::info("保持寄存器返回数据错误,个数: {}", nSize);
@@ -156,7 +156,7 @@ bool ModbusTcp::writeModbusData(int startAdd, int numbers, float val)
     uData16[1] = (tval >> 16) & 0xffff;
     writeUnit.setValue(0,uData16[0]);
     writeUnit.setValue(1,uData16[1]);
-    spdlog::info("write data h: {:#x}, l: {:#x}, val {:.2f}", uData16[1], uData16[0], val);
+    spdlog::info("write addr {:#x} data h: {:#x}, l: {:#x}, val {:.2f}", startAdd, uData16[1], uData16[0], val);
     {
         std::lock_guard<std::mutex> lg(mtx);
         rdy_data = 0;
