@@ -469,6 +469,9 @@ void MainDialog::CameraInit() {
         v.handler = new (std::nothrow) CMvCamera();
         v.timer = new QTimer(this);
         v.timer->stop();
+        v.timer->setInterval(200);
+        v.timer->setTimerType(Qt::PreciseTimer);
+        connect(v.timer, &QTimer::timeout, this, &MainDialog::monitor_modbus_hdl);
     }
     m_ui->ComboDevices->setCurrentIndex(0);
     // m_cam_idx = m_ui->ComboDevices->currentIndex();
@@ -502,32 +505,23 @@ void MainDialog::on_bnOpen_clicked()
     for (auto & v : m_cameras) {
         if (v.is_opened) {
             v.is_opened = false;
-
             v.timer->stop();
-
             m_ui->bnOpen->setText("打开");
-
             m_ui->tbExposure->setEnabled(false);
             m_ui->tbGain->setEnabled(false);
             m_ui->tbFrameRate->setEnabled(false);
             m_imgproc->camera_enable = false;
-            emit cameraStart(v.handler, m_port);
         } else {
             v.is_opened = true;
             m_ui->bnOpen->setText("关闭");
             m_ui->tbExposure->setEnabled(true);
             m_ui->tbGain->setEnabled(true);
             m_ui->tbFrameRate->setEnabled(true);
-            v.timer->stop();
             m_imgproc->camera_enable = true;
-
             if (m_ui->auto_run->checkState()) {
-                m_monitor_timer->setInterval(200);
-                m_monitor_timer->setTimerType(Qt::PreciseTimer);
-                connect(m_monitor_timer, &QTimer::timeout, this, &MainDialog::monitor_modbus_hdl);
-                m_monitor_timer->start();
+                v.timer->start();
             } else {
-                m_monitor_timer->stop();
+                v.timer->stop();
             }
             emit cameraStart(v.handler, m_port);
         }
@@ -860,24 +854,24 @@ void MainDialog::on_modbusSend_2_clicked()
     if (!m_port) {
         qDebug("port is not opened!");
     } else {
-            qDebug("get D700 %f", m_port->rdy_data);
-            m_port->writeModbusData(500, 2, m_ui->d500->text().toFloat());
-            m_port->thd_msleep(configData.modbusDelay);
-            m_port->writeModbusData(504, 2, m_ui->d504->text().toFloat());
-            m_port->thd_msleep(configData.modbusDelay);
-            m_port->writeModbusData(508, 2, m_ui->d508->text().toFloat());
-            m_port->thd_msleep(configData.modbusDelay);
-            m_port->writeModbusData(520, 2, m_ui->d520->text().toFloat());
-            m_port->thd_msleep(configData.modbusDelay);
-            m_port->writeModbusData(524, 2, m_ui->d524->text().toFloat());
-            m_port->thd_msleep(configData.modbusDelay);
-            m_port->writeModbusData(528, 2, m_ui->d528->text().toFloat());
-            m_port->thd_msleep(configData.modbusDelay);
-            m_port->writeModbusData(700, 2, 0.0f);
-            m_port->thd_msleep(configData.modbusDelay);
-            // m_port->writeModbusData(700, 0.0f);
-            // m_port->thd_msleep(500);
-            qDebug("send D500 %f, D504 %f, D508 %f", m_ui->d500->text().toFloat(), m_ui->d504->text().toFloat(), m_ui->d508->text().toFloat());
+        qDebug("get D700 %f", m_port->rdy_data);
+        m_port->writeModbusData(500, 2, m_ui->d500->text().toFloat());
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(504, 2, m_ui->d504->text().toFloat());
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(508, 2, m_ui->d508->text().toFloat());
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(520, 2, m_ui->d520->text().toFloat());
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(524, 2, m_ui->d524->text().toFloat());
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(528, 2, m_ui->d528->text().toFloat());
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(700, 2, 0.0f);
+        m_port->thd_msleep(configData.modbusDelay);
+        // m_port->writeModbusData(700, 0.0f);
+        // m_port->thd_msleep(500);
+        qDebug("send D500 %f, D504 %f, D508 %f", m_ui->d500->text().toFloat(), m_ui->d504->text().toFloat(), m_ui->d508->text().toFloat());
     }
 }
 

@@ -51,22 +51,17 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
     while (camera_enable) {
-
-        // if (auto_run_status || trigger_status) {
-        //     float ttv;
-        //     p_port->rdy_flag = false;
-        //     p_port->rdy_data = 0.0f;
-
-        //     emit signal_read_modbus_data(600, 2);
-        //     syncDelay(configData.modbusDelay);
-        //     spdlog::info("get d600 {:.2f}", p_port->rdy_data);
-
-        //     if (p_port->rdy_flag) {
-        //         spdlog::info("get d600 ready, val {:.2f}", p_port->rdy_data);
-        //     } else {
-        //         spdlog::info("get d600 not ready");
-        //     }
-        // }
+        if (auto_run_status || trigger_status) {
+            if (p_port->rdy_flag) {
+                spdlog::info("get d600 ready, val {:.2f}", p_port->rdy_data);
+                p_port->rdy_flag = false;
+                p_port->rdy_data = 0.0f;
+            } else {
+                spdlog::info("get d600 not ready");
+                syncDelay(configData.modbusDelay);
+                continue;
+            }
+        }
 
         ret = p_cam->GetImageBuffer(&frame, 1000);
         if (ret != MV_OK) {
