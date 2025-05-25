@@ -15,7 +15,7 @@ using namespace cv;
 extern std::pair<double, double> X2_MACH;
 extern std::pair<double, double> X1_MACH;
 extern DataPkt data_pkt;
-extern bool enable_process;
+extern bool trigger_process;
 extern bool img_sw_status;
 
 void syncDelay(int milliseconds) {
@@ -51,13 +51,19 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
     while (camera_enable) {
-        if (auto_run_status || trigger_status) {
+        if (trigger_status) {
+            trigger_status = false;
+            spdlog::info("manual trigger");
+        } else if (auto_run_status) {
             if (p_port->rdy_flag) {
-                spdlog::info("get d600 ready, val {:.2f}", p_port->rdy_data);
                 p_port->rdy_flag = false;
+                if (p_port->rdy_data == 0.0f) {
+                    continue;
+                }
+                spdlog::info("get data ready, val {:.2f}", p_port->rdy_data);
                 p_port->rdy_data = 0.0f;
             } else {
-                spdlog::info("get d600 not ready");
+//                spdlog::info("get d600 not ready");
                 syncDelay(configData.modbusDelay);
                 continue;
             }
@@ -179,12 +185,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         emit signal_refresh_img(color_img);
 
-        // if (auto_run_status || trigger_status) {
+        if (auto_run_status || trigger_status) {
             emit signal_refresh_delta();
-        // }
-
-        if (trigger_status) {
-            trigger_status = false;
         }
         
         frame_cnt++;

@@ -244,6 +244,9 @@
         <property name="text">
          <string>自动</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item row="7" column="6">
@@ -312,7 +315,7 @@
      <x>740</x>
      <y>321</y>
      <width>509</width>
-     <height>291</height>
+     <height>331</height>
     </rect>
    </property>
    <property name="sizePolicy">
