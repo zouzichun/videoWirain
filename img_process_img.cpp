@@ -25,7 +25,7 @@ extern std::pair<double, double> X2_MACH;
 extern std::pair<double, double> X1_MACH;
 DataPkt data_pkt;
 
-std::string vdname("/home/leon/Videos/2.mp4");
+std::string vdname("/home/leon/share/3.avi");
 
 void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
     qDebug() << "image test";
@@ -224,19 +224,19 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
 
             ProcessCountor(edge_up, lines_filtered);
             
-            cv::Mat edge;
-            cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);
+//            cv::Mat edge;
+//            cv::addWeighted(edge_up, 0.5, edge_down, 0.5, 0, edge);
 
             emit signal_refresh_img(color_img);
 
             if (img_sw_status) {
-                emit signal_refresh_cal_img(edge);
+                emit signal_refresh_cal_img(edge_up);
             } else {
                 emit signal_refresh_cal_img(color_img);
             }
 
             frame_cnt++;
-            // waitKey(10);
+//            waitKey(10);
         }
     } else {
         qDebug() << "img cal exit, frames " <<  frame_cnt;
@@ -244,7 +244,7 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
 
     // 3. 释放资源
     cap.release();
-    cv::destroyAllWindows();
+//    cv::destroyAllWindows();
 
     return;
 }

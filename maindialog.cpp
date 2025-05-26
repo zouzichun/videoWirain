@@ -38,7 +38,7 @@ extern bool img_sw_status;
 
 std::vector<cv::Point> roi_points;
 
-#define TEST_CAMERA 1
+#define TEST_CAMERA 0
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
@@ -353,15 +353,15 @@ void MainDialog::showUIConfigData(const ConfigData& configData)
     m_ui->monitor_delay->setText(QString::number(configData.monitor_delay));
     m_ui->modbus_delay->setText(QString::number(configData.modbus_delay));
 
-    m_ui->x1_start->setText(QString::number(configData.x1_start));
-    m_ui->x2_start->setText(QString::number(configData.x2_start));
-    m_ui->x2_rho->setText(QString::number(configData.x2_rho));
-    m_ui->motor_rho->setText(QString::number(configData.motor_rho));
-    m_ui->y1_start->setText(QString::number(configData.y1_start));
-    m_ui->target_delta->setText(QString::number(configData.target_delta));
-    m_ui->fetch_delta->setText(QString::number(configData.fetch_delta));
-    m_ui->y_fetch_delta->setText(QString::number(configData.y_fetch_delta));
-    m_ui->y_target_delta->setText(QString::number(configData.y_target_delta));
+    m_ui->x1_start->setText(QString::number(configData.x1_start, 'f', 2));
+    m_ui->x2_start->setText(QString::number(configData.x2_start, 'f', 2));
+    m_ui->x2_rho->setText(QString::number(configData.x2_rho, 'f', 2));
+    m_ui->motor_rho->setText(QString::number(configData.motor_rho, 'f', 2));
+    m_ui->y1_start->setText(QString::number(configData.y1_start, 'f', 2));
+    m_ui->target_delta->setText(QString::number(configData.target_delta, 'f', 2));
+    m_ui->fetch_delta->setText(QString::number(configData.fetch_delta, 'f', 2));
+    m_ui->y_fetch_delta->setText(QString::number(configData.y_fetch_delta, 'f', 2));
+    m_ui->y_target_delta->setText(QString::number(configData.y_target_delta, 'f', 2));
 }
 
 void MainDialog::main_img_refresh(cv::Mat img) {
@@ -399,12 +399,12 @@ void MainDialog::main_img_refresh(cv::Mat img) {
 extern DataPkt data_pkt;
 extern volatile bool run_sync;
 void MainDialog::calibration_refresh_delta() {
-    m_ui->y1_fetch->setText(QString::number(data_pkt.y1_fetch));
-    m_ui->y1_target->setText(QString::number(data_pkt.y1_target));
-    m_ui->x1_fetch->setText(QString::number(data_pkt.x1_fetch));
-    m_ui->x2_fetch->setText(QString::number(data_pkt.x2_fetch));
-    m_ui->x1_target->setText(QString::number(data_pkt.x1_target));
-    m_ui->x2_target->setText(QString::number(data_pkt.x2_target));
+    m_ui->y1_fetch->setText(QString::number(data_pkt.y1_fetch, 'f', 2));
+    m_ui->y1_target->setText(QString::number(data_pkt.y1_target, 'f', 2));
+    m_ui->x1_fetch->setText(QString::number(data_pkt.x1_fetch, 'f', 2));
+    m_ui->x2_fetch->setText(QString::number(data_pkt.x2_fetch, 'f', 2));
+    m_ui->x1_target->setText(QString::number(data_pkt.x1_target, 'f', 2));
+    m_ui->x2_target->setText(QString::number(data_pkt.x2_target, 'f', 2));
     m_ui->frames->setText(QString::number(data_pkt.frames));
 
     if (trigger_process) {

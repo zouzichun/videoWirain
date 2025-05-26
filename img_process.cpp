@@ -555,37 +555,40 @@ bool ImgProcess::PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down) 
     // cv::GaussianBlur(img, img, Size(3,3), 0);
     // cv::fastNlMeansDenoising(img, img, std::vector<float>({120}));
     cv::Canny(grayimg, edge_img, configData.canny_1, configData.canny_2, configData.canny_3);
-   //if (roi_points.size() >= 2) {
-   //    cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
-   //    for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
-     //      cv::line(edge_img, *(it - 1), *it, Scalar(255), 10);
-   //    cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
- //               Scalar(255), 10);
-//}
+
+//    if (roi_points.size() >= 2) {
+//        cv::Mat mask = cv::Mat::ones(edge_img.size(), CV_8UC1);
+//        for (auto it = roi_points.begin()+1; it < roi_points.end(); it++)
+//            cv::line(edge_img, *(it - 1), *it, Scalar(255), 3);
+//        cv::line(edge_img, *roi_points.begin(),*roi_points.rbegin(),
+//                 Scalar(255), 3);
+//    }
 
     edge_up = edge_img.clone();
-    edge_down = edge_img.clone();
+    // edge_down = edge_img.clone();
 
-    // for (int i = 0; i < edge_img.rows; i++) {
-    //     for (int j = 0; j < edge_img.cols; j++) {
-    //         double result = PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
-    //         cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i));
-    //         if (result <= 0) {
-    //             edge_down.at<uchar>(i, j) = 0;
-    //         } else {
-    //             edge_up.at<uchar>(i, j) = 0;
-    //         }
-    //     }
-    // }
+     for (int i = 0; i < edge_img.rows; i++) {
+         for (int j = 0; j < edge_img.cols; j++) {
+             if (edge_up.at<uchar>(i, j) == 0)
+                 continue;
+             double result = cv::pointPolygonTest(roi_points, cv::Point(j, i), false);
+//             double result = PointRelativeToLineUp(cv::Point(configData.seprate_p1x, configData.seprate_p1y),
+//             cv::Point(configData.seprate_p2x, configData.seprate_p2y), cv::Point(j, i));
+             if (result < 0) {
+                 edge_up.at<uchar>(i, j) = 0;
+             }
+         }
+     }
+
     if (debug_win_enable) {
         cv::Mat uptt;
-        cv::Mat downtt;
+        // cv::Mat downtt;
         edge_up.copyTo(uptt);
-        edge_down.copyTo(downtt);
+        // edge_down.copyTo(downtt);
         cv::resize(uptt, uptt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
-        cv::resize(downtt, downtt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
+        // cv::resize(downtt, downtt, cv::Size(), 0.25, 0.25, cv::INTER_AREA);  // 缩小50%
         imshow("edge_up", uptt);
-        imshow("edge_down", downtt);
+        // imshow("edge_down", downtt);
     }
 }
 
