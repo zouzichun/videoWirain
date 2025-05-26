@@ -31,6 +31,7 @@ SOURCES += main.cpp\
     imgwindow.cpp \
     maindialog.cpp \
     crcalgorithm.cpp \
+    modbusWin.cpp \
     port/modbus_tcp.cpp \
     port/serial_port.cpp \
     port/modbus.cpp \
@@ -44,6 +45,7 @@ HEADERS  += maindialog.h \
     comdata.h \
     crcalgorithm.h \
     imgwindow.h \
+    modbusWin.h \
     port/modbus_tcp.h \
     port/serial_port.h \
     port/modbus.h \
@@ -102,7 +104,8 @@ HEADERS  += maindialog.h \
     img_process.h
 
 FORMS    += maindialog.ui \
-    imgwindow.ui
+    imgwindow.ui \
+    modbusWin.ui
 
 DISTFILES += \
     spdlog/LICENSE \

@@ -26,290 +26,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
-     <width>721</width>
-     <height>268</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>摄像头参数:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="ComboDevices"/>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bnOpen">
-          <property name="text">
-           <string>打开</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="Calibration">
-          <property name="text">
-           <string>校准</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="Calibration_2">
-          <property name="text">
-           <string>ModbusTCP</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QLineEdit" name="tbExposure"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="tbFrameRate"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="tbGain"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="frames"/>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="2" column="8">
-       <layout class="QHBoxLayout" name="horizontalLayout"/>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Y归零常量</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>Y取料</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>X2归零常量</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="5">
-       <widget class="QLabel" name="label_14">
-        <property name="text">
-         <string>X2放料</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="7">
-       <widget class="QCheckBox" name="auto_run">
-        <property name="text">
-         <string>自动</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="5">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>X放料校正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="5">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>X1放料</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="7">
-       <widget class="QPushButton" name="saveImg">
-        <property name="text">
-         <string>保存</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>X1归零常量</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="3">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>Y取料校正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="x2_rho"/>
-      </item>
-      <item row="1" column="4">
-       <widget class="QLineEdit" name="motor_rho"/>
-      </item>
-      <item row="7" column="5">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Y放料校正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_17">
-        <property name="text">
-         <string>查询间隔ms</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="4">
-       <widget class="QLineEdit" name="y1_fetch"/>
-      </item>
-      <item row="4" column="6">
-       <widget class="QLineEdit" name="x2_target"/>
-      </item>
-      <item row="4" column="4">
-       <widget class="QLineEdit" name="x2_fetch"/>
-      </item>
-      <item row="7" column="7">
-       <widget class="QPushButton" name="trigger">
-        <property name="text">
-         <string>trigger</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="6">
-       <widget class="QLineEdit" name="y_target_delta"/>
-      </item>
-      <item row="2" column="6">
-       <widget class="QLineEdit" name="x1_target"/>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="x2_start"/>
-      </item>
-      <item row="6" column="4">
-       <widget class="QLineEdit" name="fetch_delta"/>
-      </item>
-      <item row="6" column="3">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>X取料校正</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QLineEdit" name="y1_start"/>
-      </item>
-      <item row="7" column="4">
-       <widget class="QLineEdit" name="y_fetch_delta"/>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLineEdit" name="monitor_delay"/>
-      </item>
-      <item row="5" column="5">
-       <widget class="QLabel" name="label_15">
-        <property name="text">
-         <string>Y放料</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>超声与电机轴间距</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="x1_start"/>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_18">
-        <property name="text">
-         <string>写延时ms</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>X2零点距离</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="4">
-       <widget class="QLineEdit" name="x1_fetch"/>
-      </item>
-      <item row="4" column="3">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>X2取料</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>X1取料</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="6">
-       <widget class="QLineEdit" name="target_delta"/>
-      </item>
-      <item row="5" column="6">
-       <widget class="QLineEdit" name="y1_target"/>
-      </item>
-      <item row="7" column="2">
-       <widget class="QLineEdit" name="modbus_delay"/>
-      </item>
-     </layout>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="layoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>280</y>
-     <width>721</width>
-     <height>371</height>
+     <y>190</y>
+     <width>1251</width>
+     <height>471</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -332,10 +51,10 @@
   <widget class="QTextBrowser" name="txbRecv">
    <property name="geometry">
     <rect>
-     <x>740</x>
-     <y>330</y>
-     <width>509</width>
-     <height>331</height>
+     <x>40</x>
+     <y>670</y>
+     <width>1221</width>
+     <height>121</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -345,236 +64,260 @@
     </sizepolicy>
    </property>
   </widget>
-  <widget class="QWidget" name="layoutWidget_3">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>750</x>
-     <y>10</y>
-     <width>491</width>
-     <height>312</height>
+     <x>0</x>
+     <y>50</y>
+     <width>1261</width>
+     <height>121</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QGridLayout" name="gridLayout_4">
+    <item row="1" column="6">
+     <widget class="QLineEdit" name="x1_start"/>
+    </item>
+    <item row="1" column="7">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>X2归零常量</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="label_13">
+      <property name="text">
+       <string>X1放料</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QLineEdit" name="x2_fetch"/>
+    </item>
+    <item row="2" column="2">
+     <widget class="QLineEdit" name="x1_fetch"/>
+    </item>
+    <item row="2" column="8">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>X放料校正</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="4">
+     <widget class="QLineEdit" name="x1_target"/>
+    </item>
+    <item row="1" column="4">
+     <widget class="QLineEdit" name="motor_rho"/>
+    </item>
+    <item row="1" column="11">
+     <widget class="QPushButton" name="saveImg">
+      <property name="text">
+       <string>保存</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>X2取料</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="6">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>X取料校正</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_9">
+      <property name="text">
+       <string>X1取料</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="3">
+     <widget class="QLabel" name="label_15">
+      <property name="text">
+       <string>Y放料</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="3">
+     <widget class="QLabel" name="label_14">
+      <property name="text">
+       <string>X2放料</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="5">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>X1归零常量</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLabel" name="label_12">
+      <property name="text">
+       <string>超声与电机轴间距</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="8">
+     <widget class="QLineEdit" name="x2_start"/>
+    </item>
+    <item row="1" column="9">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>Y归零常量</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QLabel" name="label_11">
+      <property name="text">
+       <string>Y取料</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2">
+     <widget class="QLineEdit" name="y1_fetch"/>
+    </item>
+    <item row="1" column="10">
+     <widget class="QLineEdit" name="y1_start"/>
+    </item>
+    <item row="2" column="12">
+     <layout class="QHBoxLayout" name="horizontalLayout"/>
+    </item>
+    <item row="2" column="7">
+     <widget class="QLineEdit" name="fetch_delta"/>
+    </item>
+    <item row="5" column="4">
+     <widget class="QLineEdit" name="y1_target"/>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_8">
+      <property name="text">
+       <string>X2零点距离</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="4">
+     <widget class="QLineEdit" name="x2_target"/>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="x2_rho"/>
+    </item>
+    <item row="2" column="9">
+     <widget class="QLineEdit" name="target_delta"/>
+    </item>
+    <item row="5" column="6">
+     <widget class="QLabel" name="label_16">
+      <property name="text">
+       <string>Y取料校正</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="7">
+     <widget class="QLineEdit" name="y_fetch_delta"/>
+    </item>
+    <item row="5" column="9">
+     <widget class="QLineEdit" name="y_target_delta"/>
+    </item>
+    <item row="5" column="8">
+     <widget class="QLabel" name="label_6">
+      <property name="text">
+       <string>Y放料校正</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="11">
+     <widget class="QCheckBox" name="auto_run">
+      <property name="text">
+       <string>自动</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="11">
+     <widget class="QPushButton" name="trigger">
+      <property name="text">
+       <string>trigger</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>2</x>
+     <y>2</y>
+     <width>1261</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <layout class="QGridLayout" name="gridLayout_7">
-      <item row="0" column="0">
-       <widget class="QLabel" name="LSerialName">
-        <property name="text">
-         <string>串口</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="2">
-       <widget class="QLineEdit" name="serialName"/>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLabel" name="LTx">
-        <property name="text">
-         <string>发送数</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4" colspan="2">
-       <widget class="QLineEdit" name="uartTx"/>
-      </item>
-      <item row="0" column="6">
-       <widget class="QLabel" name="LRx">
-        <property name="text">
-         <string>接受数</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="7" colspan="2">
-       <widget class="QLineEdit" name="uartRx"/>
-      </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QLabel" name="LBuadRate">
-        <property name="text">
-         <string>波特率</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2" colspan="3">
-       <widget class="QLineEdit" name="baudRate"/>
-      </item>
-      <item row="1" column="5">
-       <widget class="QPushButton" name="SerialOpen">
-        <property name="text">
-         <string>打开串口</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="6" colspan="2">
-       <widget class="QPushButton" name="SerialSend">
-        <property name="text">
-         <string>发送</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="8">
-       <spacer name="horizontalSpacer_5">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>摄像头参数:</string>
+      </property>
+     </widget>
     </item>
     <item>
-     <layout class="QGridLayout" name="gridLayout_8">
-      <item row="7" column="0">
-       <widget class="QLineEdit" name="length">
-        <property name="text">
-         <string>2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="d504">
-        <property name="text">
-         <string>34</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLineEdit" name="d524">
-        <property name="text">
-         <string>40</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="d520">
-        <property name="text">
-         <string>15</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="2">
-       <widget class="QLineEdit" name="modbus">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="read">
-        <property name="text">
-         <string>read</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLineEdit" name="val_2"/>
-      </item>
-      <item row="9" column="0">
-       <widget class="QPushButton" name="modbusSend">
-        <property name="text">
-         <string>modbus发送</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLineEdit" name="test_addr">
-        <property name="text">
-         <string>700</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLineEdit" name="optype">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="QPushButton" name="modbusSend_2">
-        <property name="text">
-         <string>TS发送</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLineEdit" name="val"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="d700">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLineEdit" name="addr">
-        <property name="text">
-         <string>500</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLineEdit" name="ceil">
-        <property name="text">
-         <string>2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="2">
-       <widget class="QLineEdit" name="d528">
-        <property name="text">
-         <string>20</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="test_val">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLineEdit" name="d508">
-        <property name="text">
-         <string>15</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="d500">
-        <property name="text">
-         <string>12</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLineEdit" name="wr_addr">
-        <property name="text">
-         <string>700</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="wr_val">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QPushButton" name="write">
-        <property name="text">
-         <string>write</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QComboBox" name="ComboDevices"/>
+    </item>
+    <item>
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="tbExposure"/>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="tbFrameRate"/>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="tbGain"/>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="frames"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="bnOpen">
+      <property name="text">
+       <string>打开</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="Calibration">
+      <property name="text">
+       <string>校准</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="Calibration_2">
+      <property name="text">
+       <string>ModbusTCP</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

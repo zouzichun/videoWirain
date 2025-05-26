@@ -87,7 +87,6 @@ MainDialog::MainDialog(QWidget *parent) :
 
     connect(this, &MainDialog::signal_auto_run, m_imgproc, &ImgProcess::AutoRunSlot, Qt::DirectConnection);
     connect(this, &MainDialog::signal_trigger, m_imgproc, &ImgProcess::TriggerSlot, Qt::DirectConnection);
-    connect(m_imgproc, &ImgProcess::signal_read_modbus_data, this, &MainDialog::read_modbus_data, Qt::DirectConnection);
     
     #if TEST_CAMERA
         connect(this, &MainDialog::cameraStart, m_imgproc, &ImgProcess::CameraTest);
@@ -102,6 +101,11 @@ MainDialog::MainDialog(QWidget *parent) :
         connect(this, &MainDialog::cameraCalStart, m_imgproc, &ImgProcess::ImageCalTest, Qt::QueuedConnection);
     #endif
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::calibration_refresh, Qt::QueuedConnection);
+
+    modbusWin = new modbusWin();
+    connect(modbusWin, &modbusWin::modbusRead, this, &MainDialog::modbusRead);
+    connect(modbusWin, &modbusWin::modbusWrite, this, &MainDialog::modbusWrite);
+
 
     m_hWnd = (void*)m_ui->painter->winId();
     connect(m_ui->modbus_delay,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
@@ -157,8 +161,16 @@ MainDialog::~MainDialog()
     delete m_monitor_timer;
 }
 
-void MainDialog::updateReadVal(int val) {
-    m_ui->test_val->setText(QString::number(val));
+void MainDialog::modbusRead(int addr) {
+    if (m_port) {
+        m_port->readModbusData(addr, 2, val);
+    }
+}
+
+void MainDialog::modbusWrite(int addr, float val) {
+    if (m_port) {
+        m_port->writeModbusData(addr, 2, val);
+    }
 }
 
 void MainDialog::saveCommParam()
@@ -338,16 +350,10 @@ void MainDialog::loadConfigFile()
     m_ui->txbRecv->append("config file loadded!");
 }
 
-void MainDialog::fetchNewConfig(ConfigData &configData)
-{
-    configData.serialName = m_ui->serialName->text();
-    configData.baudRate = m_ui->baudRate->text().toUInt();
-}
-
 void MainDialog::showUIConfigData(const ConfigData& configData)
 {
-    m_ui->baudRate->setText(QString::number(configData.baudRate));
-    m_ui->serialName->setText(configData.serialName);
+    // m_ui->baudRate->setText(QString::number(configData.baudRate));
+    // m_ui->serialName->setText(configData.serialName);
 
     m_ui->modbus->setText(configData.modbusTcpIp+":"+QString::number(configData.modbusTcpPort));
     m_ui->monitor_delay->setText(QString::number(configData.monitor_delay));
@@ -448,18 +454,6 @@ void MainDialog::calibration_refresh_delta() {
         // m_port->writeModbusData(600, 2, 0.0f);
 //        m_port->thd_msleep(configData.modbus_delay);
         // spdlog::info("checkbox test d600 wto 0");
-    }
-}
-void MainDialog::on_SerialOpen_clicked()
-{
-    if (m_port->isOpened == false) {
-        m_port->startPort(configData);
-        m_port->isOpened = true;
-        m_ui->SerialOpen->setText("关闭串口");
-    } else {
-        m_port->closePort();
-        m_port->isOpened = false;
-        m_ui->SerialOpen->setText("打开串口");
     }
 }
 
@@ -869,63 +863,30 @@ void MainDialog::on_cal_editingFinished()
     configData.modbus_delay = m_ui->modbus_delay->text().toInt();
 }
 
-void MainDialog::on_modbusSend_clicked()
+void MainDialog::on_modbusSend_2_clicked(float d500, float d504, float d508, float d520, float d524, float d528)
 {
     if (!m_port) {
         qDebug("port is not opened!");
     } else {
-        if (m_ui->optype->text().toInt() == 0) {
-            int val = 0;
-            m_port->readModbusData(m_ui->addr->text().toInt(), m_ui->length->text().toInt(), val);
-        } if (m_ui->optype->text().toInt() == 1) {
-            m_port->writeModbusData(m_ui->addr->text().toInt(), m_ui->length->text().toInt(), m_ui->val->text().toFloat());
-        } else {
-
-        }
-
-        float w_val = 1.0;
-        int r_val;
-        m_port->writeModbusData(500, 2 , w_val);
-        m_port->writeModbusData(502, 2 , w_val + 1.1f);
-        m_port->writeModbusData(504, 2 , w_val + 1.1f);
-        m_port->writeModbusData(506, 2 , w_val + 1.1f);
-        m_port->readModbusData(500, 2 , r_val);
-        qDebug("read %d, %d", 500, r_val);
-        m_port->readModbusData(502, 2 , r_val);
-         QThread::sleep(1);
-        qDebug("read %d, %d", 502, r_val);
-        m_port->readModbusData(504, 2 , r_val);
-         QThread::sleep(1);
-        qDebug("read %d, %d", 504, r_val);
-        m_port->readModbusData(506, 2 , r_val);
-         QThread::sleep(1);
-        qDebug("read %d, %d", 506, r_val);
-    }
-}
-
-void MainDialog::on_modbusSend_2_clicked()
-{
-    if (!m_port) {
-        qDebug("port is not opened!");
-    } else {
-        qDebug("get D700 %d", m_port->rdy_data);
-        m_port->writeModbusData(500, 2, m_ui->d500->text().toFloat());
-        m_port->thd_msleep(configData.modbus_delay);
-        m_port->writeModbusData(504, 2, m_ui->d504->text().toFloat());
-        m_port->thd_msleep(configData.modbus_delay);
-        m_port->writeModbusData(508, 2, m_ui->d508->text().toFloat());
-        m_port->thd_msleep(configData.modbus_delay);
-        m_port->writeModbusData(520, 2, m_ui->d520->text().toFloat());
-        m_port->thd_msleep(configData.modbus_delay);
-        m_port->writeModbusData(524, 2, m_ui->d524->text().toFloat());
-        m_port->thd_msleep(configData.modbus_delay);
-        m_port->writeModbusData(528, 2, m_ui->d528->text().toFloat());
-        m_port->thd_msleep(configData.modbus_delay);
-//        m_port->writeModbusData(700, 2, 0.0f);
-//        m_port->thd_msleep(configData.modbus_delay);
+        qDebug("get D700 %f", m_port->rdy_data);
+        m_port->writeModbusData(500, 2, d500);
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(504, 2, d504);
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(508, 2, d508);
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(520, 2, d520);
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(524, 2, d524);
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(528, 2, d528);
+        m_port->thd_msleep(configData.modbusDelay);
+        m_port->writeModbusData(700, 2, 0.0f);
+        m_port->thd_msleep(configData.modbusDelay);
         // m_port->writeModbusData(700, 0.0f);
         // m_port->thd_msleep(500);
-        qDebug("send D500 %f, D504 %f, D508 %f", m_ui->d500->text().toFloat(), m_ui->d504->text().toFloat(), m_ui->d508->text().toFloat());
+        qDebug("send D500 %f, D504 %f, D508 %f", d500, d504, d508);
+        qDebug("send D520 %f, D524 %f, D528 %f", d520, d524, d528);
     }
 }
 

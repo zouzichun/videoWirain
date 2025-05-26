@@ -7,6 +7,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include "imgwindow.h"
+#include "modbusWin.h"
 #include "port/port.h"
 #include "port/serial_port.h"
 #include "port/modbus.h"
@@ -112,7 +113,6 @@ public:
     void saveCommParam();
     void saveImgParam();
     void loadConfigFile();
-    void fetchNewConfig(ConfigData &configData);
     void showUIConfigData(const ConfigData& configData);
     QString toString(unsigned char*buf, unsigned int bufLen);
     void clearState();
@@ -141,17 +141,18 @@ signals:
     void signal_trigger();
 
 private slots:
-    void on_SerialOpen_clicked();
     void on_cal_editingFinished();
     void on_Calibration_clicked();
     void on_bnOpen_clicked();
 
     void on_saveImg_clicked();
-    void on_modbusSend_clicked();
     void main_img_refresh(cv::Mat img);
     void calibration_refresh_delta();
 
-    void on_modbusSend_2_clicked();
+    void modbusRead(int addr);
+    void modbusWrite(int addr, float val);
+
+    void on_modbusSend_2_clicked(float d500, float d504, float d508, float d520, float d524, float d528);
 
     void on_read_clicked();
 
@@ -159,7 +160,8 @@ private slots:
 
     void on_trigger_clicked();
 
-    void read_modbus_data(int startAdd, int numbers);
+    void read_modbus(int startAdd, int numbers);
+    void write_modbus(int startAdd, int numbers, float val);
 
     void on_auto_run_stateChanged(int arg1);
     void monitor_modbus_hdl();
@@ -173,6 +175,7 @@ private:
     QTimer * m_monitor_timer = nullptr;
     Port *       m_port = nullptr;
     imgWindow * imgw = nullptr;
+    modbusWin * modbusWin = nullptr;
 
     void *m_hWnd;                          // ch:显示窗口句柄 | en:The Handle of Display Window
     MV_CC_DEVICE_INFO_LIST  m_stDevList;   // ch:设备信息链表 | en:The list of device info

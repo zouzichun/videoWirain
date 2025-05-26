@@ -235,8 +235,13 @@ void ImgProcess::ImageCalTest(CMvCamera* p_cam) {
                 emit signal_refresh_cal_img(color_img);
             }
 
+            data_pkt.frames = frame_cnt;
+            data_pkt.valid = true;
+
+            emit signal_refresh_delta();
+
             frame_cnt++;
-//            waitKey(10);
+//            waitKey(30);
         }
     } else {
         qDebug() << "img cal exit, frames " <<  frame_cnt;
