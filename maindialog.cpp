@@ -380,6 +380,7 @@ void MainDialog::main_img_refresh(cv::Mat img) {
 }
 
 extern DataPkt data_pkt;
+extern volatile bool run_sync;
 void MainDialog::calibration_refresh_delta() {
     m_ui->y1_fetch->setText(QString::number(data_pkt.y1_fetch));
     m_ui->y1_target->setText(QString::number(data_pkt.y1_target));
@@ -410,21 +411,23 @@ void MainDialog::calibration_refresh_delta() {
 //         // spdlog::info("trigger test d600 wto 0");
         m_ui->trigger->setDisabled(false);
     } else if (m_ui->auto_run->checkState() == Qt::Checked) {
-        m_port->writeModbusData(500, 2, data_pkt.x1_fetch);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(504, 2, data_pkt.x2_fetch);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(508, 2, data_pkt.y1_fetch);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(520, 2, data_pkt.x1_target);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(524, 2, data_pkt.x2_target);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(528, 2, data_pkt.y1_target);
-        m_port->thd_msleep(configData.modbusDelay);
-        m_port->writeModbusData(700, 2, 0.0f);
-        m_port->thd_msleep(configData.modbusDelay);
-
+        if (run_sync) {
+            m_port->writeModbusData(500, 2, data_pkt.x1_fetch);
+            m_port->thd_msleep(configData.modbusDelay);
+            m_port->writeModbusData(504, 2, data_pkt.x2_fetch);
+            m_port->thd_msleep(configData.modbusDelay);
+            m_port->writeModbusData(508, 2, data_pkt.y1_fetch);
+            m_port->thd_msleep(configData.modbusDelay);
+            m_port->writeModbusData(520, 2, data_pkt.x1_target);
+            m_port->thd_msleep(configData.modbusDelay);
+            m_port->writeModbusData(524, 2, data_pkt.x2_target);
+            m_port->thd_msleep(configData.modbusDelay);
+            m_port->writeModbusData(528, 2, data_pkt.y1_target);
+            m_port->thd_msleep(configData.modbusDelay);
+            m_port->writeModbusData(700, 2, 0.0f);
+            m_port->thd_msleep(configData.modbusDelay);
+            run_sync = false;
+        }
         // m_port->writeModbusData(600, 2, 0.0f);
 //        m_port->thd_msleep(configData.modbusDelay);
         // spdlog::info("checkbox test d600 wto 0");
@@ -893,12 +896,8 @@ void MainDialog::on_trigger_clicked()
 {
     if (m_ui->trigger->isEnabled()) {
         m_ui->trigger->setEnabled(false);
-        if (m_imgproc->camera_enable) {
-            trigger_process = true;
-            emit signal_trigger();
-        } else {
-            m_ui->trigger->setEnabled(true);
-        }
+        trigger_process = true;
+        emit signal_trigger();
     }
 }
 

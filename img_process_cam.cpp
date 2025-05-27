@@ -18,6 +18,8 @@ extern DataPkt data_pkt;
 extern bool trigger_process;
 extern bool img_sw_status;
 
+volatile bool run_sync = false;
+
 void syncDelay(int milliseconds) {
     QEventLoop loop;
     QTimer timer;
@@ -55,17 +57,17 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
             trigger_status = false;
             spdlog::info("manual trigger");
         } else if (auto_run_status) {
-            if (p_port->rdy_flag) {
-                p_port->rdy_flag = false;
-                if (p_port->rdy_data == 0.0f) {
-                    continue;
-                }
-                spdlog::info("get data ready, val {:.2f}", p_port->rdy_data);
-                p_port->rdy_data = 0.0f;
-            } else {
-//                spdlog::info("get d600 not ready");
+            if (run_sync) {
                 syncDelay(configData.modbusDelay);
                 continue;
+            }
+            if (p_port->rdy_flag) {
+                p_port->rdy_flag = false;
+                if (p_port->rdy_data != 0.0f) {
+                    p_port->rdy_data = 0.0f;
+                    spdlog::info("get data ready, val {:.2f}", p_port->rdy_data);
+                    run_sync = true;
+                }
             }
         }
 
@@ -185,8 +187,15 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         emit signal_refresh_img(color_img);
 
-        if (auto_run_status || trigger_status) {
+        if (trigger_status) {
+            trigger_status = false;
             emit signal_refresh_delta();
+        }
+
+        if (auto_run_status) {
+            if (run_sync) {
+                emit signal_refresh_delta();
+            }
         }
         
         frame_cnt++;
