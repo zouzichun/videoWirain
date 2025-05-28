@@ -64,8 +64,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
             if (p_port->rdy_flag) {
                 p_port->rdy_flag = false;
                 if (p_port->rdy_data != 0.0f) {
-                    p_port->rdy_data = 0.0f;
                     spdlog::info("get data ready, val {:.2f}", p_port->rdy_data);
+                    p_port->rdy_data = 0.0f;
                     run_sync = true;
                 }
             }

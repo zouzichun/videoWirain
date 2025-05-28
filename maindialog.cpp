@@ -472,7 +472,7 @@ void MainDialog::CameraInit() {
         v.handler = new (std::nothrow) CMvCamera();
         v.timer = new QTimer(this);
         v.timer->stop();
-        v.timer->setInterval(1000);
+        v.timer->setInterval(400);
         v.timer->setTimerType(Qt::PreciseTimer);
         connect(v.timer, &QTimer::timeout, this, &MainDialog::monitor_modbus_hdl);
     }
