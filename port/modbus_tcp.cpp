@@ -121,7 +121,7 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
                             rdy_flag = true;
                         }
 //                        emit signal_UpdateReadData(val);
-//                        spdlog::info("read register h: {:#x}, l: {:#x}, val {:.2f}", resultNum >> 16, resultNum & 0xffff, val);
+                        spdlog::info("read register h: {:#x}, l: {:#x}, val {:.2f}", resultNum >> 16, resultNum & 0xffff, val);
                     } else {
 //                        spdlog::info("保持寄存器返回数据错误,个数: {}", nSize);
                     }

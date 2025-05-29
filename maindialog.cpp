@@ -904,6 +904,7 @@ void MainDialog::on_trigger_clicked()
 void MainDialog::read_modbus_data(int startAdd, int numbers) {
     float data = 0.0;
     m_port->readModbusData(startAdd, numbers, data);
+    m_port->thd_msleep(configData.modbusDelay);
 }
 
 
