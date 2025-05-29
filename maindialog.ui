@@ -297,7 +297,7 @@
        <widget class="QLineEdit" name="y1_target"/>
       </item>
       <item row="7" column="2">
-       <widget class="QLineEdit" name="write_delay"/>
+       <widget class="QLineEdit" name="modbus_delay"/>
       </item>
      </layout>
     </item>

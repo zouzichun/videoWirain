@@ -58,7 +58,7 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
             spdlog::info("manual trigger");
         } else if (auto_run_status) {
             if (run_sync) {
-                syncDelay(configData.modbusDelay);
+                syncDelay(configData.modbus_delay);
                 continue;
             }
             if (p_port->rdy_flag) {
