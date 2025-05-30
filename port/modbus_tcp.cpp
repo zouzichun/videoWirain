@@ -61,6 +61,7 @@ int ModbusTcp::startPort(const ConfigData &configData) {
         tcp_ip = configData.modbusTcpIp;
         tcp_port = configData.modbusTcpPort;
         spdlog::info("try start modbus {}:{}", tcp_ip.toStdString().c_str(), tcp_port);
+
         m_modbustcp->setConnectionParameter(QModbusDevice::NetworkAddressParameter, tcp_ip);
         m_modbustcp->setConnectionParameter(QModbusDevice::NetworkPortParameter, tcp_port);
         if (!m_modbustcp->connectDevice()) {
@@ -68,6 +69,13 @@ int ModbusTcp::startPort(const ConfigData &configData) {
             return -1;
         }
         else {
+            if (QIODevice *device = m_modbustcp->device()) {  // 获取底层设备
+                if (QTcpSocket *socket = qobject_cast<QTcpSocket*>(device)) {
+                    // 设置 TCP_NODELAY (禁用 Nagle 算法)
+                    socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+                    qDebug() << "Nagle algorithm disabled";
+                }
+            }
             spdlog::info("connect to modbus {}:{} succeeded!", tcp_ip.toStdString().c_str(), tcp_port);
             return 0;
         }
@@ -147,21 +155,27 @@ bool ModbusTcp::writeModbusData(int startAdd, int numbers, float val)
         return false;
     }
 
-    QModbusDataUnit writeUnit;
-    writeUnit = QModbusDataUnit(QModbusDataUnit::HoldingRegisters,startAdd,2);
+     QModbusDataUnit writeUnit;
+     writeUnit = QModbusDataUnit(QModbusDataUnit::HoldingRegisters,startAdd,2);
     quint16 uData16[2] = {0};
     uint32_t tval;
     memcpy(&tval, &val, sizeof(float));
     uData16[0] = tval & 0xffff;
     uData16[1] = (tval >> 16) & 0xffff;
-    writeUnit.setValue(0,uData16[0]);
-    writeUnit.setValue(1,uData16[1]);
+     writeUnit.setValue(0,uData16[0]);
+     writeUnit.setValue(1,uData16[1]);
 //    spdlog::info("write addr {:#x} data h: {:#x}, l: {:#x}, val {:.2f}", startAdd, uData16[1], uData16[0], val);
+
+//    QModbusRequest request(QModbusRequest::WriteSingleRegister,
+//        QByteArray::fromRawData(reinterpret_cast<const char*>(&uData16),
+//                       sizeof(uData16)));
+
     {
         std::lock_guard<std::mutex> lg(mtx);
         rdy_data = 0;
         rdy_flag = false;
     }
+
     if(auto *reply = m_modbustcp->sendWriteRequest(writeUnit,1)) {
         if(!reply->isFinished()) {
             connect(reply,&QModbusReply::finished,this,[=]() {

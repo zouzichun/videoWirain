@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QByteArray>
 #include <QTimer>
+#include <QTcpSocket>
 #include <QModbusDataUnit>
 #include <QModbusTcpClient>
  

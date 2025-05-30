@@ -482,7 +482,7 @@ void MainDialog::CameraInit() {
         v.handler = new (std::nothrow) CMvCamera();
         v.timer = new QTimer(this);
         v.timer->stop();
-        v.timer->setInterval(400);
+        v.timer->setInterval(configData.monitor_delay);
         v.timer->setTimerType(Qt::PreciseTimer);
         connect(v.timer, &QTimer::timeout, this, &MainDialog::monitor_modbus_hdl);
     }
@@ -882,8 +882,8 @@ void MainDialog::on_modbusSend_2_clicked()
         m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(528, 2, m_ui->d528->text().toFloat());
         m_port->thd_msleep(configData.modbus_delay);
-        m_port->writeModbusData(700, 2, 0.0f);
-        m_port->thd_msleep(configData.modbus_delay);
+//        m_port->writeModbusData(700, 2, 0.0f);
+//        m_port->thd_msleep(configData.modbus_delay);
         // m_port->writeModbusData(700, 0.0f);
         // m_port->thd_msleep(500);
         qDebug("send D500 %f, D504 %f, D508 %f", m_ui->d500->text().toFloat(), m_ui->d504->text().toFloat(), m_ui->d508->text().toFloat());

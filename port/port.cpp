@@ -170,7 +170,14 @@ void Port::parseMsg(int buff_idx)
 }
 
 void Port::thd_msleep(uint32_t ms) {
-    QThread::msleep(ms);
+    QEventLoop loop;
+    QTimer timer;
+
+    // 绑定定时器超时信号与事件循环退出
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+    timer.start(ms);  // 启动定时器
+    loop.exec();      // 进入事件循环等待
 }
 
 void Port::ClearFlagData() {
