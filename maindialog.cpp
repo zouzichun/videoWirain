@@ -462,6 +462,19 @@ void MainDialog::on_SerialOpen_clicked()
 }
 
 void MainDialog::on_auto_run_stateChanged(int arg1) {
+    if (m_ui->auto_run->checkState() == Qt::Unchecked) {
+        for (auto & v : m_cameras) {
+            if (v.is_opened) {
+                v.timer->stop();
+            }
+        }
+    } else {
+        for (auto & v : m_cameras) {
+            if (v.is_opened) {
+                v.timer->start();
+            }
+        }
+    }
     emit signal_auto_run(m_ui->auto_run->checkState());
 }
 
@@ -904,8 +917,8 @@ void MainDialog::on_read_clicked()
 
 void MainDialog::on_write_clicked()
 {
-    float val = m_ui->test_val->text().toFloat();
-    m_port->writeModbusData(m_ui->test_addr->text().toInt(), 2 , val);
+    float val = m_ui->wr_val->text().toFloat();
+    m_port->writeModbusData(m_ui->wr_addr->text().toInt(), 2 , val);
 }
 
 void MainDialog::on_trigger_clicked()
