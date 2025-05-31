@@ -26,13 +26,14 @@ public:
     virtual void closePort();
     // virtual int sendMsg(int idx);
 
-    virtual bool readModbusData(int startAdd, int numbers, float &val);
+    virtual bool readModbusData(int startAdd, int numbers, int &val);
     virtual bool writeModbusData(int startAdd, int numbers, float val);
+    virtual bool writeModbusData(int startAdd, int numbers, int val);
     virtual bool waitDataReady();
 
  signals:
     // void signal_stateChanged(bool flag);
-    void signal_UpdateReadData(float val);
+    void signal_UpdateReadData(int val);
 
 private slots:
     void handleStateChanged(QModbusDevice::State state);

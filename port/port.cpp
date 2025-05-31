@@ -183,7 +183,7 @@ void Port::thd_msleep(uint32_t ms) {
 void Port::ClearFlagData() {
     std::lock_guard<std::mutex> lg(mtx);
     {
-        rdy_data = 0.0f;
+        rdy_data = 0;
         rdy_flag = false;
     }
 }

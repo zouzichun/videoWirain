@@ -42,7 +42,7 @@ void ModbusPort::closePort() {
     m_serial.close();
 }
 
-bool ModbusPort::readModbusData(int startAdd, int numbers, float & val) {
+bool ModbusPort::readModbusData(int startAdd, int numbers, int & val) {
     qDebug("modbus send read message!");
     //读取modbus设备各寄存器数据
     //typeNum:1_线圈 2_离散输入 3_保持 4_输入
@@ -81,6 +81,11 @@ bool ModbusPort::readModbusData(int startAdd, int numbers, float & val) {
 //对modbus设备各寄存器写入数据
 //typeNum:1_线圈 2_保持 (这两类寄存器可读可写,其余的只读)
 bool ModbusPort::writeModbusData(int startAdd, int writeNum, float val)
+{
+    return true;
+}
+
+bool ModbusPort::writeModbusData(int startAdd, int writeNum, int val)
 {
     return true;
 }

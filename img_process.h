@@ -94,6 +94,7 @@ signals:
     void signal_refresh_cal_img(cv::Mat img);
     void signal_change_cal_img_mode(int mode);
     void signal_read_modbus_data(int addr, int numbers);
+    void signal_errors(int err_code);
 
 public slots:
     void CameraTest(CMvCamera* p_cam, Port * p_port);
@@ -102,6 +103,7 @@ public slots:
     void ImageCalTest(CMvCamera* p_cam);
     void AutoRunSlot(bool auto_run);
     void TriggerSlot();
+    void sig_func();
 
 private:
     QString m_dev_name;

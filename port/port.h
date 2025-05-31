@@ -110,8 +110,12 @@ public:
     int formFrame(unsigned char command, unsigned int size, void * buff);
     void parseMsg(int idx);
 
-    virtual bool readModbusData(int startAdd, int numbers, float &val) = 0;
+    // virtual bool readModbusData(int startAdd, int numbers, float &val) = 0;
+    // virtual bool writeModbusData(int startAdd, int numbers, float val) = 0;
+    virtual bool readModbusData(int startAdd, int numbers, int &val) = 0;
     virtual bool writeModbusData(int startAdd, int numbers, float val) = 0;
+    virtual bool writeModbusData(int startAdd, int numbers, int val) = 0;
+
     virtual bool waitDataReady() {return true;};
     void ClearFlagData();
     virtual float getRdyData(float & val) {
@@ -127,7 +131,8 @@ public:
     QThread* comToThread;
 
     volatile bool rdy_flag;
-    volatile float rdy_data;
+    volatile float rdy_data_f;
+    volatile int rdy_data;
     QMessageBox* msgBoxIoTimeout;
     bool isOpened = false;
 

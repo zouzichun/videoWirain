@@ -93,16 +93,11 @@ void ModbusTcp::handleDataReady(float & val) {
 
 }
 
-bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
+bool ModbusTcp::readModbusData(int startAdd, int numbers, int &val) {
 //    qDebug("ConnectedState %d", m_modbustcp->state());
     if (!m_modbustcp || m_modbustcp->state() != QModbusDevice::ConnectedState)
         return false;
     QModbusDataUnit readUnit(QModbusDataUnit::InputRegisters, startAdd, numbers);
-//    {
-//        std::lock_guard<std::mutex> lg(mtx);
-//        rdy_data = 0;
-//        rdy_flag = false;
-//    }
 
     if (auto *reply = m_modbustcp->sendReadRequest(readUnit, 1)) {
         if (!reply->isFinished()) {
@@ -121,15 +116,15 @@ bool ModbusTcp::readModbusData(int startAdd, int numbers, float &val) {
                         resultNum |= uData16[0];
 
                         // Debug("read register h: %x, l: %x, val %x", resultNum >> 16, resultNum & 0xffff, resultNum);
-                        float val = 0.0;
-                        memcpy(&val, &resultNum, sizeof(float));
+                        int val = 0;
+                        memcpy(&val, &resultNum, sizeof(int));
                         {
                             std::lock_guard<std::mutex> lg(mtx);
                             rdy_data = val;
                             rdy_flag = true;
                         }
                         emit signal_UpdateReadData(val);
-                        spdlog::info("read register h: {:#x}, l: {:#x}, val {:.2f}", resultNum >> 16, resultNum & 0xffff, val);
+                        spdlog::info("read register h: {:#x}, l: {:#x}, val {}", resultNum >> 16, resultNum & 0xffff, val);
                     } else {
 //                        spdlog::info("保持寄存器返回数据错误,个数: {}", nSize);
                     }
@@ -170,13 +165,48 @@ bool ModbusTcp::writeModbusData(int startAdd, int numbers, float val)
 //        QByteArray::fromRawData(reinterpret_cast<const char*>(&uData16),
 //                       sizeof(uData16)));
 
-    {
-        std::lock_guard<std::mutex> lg(mtx);
-        rdy_data = 0;
-        rdy_flag = false;
+    if(auto *reply = m_modbustcp->sendWriteRequest(writeUnit, 1)) {
+        if(!reply->isFinished()) {
+            connect(reply,&QModbusReply::finished,this,[=]() {
+                if(reply->error() == QModbusDevice::NoError) {
+//                    spdlog::info("write addr {}, numbers {} val {:.2f} success", startAdd, numbers, val);
+                } else {
+                    spdlog::info("write failed: {}", reply->error());
+                }
+                reply->deleteLater();
+            });
+        }
+    } else {
+        spdlog::info("write failed! {}" ,m_modbustcp->errorString().toStdString().c_str());
+        return false;
+    }
+    return true;
+}
+
+//对modbus设备各寄存器写入数据
+//typeNum:1_线圈 2_保持 (这两类寄存器可读可写,其余的只读)
+bool ModbusTcp::writeModbusData(int startAdd, int numbers, int val)
+{
+    if(m_modbustcp->state() != QModbusDevice::ConnectedState) {
+        return false;
     }
 
-    if(auto *reply = m_modbustcp->sendWriteRequest(writeUnit,1)) {
+     QModbusDataUnit writeUnit;
+     writeUnit = QModbusDataUnit(QModbusDataUnit::HoldingRegisters,startAdd,2);
+    quint16 uData16[2] = {0};
+    uint32_t tval;
+    memcpy(&tval, &val, sizeof(int));
+    uData16[0] = tval & 0xffff;
+    uData16[1] = (tval >> 16) & 0xffff;
+     writeUnit.setValue(0,uData16[0]);
+     writeUnit.setValue(1,uData16[1]);
+//    spdlog::info("write addr {:#x} data h: {:#x}, l: {:#x}, val {:.2f}", startAdd, uData16[1], uData16[0], val);
+
+//    QModbusRequest request(QModbusRequest::WriteSingleRegister,
+//        QByteArray::fromRawData(reinterpret_cast<const char*>(&uData16),
+//                       sizeof(uData16)));
+
+    if(auto *reply = m_modbustcp->sendWriteRequest(writeUnit, 1)) {
         if(!reply->isFinished()) {
             connect(reply,&QModbusReply::finished,this,[=]() {
                 if(reply->error() == QModbusDevice::NoError) {

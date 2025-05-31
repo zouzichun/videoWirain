@@ -157,8 +157,8 @@ MainDialog::~MainDialog()
     delete m_monitor_timer;
 }
 
-void MainDialog::updateReadVal(float val) {
-    m_ui->test_val->setText(QString::number(val,'f', 3));
+void MainDialog::updateReadVal(int val) {
+    m_ui->test_val->setText(QString::number(val));
 }
 
 void MainDialog::saveCommParam()
@@ -577,9 +577,26 @@ void MainDialog::on_bnOpen_clicked()
 }
 
 void MainDialog::monitor_modbus_hdl() {
-    float val;
+    int val;
     m_port->readModbusData(700, 2, val);
 }
+
+void MainDialog::slot_errors(int err) {
+    for (auto & v : m_cameras) {
+        if (v.is_opened) {
+            v.is_opened = false;
+            v.timer->stop();
+            m_ui->bnOpen->setText("打开");
+            m_ui->tbExposure->setEnabled(false);
+            m_ui->tbGain->setEnabled(false);
+            m_ui->tbFrameRate->setEnabled(false);
+            m_imgproc->camera_enable = false;
+        }
+    }
+    spdlog::info("get signal timeout! send plc error code {}", err);
+    m_port->writeModbusData(600, 2, err);
+}
+
 
 extern std::vector<std::pair<double, double>> g_roi;
 void MainDialog::on_Calibration_clicked()
@@ -854,7 +871,7 @@ void MainDialog::on_modbusSend_clicked()
         qDebug("port is not opened!");
     } else {
         if (m_ui->optype->text().toInt() == 0) {
-            float val = 0.0f;
+            int val = 0;
             m_port->readModbusData(m_ui->addr->text().toInt(), m_ui->length->text().toInt(), val);
         } if (m_ui->optype->text().toInt() == 1) {
             m_port->writeModbusData(m_ui->addr->text().toInt(), m_ui->length->text().toInt(), m_ui->val->text().toFloat());
@@ -863,22 +880,22 @@ void MainDialog::on_modbusSend_clicked()
         }
 
         float w_val = 1.0;
-        float r_val;
+        int r_val;
         m_port->writeModbusData(500, 2 , w_val);
-        m_port->writeModbusData(502, 2 , w_val + 1.1);
-        m_port->writeModbusData(504, 2 , w_val + 1.1);
-        m_port->writeModbusData(506, 2 , w_val + 1.1);
+        m_port->writeModbusData(502, 2 , w_val + 1.1f);
+        m_port->writeModbusData(504, 2 , w_val + 1.1f);
+        m_port->writeModbusData(506, 2 , w_val + 1.1f);
         m_port->readModbusData(500, 2 , r_val);
-        qDebug("read %d, %f", 500, r_val);
+        qDebug("read %d, %d", 500, r_val);
         m_port->readModbusData(502, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 502, r_val);
+        qDebug("read %d, %d", 502, r_val);
         m_port->readModbusData(504, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 504, r_val);
+        qDebug("read %d, %d", 504, r_val);
         m_port->readModbusData(506, 2 , r_val);
          QThread::sleep(1);
-        qDebug("read %d, %f", 506, r_val);
+        qDebug("read %d, %d", 506, r_val);
     }
 }
 
@@ -887,7 +904,7 @@ void MainDialog::on_modbusSend_2_clicked()
     if (!m_port) {
         qDebug("port is not opened!");
     } else {
-        qDebug("get D700 %f", m_port->rdy_data);
+        qDebug("get D700 %d", m_port->rdy_data);
         m_port->writeModbusData(500, 2, m_ui->d500->text().toFloat());
         m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(504, 2, m_ui->d504->text().toFloat());
@@ -910,7 +927,7 @@ void MainDialog::on_modbusSend_2_clicked()
 
 void MainDialog::on_read_clicked()
 {
-    float val = 0.0f;
+    int val = 0;
     m_ui->test_val->setText(QString("0"));
     m_port->readModbusData(m_ui->test_addr->text().toInt(), 2 , val);
 }
@@ -931,7 +948,7 @@ void MainDialog::on_trigger_clicked()
 }
 
 void MainDialog::read_modbus_data(int startAdd, int numbers) {
-    float data = 0.0;
+    int data = 0;
     m_port->readModbusData(startAdd, numbers, data);
     m_port->thd_msleep(configData.modbus_delay);
 }

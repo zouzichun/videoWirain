@@ -31,6 +31,11 @@ void syncDelay(int milliseconds) {
     loop.exec();                 // 进入事件循环等待
 }
 
+void ImgProcess::sig_func() {
+    spdlog::info("定时器触发，只执行一次");
+    emit signal_errors(0);
+}
+
 uint64_t calc_frames = 0;
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
@@ -53,6 +58,11 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     MV_FRAME_OUT frame;
     memset(&frame, 0, sizeof(MV_FRAME_OUT));
 
+    QTimer *timer = new QTimer(this);
+    timer->setSingleShot(true);  // 设置为单次触发模式
+    connect(timer, &QTimer::timeout, this, &ImgProcess::sig_func);
+    timer->start(30000);  // 3秒后触发
+
     while (camera_enable) {
         if (trigger_status) {
             trigger_status = false;
@@ -64,12 +74,16 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
             }
             if (p_port->rdy_flag) {
                 p_port->rdy_flag = false;
-                if (p_port->rdy_data != 0.0f) {
-                    spdlog::info("get data ready, val {:.2f}", p_port->rdy_data);
-                    p_port->rdy_data = 0.0f;
+                // restart timer
+                timer->start(30000);
+                if (p_port->rdy_data != 0) {
+                    spdlog::info("get data ready, val {}", p_port->rdy_data);
+                    p_port->rdy_data = 0;
                     run_sync = true;
                 }
             }
+        } else {
+            timer->stop();
         }
 
         ret = p_cam->GetImageBuffer(&frame, 1000);

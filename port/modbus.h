@@ -33,8 +33,9 @@ public:
     virtual void closePort();
     // virtual int sendMsg(int idx);
 
-    virtual bool readModbusData(int startAdd, int numbers, float &val);
-    virtual bool writeModbusData(int startAdd, int writeNum, float val);
+    virtual bool readModbusData(int startAdd, int numbers, int &val);
+    virtual bool writeModbusData(int startAdd, int numbers, float val);
+    virtual bool writeModbusData(int startAdd, int numbers, int val);
     virtual bool waitDataReady();
  
  signals:
