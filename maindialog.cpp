@@ -71,6 +71,7 @@ MainDialog::MainDialog(QWidget *parent) :
 
 //    connect(this, SIGNAL(sendMsgWait(const QByteArray&)),
 //                m_serial, SLOT(sendMsgWait(const QByteArray&)));
+    connect(reinterpret_cast<ModbusTcp*>(m_port), &ModbusTcp::signal_UpdateReadData, this, &MainDialog::updateReadVal);
 
     m_monitor_timer =new QTimer(this);
     // connect(this->m_monitor_timer,SIGNAL(timeout()),this,SLOT(monitor_thread()));
@@ -154,6 +155,10 @@ MainDialog::~MainDialog()
 //     mmodbusthd.wait();
     m_monitor_timer->stop();
     delete m_monitor_timer;
+}
+
+void MainDialog::updateReadVal(float val) {
+    m_ui->test_val->setText(QString::number(val,'f', 3));
 }
 
 void MainDialog::saveCommParam()
@@ -895,7 +900,6 @@ void MainDialog::on_read_clicked()
     float val = 0.0f;
     m_ui->test_val->setText(QString("0"));
     m_port->readModbusData(m_ui->test_addr->text().toInt(), 2 , val);
-    m_ui->test_val->setText(QString("%1").arg(val));
 }
 
 void MainDialog::on_write_clicked()

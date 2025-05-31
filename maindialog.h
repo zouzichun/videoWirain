@@ -161,6 +161,7 @@ private slots:
 
     void on_auto_run_stateChanged(int arg1);
     void monitor_modbus_hdl();
+    void updateReadVal(float val);
 
 private:
     Ui::MainDialog *m_ui;

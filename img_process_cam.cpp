@@ -31,6 +31,7 @@ void syncDelay(int milliseconds) {
     loop.exec();                 // 进入事件循环等待
 }
 
+uint64_t calc_frames = 0;
 void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
     int frame_cnt = 0;
     int ret = p_cam->StartGrabbing();
@@ -182,18 +183,20 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.target_delta;
         data_pkt.y1_fetch = y_down + configData.y_fetch_delta;
         data_pkt.y1_target = y_up + configData.y_target_delta;
-        data_pkt.frames = frame_cnt;
-        data_pkt.valid = true;
 
         emit signal_refresh_img(color_img);
 
         if (trigger_status) {
             trigger_status = false;
+            data_pkt.frames = ++calc_frames;
+            data_pkt.valid = true;
             emit signal_refresh_delta();
         }
 
         if (auto_run_status) {
             if (run_sync) {
+                data_pkt.frames = ++calc_frames;
+                data_pkt.valid = true;
                 emit signal_refresh_delta();
             }
         }
