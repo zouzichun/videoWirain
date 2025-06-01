@@ -90,6 +90,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         if (ret != MV_OK) {
             spdlog::debug("No data {:#x}", ret);
             p_cam->StopGrabbing();
+            if (run_sync)
+                run_sync = false;
             return;
         }
 
@@ -105,6 +107,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
          if (ret != MV_OK) {
              spdlog::debug("free img buffer failed!");
              p_cam->StopGrabbing();
+             if (run_sync)
+                run_sync = false;
              return;
          }
 
@@ -130,6 +134,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
 
         if (!valid_flag) {
             frame_cnt++;
+            if (run_sync)
+                run_sync = false;
             continue;
         }
 
@@ -137,6 +143,8 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         std::vector<cv::Point2f> line2;
         if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
             frame_cnt++;
+            if (run_sync)
+                run_sync = false;
             continue;
         }
         cv::Point2f p1 = line1[0];

@@ -1094,14 +1094,14 @@ bool ImgProcess::GetCentralLinesCountor(const std::vector<std::vector<std::pair<
     double len0 = sqrt(pow(p0.first - p1.first, 2) + pow(p0.second - p1.second, 2));
     double len1 = sqrt(pow(p10.first - p11.first, 2) + pow(p10.second - p11.second, 2));
     if (abs(len0 - len1) > 100) {
-        spdlog::debug("invalid line len0 {}, len1 {}", len0, len1);
+        // spdlog::debug("invalid line len0 {}, len1 {}", len0, len1);
         return false;
     }
     auto hough0 = PointsToHoughParams(line1[0], line1[2]);
     auto hough1 = PointsToHoughParams(line2[0], line2[2]);
 
     if (abs(hough0.second - hough1.second) > 1.0f) {
-        spdlog::debug("invalid line hough0 {}, hough1 {}", hough0.second, hough1.second);
+        // spdlog::debug("invalid line hough0 {}, hough1 {}", hough0.second, hough1.second);
         return false;
     }
 
