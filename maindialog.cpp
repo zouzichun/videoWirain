@@ -71,7 +71,6 @@ MainDialog::MainDialog(QWidget *parent) :
 
 //    connect(this, SIGNAL(sendMsgWait(const QByteArray&)),
 //                m_serial, SLOT(sendMsgWait(const QByteArray&)));
-    connect(reinterpret_cast<ModbusTcp*>(m_port), &ModbusTcp::signal_UpdateReadData, this, &MainDialog::updateReadVal);
 
     m_monitor_timer =new QTimer(this);
     // connect(this->m_monitor_timer,SIGNAL(timeout()),this,SLOT(monitor_thread()));
@@ -162,7 +161,7 @@ MainDialog::~MainDialog()
 
 void MainDialog::modbusRead(int addr) {
     if (m_port) {
-        float val = 0.0f;
+        int val = 0;
         m_port->readModbusData(addr, 2, val);
     }
 }
@@ -870,19 +869,19 @@ void MainDialog::on_modbusSend_2_clicked(float d500, float d504, float d508, flo
     } else {
         qDebug("get D700 %f", m_port->rdy_data);
         m_port->writeModbusData(500, 2, d500);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(504, 2, d504);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(508, 2, d508);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(520, 2, d520);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(524, 2, d524);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(528, 2, d528);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         m_port->writeModbusData(700, 2, 0.0f);
-        m_port->thd_msleep(configData.modbusDelay);
+        m_port->thd_msleep(configData.modbus_delay);
         // m_port->writeModbusData(700, 0.0f);
         // m_port->thd_msleep(500);
         qDebug("send D500 %f, D504 %f, D508 %f", d500, d504, d508);
