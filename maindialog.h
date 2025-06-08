@@ -32,6 +32,8 @@ const ConfigData defaultSetting {
     .modbusRate=19200,
     .modbusTcpIp="192.168.20.32",
     .modbusTcpPort=520,
+    .modbusTimeout=500,
+    .modbusNumRetry=3,
     .modbus_delay=30,
     .monitor_delay=500,
     // camera

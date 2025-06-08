@@ -21,6 +21,8 @@ typedef struct {
 
     QString modbusTcpIp;
     qint32 modbusTcpPort;
+    qint32 modbusTimeout;
+    qint32 modbusNumRetry;
     qint32 modbus_delay;
     qint32 monitor_delay;
 

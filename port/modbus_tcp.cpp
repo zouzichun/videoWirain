@@ -60,10 +60,14 @@ int ModbusTcp::startPort(const ConfigData &configData) {
     } else {
         tcp_ip = configData.modbusTcpIp;
         tcp_port = configData.modbusTcpPort;
-        spdlog::info("try start modbus {}:{}", tcp_ip.toStdString().c_str(), tcp_port);
+        spdlog::info("try start modbus {}:{}, timeout {}, retry {}",
+            tcp_ip.toStdString().c_str(), tcp_port,
+            configData.modbusTimeout, configData.modbusNumRetry);
 
         m_modbustcp->setConnectionParameter(QModbusDevice::NetworkAddressParameter, tcp_ip);
         m_modbustcp->setConnectionParameter(QModbusDevice::NetworkPortParameter, tcp_port);
+        m_modbustcp->setTimeout(configData.modbusTimeout);
+        m_modbustcp->setNumberOfRetries(configData.modbusNumRetry);
         if (!m_modbustcp->connectDevice()) {
             spdlog::info("connect modbus  {}:{} failed!", tcp_ip.toStdString().c_str(), tcp_port);
             return -1;

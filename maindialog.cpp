@@ -232,6 +232,8 @@ void MainDialog::loadConfigFile()
 
     configData.modbusTcpIp = sets.value("modbusTcpIp",defaultSetting.modbusTcpIp).toString();
     configData.modbusTcpPort = sets.value("modbusTcpPort",defaultSetting.modbusTcpPort).toInt();
+    configData.modbusTimeout = sets.value("modbusTimeout",defaultSetting.modbusTimeout).toInt();
+    configData.modbusNumRetry = sets.value("modbusNumRetry",defaultSetting.modbusNumRetry).toInt();
     configData.modbus_delay = sets.value("modbus_delay",defaultSetting.modbus_delay).toInt();
     configData.monitor_delay = sets.value("monitor_delay",defaultSetting.monitor_delay).toInt();
 
@@ -578,7 +580,9 @@ void MainDialog::on_bnOpen_clicked()
 
 void MainDialog::monitor_modbus_hdl() {
     int val;
-    m_port->readModbusData(700, 2, val);
+    if (!run_sync) {
+        m_port->readModbusData(700, 2, val);
+    }
 }
 
 void MainDialog::slot_errors(int err) {
@@ -934,7 +938,7 @@ void MainDialog::on_read_clicked()
 
 void MainDialog::on_write_clicked()
 {
-    float val = m_ui->wr_val->text().toFloat();
+    int val = m_ui->wr_val->text().toInt();
     m_port->writeModbusData(m_ui->wr_addr->text().toInt(), 2 , val);
 }
 
