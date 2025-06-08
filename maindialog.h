@@ -154,14 +154,7 @@ private slots:
 
     void on_modbusSend_2_clicked(float d500, float d504, float d508, float d520, float d524, float d528);
 
-    void on_read_clicked();
-
-    void on_write_clicked();
-
     void on_trigger_clicked();
-
-    void read_modbus(int startAdd, int numbers);
-    void write_modbus(int startAdd, int numbers, float val);
 
     void on_auto_run_stateChanged(int arg1);
     void monitor_modbus_hdl();
@@ -175,7 +168,7 @@ private:
     QTimer * m_monitor_timer = nullptr;
     Port *       m_port = nullptr;
     imgWindow * imgw = nullptr;
-    modbusWin * modbusWin = nullptr;
+    modbusWin * mdw = nullptr;
 
     void *m_hWnd;                          // ch:显示窗口句柄 | en:The Handle of Display Window
     MV_CC_DEVICE_INFO_LIST  m_stDevList;   // ch:设备信息链表 | en:The list of device info

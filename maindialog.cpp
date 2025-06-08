@@ -38,7 +38,7 @@ extern bool img_sw_status;
 
 std::vector<cv::Point> roi_points;
 
-#define TEST_CAMERA 0
+#define TEST_CAMERA 1
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
@@ -102,10 +102,9 @@ MainDialog::MainDialog(QWidget *parent) :
     #endif
     connect(m_imgproc, &ImgProcess::signal_refresh_cal_img, imgw, &imgWindow::calibration_refresh, Qt::QueuedConnection);
 
-    modbusWin = new modbusWin();
-    connect(modbusWin, &modbusWin::modbusRead, this, &MainDialog::modbusRead);
-    connect(modbusWin, &modbusWin::modbusWrite, this, &MainDialog::modbusWrite);
-
+    mdw = new modbusWin();
+    connect(mdw, &modbusWin::modbusRead, this, &MainDialog::modbusRead);
+    connect(mdw, &modbusWin::modbusWrite, this, &MainDialog::modbusWrite);
 
     m_hWnd = (void*)m_ui->painter->winId();
     connect(m_ui->modbus_delay,&QLineEdit::editingFinished,this,&MainDialog::on_cal_editingFinished);
@@ -163,6 +162,7 @@ MainDialog::~MainDialog()
 
 void MainDialog::modbusRead(int addr) {
     if (m_port) {
+        float val = 0.0f;
         m_port->readModbusData(addr, 2, val);
     }
 }
@@ -890,19 +890,6 @@ void MainDialog::on_modbusSend_2_clicked(float d500, float d504, float d508, flo
     }
 }
 
-void MainDialog::on_read_clicked()
-{
-    int val = 0;
-    m_ui->test_val->setText(QString("0"));
-    m_port->readModbusData(m_ui->test_addr->text().toInt(), 2 , val);
-}
-
-void MainDialog::on_write_clicked()
-{
-    int val = m_ui->wr_val->text().toInt();
-    m_port->writeModbusData(m_ui->wr_addr->text().toInt(), 2 , val);
-}
-
 void MainDialog::on_trigger_clicked()
 {
     if (m_ui->trigger->isEnabled()) {
@@ -910,12 +897,6 @@ void MainDialog::on_trigger_clicked()
         trigger_process = true;
         emit signal_trigger();
     }
-}
-
-void MainDialog::read_modbus_data(int startAdd, int numbers) {
-    int data = 0;
-    m_port->readModbusData(startAdd, numbers, data);
-    m_port->thd_msleep(configData.modbus_delay);
 }
 
 
