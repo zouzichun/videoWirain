@@ -5,7 +5,14 @@ modbusWin::modbusWin(QWidget *parent)
     : QWidget(parent),
     ui(new Ui::modbusWin)
 {
+    ui->setupUi(this);
+//    ui->test_addr->setText(QString::number(700));
+//    ui->test_val->setText(QString::number(0, 'f', 2));
+}
 
+modbusWin::~modbusWin()
+{
+    delete ui;
 }
 
 void modbusWin::on_modbusSend_2_clicked()

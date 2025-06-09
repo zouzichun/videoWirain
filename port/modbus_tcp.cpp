@@ -81,6 +81,7 @@ int ModbusTcp::startPort(const ConfigData &configData) {
                 }
             }
             spdlog::info("connect to modbus {}:{} succeeded!", tcp_ip.toStdString().c_str(), tcp_port);
+            
             return 0;
         }
     }

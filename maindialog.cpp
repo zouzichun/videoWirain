@@ -65,7 +65,15 @@ MainDialog::MainDialog(QWidget *parent) :
     // if (configData.netType == 3) {
     // m_port = new ModbusPort(parent);
     m_port = new ModbusTcp(parent);
-    m_port->startPort(configData);
+    if (m_port->startPort(configData) == 0) {
+        QString str = QString("ModbusTcp") +
+            configData.modbusTcpIp + ":" + QString::number(configData.modbusTcpPort) + QString(" start success");
+        m_ui->txbRecv->append(str);
+    } else {
+        QString str = QString("ModbusTcp") +
+            configData.modbusTcpIp + ":" + QString::number(configData.modbusTcpPort) + QString(" start failed!");
+        m_ui->txbRecv->append(str);
+    }
 //     m_port->moveToThread(&mmodbusthd);
 //     connect(&mmodbusthd, &QThread::finished, m_port, &QObject::deleteLater);
 
@@ -132,6 +140,9 @@ MainDialog::~MainDialog()
     delete m_ui;
     if (imgw)
         delete imgw;
+
+    if (mdw)
+        delete mdw;
 
     if (m_serial)
         delete m_serial;
@@ -579,19 +590,24 @@ void MainDialog::monitor_modbus_hdl() {
 }
 
 void MainDialog::slot_errors(int err) {
-    for (auto & v : m_cameras) {
-        if (v.is_opened) {
-            v.is_opened = false;
-            v.timer->stop();
-            m_ui->bnOpen->setText("打开");
-            m_ui->tbExposure->setEnabled(false);
-            m_ui->tbGain->setEnabled(false);
-            m_ui->tbFrameRate->setEnabled(false);
-            m_imgproc->camera_enable = false;
+    if (err >= 20) {
+        for (auto & v : m_cameras) {
+            if (v.is_opened) {
+                v.is_opened = false;
+                v.timer->stop();
+                m_ui->bnOpen->setText("打开");
+                m_ui->tbExposure->setEnabled(false);
+                m_ui->tbGain->setEnabled(false);
+                m_ui->tbFrameRate->setEnabled(false);
+                m_imgproc->camera_enable = false;
+            }
         }
+        QString estr = QString("get signal timeout! send plc error code ") + QString::number(err);
+        spdlog::info("get signal timeout! send plc error code {}", err);
+        m_ui->txbRecv->append(estr);
     }
-    spdlog::info("get signal timeout! send plc error code {}", err);
-    m_port->writeModbusData(600, 2, err);
+
+    m_port->writeModbusData(800, 2, err);
 }
 
 
@@ -898,4 +914,15 @@ void MainDialog::on_trigger_clicked()
     }
 }
 
+static bool show_mdbus_win = false;
+
+void MainDialog::on_modbus_win_clicked()
+{
+    if (!show_mdbus_win) {
+        mdw->show();
+    } else {
+        mdw->hide();
+    }
+    show_mdbus_win = !show_mdbus_win;
+}
 

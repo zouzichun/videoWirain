@@ -160,6 +160,8 @@ private slots:
     void monitor_modbus_hdl();
     void slot_errors(int err);
 
+    void on_modbus_win_clicked();
+
 private:
     Ui::MainDialog *m_ui;
     SerialPort * m_serial = nullptr;

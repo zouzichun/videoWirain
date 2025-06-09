@@ -12,6 +12,7 @@ class modbusWin : public QWidget
     Q_OBJECT
 public:
     explicit modbusWin(QWidget *parent = nullptr);
+    ~modbusWin();
 
 signals:
     void modbusRead(int addr);
