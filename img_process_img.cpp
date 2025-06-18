@@ -87,17 +87,13 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             // }
             ProcessCountor(edge_up, lines_filtered);
 
-            if (!valid_flag) {
-                frame_cnt++;
-                continue;
-            }
-
             std::vector<cv::Point2f> line1;
             std::vector<cv::Point2f> line2;
             if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
                 frame_cnt++;
                 continue;
             }
+
             cv::Point2f p1 = line1[0];
             cv::Point2f p_mid = line1[1];
             cv::Point2f p2 = line1[2];
@@ -151,7 +147,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
             emit signal_refresh_img(color_img);
 
-            emit signal_refresh_delta();
+            // emit signal_refresh_delta();
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;
