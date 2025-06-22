@@ -90,6 +90,7 @@ const ConfigData defaultSetting {
     .hsv_high1=200,
     .hsv_high2=60,
     .hsv_high3=255,
+    .mini_area=300,
 };
 
 typedef struct {

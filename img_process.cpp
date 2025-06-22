@@ -755,7 +755,8 @@ bool ImgProcess::ProcessCountor(cv::Mat &edge_img, std::vector<std::vector<std::
     }
 
     if (!contours.empty()) {
-        double min_area = 2048 * 2048 * 0.015;
+        // double min_area = 2048 * 2048 * 0.015;
+        double min_area = configData.mini_area;
         // Sort contours by area (descending)
         std::sort(contours.begin(), contours.end(), 
                  [](const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
@@ -791,7 +792,7 @@ bool ImgProcess::ProcessCountor(cv::Mat &edge_img, std::vector<std::vector<std::
             }
         }
         
-        // qDebug("line_segments size %d", line_segments.size());
+        //  qDebug("line_segments size %d", line_segments.size());
 
         if (line_segments.size() >= 4) {
             for(auto it = line_segments.begin(); it != line_segments.end(); ++it) {

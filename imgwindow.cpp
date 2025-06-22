@@ -46,6 +46,7 @@ imgWindow::imgWindow(QWidget *parent) :
     ui->hsv_high1->setText(QString::number(configData.hsv_high1));
     ui->hsv_high2->setText(QString::number(configData.hsv_high2));
     ui->hsv_high3->setText(QString::number(configData.hsv_high3));
+    ui->mini_area->setText(QString::number(configData.mini_area));
 
     connect(ui->inv_thd,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
     connect(ui->canny1,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
@@ -64,6 +65,7 @@ imgWindow::imgWindow(QWidget *parent) :
     connect(ui->hsv_high1,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
     connect(ui->hsv_high2,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
     connect(ui->hsv_high3,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
+    connect(ui->mini_area,&QLineEdit::editingFinished,this,&imgWindow::on_cal_editingFinished);
 }
 
 imgWindow::~imgWindow()
@@ -91,6 +93,7 @@ void imgWindow::on_cal_editingFinished()
     configData.hsv_high1 = ui->hsv_high1->text().toInt();
     configData.hsv_high2 = ui->hsv_high2->text().toInt();
     configData.hsv_high3 = ui->hsv_high3->text().toInt();
+    configData.mini_area = ui->mini_area->text().toInt();
 }
 
 
@@ -127,7 +130,7 @@ void imgWindow::saveImgParam()
     sets.setValue("hsv_high1",configData.hsv_high1);
     sets.setValue("hsv_high2",configData.hsv_high2);
     sets.setValue("hsv_high3",configData.hsv_high3);
-
+    sets.setValue("mini_area",configData.mini_area);
     sets.sync();
 }
 

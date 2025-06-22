@@ -147,7 +147,7 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 
             emit signal_refresh_img(color_img);
 
-            // emit signal_refresh_delta();
+            emit signal_refresh_delta();
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;

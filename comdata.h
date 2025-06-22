@@ -88,6 +88,7 @@ typedef struct {
     int hsv_high1;
     int hsv_high2;
     int hsv_high3;
+    int mini_area;
 } ConfigData;
 
 extern ConfigData configData;

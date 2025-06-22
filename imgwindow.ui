@@ -365,26 +365,45 @@
      <x>640</x>
      <y>320</y>
      <width>361</width>
-     <height>186</height>
+     <height>188</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_6">
-    <item row="0" column="0">
-     <widget class="QLabel" name="PulseNum_2">
+    <item row="4" column="3">
+     <widget class="QLineEdit" name="line_ang_abs"/>
+    </item>
+    <item row="4" column="2">
+     <widget class="QLabel" name="label_9">
       <property name="text">
-       <string>Canny</string>
+       <string>角度误差</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="4">
+     <widget class="QPushButton" name="saveImg">
+      <property name="text">
+       <string>保存</string>
       </property>
      </widget>
     </item>
     <item row="1" column="1">
      <widget class="QLineEdit" name="hgline1"/>
     </item>
-    <item row="2" column="2">
-     <widget class="QLabel" name="label_11">
+    <item row="6" column="0">
+     <widget class="QLabel" name="label_12">
       <property name="text">
-       <string>反转阀值</string>
+       <string>线数量</string>
       </property>
      </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLineEdit" name="canny2"/>
+    </item>
+    <item row="1" column="3">
+     <widget class="QLineEdit" name="hgline3"/>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLineEdit" name="canny3"/>
     </item>
     <item row="2" column="0">
      <widget class="QLabel" name="Encoder_3">
@@ -400,21 +419,18 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="2">
-     <widget class="QLineEdit" name="linenum_down"/>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="hgline2"/>
     </item>
-    <item row="4" column="2">
-     <widget class="QLabel" name="label_9">
+    <item row="1" column="0">
+     <widget class="QLabel" name="Encoder_2">
       <property name="text">
-       <string>角度误差</string>
+       <string>线条参数</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="3">
-     <widget class="QLineEdit" name="line_ang_abs"/>
-    </item>
-    <item row="0" column="2">
-     <widget class="QLineEdit" name="canny2"/>
+    <item row="6" column="2">
+     <widget class="QLineEdit" name="linenum_down"/>
     </item>
     <item row="6" column="1">
      <widget class="QLineEdit" name="linenum_up"/>
@@ -425,14 +441,15 @@
     <item row="2" column="3">
      <widget class="QLineEdit" name="inv_thd"/>
     </item>
-    <item row="1" column="2">
-     <widget class="QLineEdit" name="hgline2"/>
+    <item row="0" column="0">
+     <widget class="QLabel" name="PulseNum_2">
+      <property name="text">
+       <string>Canny</string>
+      </property>
+     </widget>
     </item>
     <item row="0" column="1">
      <widget class="QLineEdit" name="canny1"/>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLineEdit" name="hgline3"/>
     </item>
     <item row="2" column="1">
      <widget class="QLineEdit" name="blur_kernel"/>
@@ -440,29 +457,22 @@
     <item row="1" column="4">
      <widget class="QLineEdit" name="hgline4"/>
     </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="Encoder_2">
+    <item row="2" column="2">
+     <widget class="QLabel" name="label_11">
       <property name="text">
-       <string>线条参数</string>
+       <string>反转阀值</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="3">
-     <widget class="QLineEdit" name="canny3"/>
-    </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="label_12">
+    <item row="7" column="0">
+     <widget class="QLabel" name="label_13">
       <property name="text">
-       <string>线数量</string>
+       <string>最小面积</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="4">
-     <widget class="QPushButton" name="saveImg">
-      <property name="text">
-       <string>保存</string>
-      </property>
-     </widget>
+    <item row="7" column="1">
+     <widget class="QLineEdit" name="mini_area"/>
     </item>
    </layout>
   </widget>

@@ -329,6 +329,7 @@ void MainDialog::loadConfigFile()
     configData.hsv_high1 = sets.value("hsv_high1",defaultSetting.hsv_high1).toInt();
     configData.hsv_high2 = sets.value("hsv_high2",defaultSetting.hsv_high2).toInt();
     configData.hsv_high3 = sets.value("hsv_high3",defaultSetting.hsv_high3).toInt();
+    configData.mini_area = sets.value("mini_area",defaultSetting.mini_area).toInt();
 
     std::vector<std::string> angs = split(configData.line_angs.toStdString(),',');
     std::vector<std::string> rhos = split(configData.line_rhos.toStdString(),',');
