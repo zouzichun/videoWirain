@@ -106,10 +106,26 @@ public slots:
     void sig_func();
 
 private:
-    QString m_dev_name;
+    QString m_name;
     int cal_img_mode = 1;
     volatile bool auto_run_status = false;
     volatile bool trigger_status = false;
+};
+
+
+class ImgProcessRknn : public ImgProcess
+{
+    Q_OBJECT
+
+public:
+    explicit ImgProcessRknn(QString model_name);
+    ~ImgProcessRknn();
+
+    bool Init();
+    bool Deinit();
+    bool PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
+    bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found, bool up = true);
+    bool PostProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
 };
 
 #endif // IMGPROCESS_H

@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     port/port.cpp \
     img_process.cpp \
     img_process_cam.cpp \
-    img_process_img.cpp
+    img_process_img.cpp \
+    img_rknn.cpp
 
 HEADERS  += maindialog.h \
     MvCamera.h \

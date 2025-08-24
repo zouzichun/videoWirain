@@ -18,7 +18,7 @@ ImgProcess::ImgProcess(QString dev_name, int img_height, int img_width, bool col
 IMG_HEIGHT(img_height),
 IMG_WIDTH(img_width),
 color_img(color_img),
-m_dev_name(dev_name) {
+m_name(dev_name) {
 }
 
 ImgProcess::~ImgProcess() {
