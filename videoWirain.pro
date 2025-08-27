@@ -15,12 +15,15 @@ TEMPLATE = app
 INCLUDEPATH += /opt/opencv/include
 INCLUDEPATH += /opt/MVS/include
 INCLUDEPATH += /usr/local/include
+INCLUDEPATH += 3rdparty/rga/include
+INCLUDEPATH += rknn_yolov5/include
 
 LIBS += /opt/opencv/lib/libopencv*.so
 
 contains(QT_ARCH, arm64){
 message("arm64") #在这里处理arm64所需
 LIBS += /opt/MVS/lib/aarch64/libMvCameraControl.so
+LIBS += /home/leon/tt/videoWirain/rknn_yolov5/librknnrt.so
 }else{
 message("x86")
 LIBS += /opt/MVS/lib/64/libMvCameraControl.so

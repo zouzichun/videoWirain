@@ -14,6 +14,7 @@
 #include "MvCamera.h"
 #include "comdata.h"
 #include "port/port.h"
+#include "rknn_api.h"
 
 extern std::vector<Lines> g_lines;
 float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
@@ -87,6 +88,7 @@ public:
     int IMG_HEIGHT = 2048;
     int IMG_WIDTH = 2048;
     bool color_img = false;
+    QString m_name;
 
 signals:
     void signal_refresh_img(cv::Mat img);
@@ -106,7 +108,6 @@ public slots:
     void sig_func();
 
 private:
-    QString m_name;
     int cal_img_mode = 1;
     volatile bool auto_run_status = false;
     volatile bool trigger_status = false;
@@ -126,6 +127,8 @@ public:
     bool PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
     bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found, bool up = true);
     bool PostProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
+
+    rknn_context ctx;
 };
 
 #endif // IMGPROCESS_H
