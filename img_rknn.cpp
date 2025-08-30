@@ -16,6 +16,8 @@ using namespace cv;
 
 #include "RgaUtils.h"
 #include "rknn_api.h"
+#include "im2d.h"
+#include "rga.h"
 
 static void dump_tensor_attr(rknn_tensor_attr *attr)
 {
@@ -87,13 +89,14 @@ static unsigned char *load_model(const char *filename, int *model_size)
   return data;
 }
 
-ImgProcessRknn::ImgProcessRknn(QString model_name) : ImgProcess(model_name, 2048, 2048, true) {
+RknnProcess::RknnProcess(QString model_name) :
+m_name(model_name) {
 }
 
-ImgProcessRknn::~ImgProcessRknn() {
+RknnProcess::~RknnProcess() {
 }
 
-bool ImgProcessRknn::Init() {
+bool RknnProcess::Init() {
     int ret = 0;
     /* Create the neural network */
     spdlog::info("Loading model: {}", m_name.toStdString());
@@ -115,7 +118,6 @@ bool ImgProcessRknn::Init() {
     }
     printf("sdk version: %s driver version: %s\n", version.api_version, version.drv_version);
 
-    rknn_input_output_num io_num;
     ret = rknn_query(ctx, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
     if (ret < 0)
     {
@@ -124,46 +126,111 @@ bool ImgProcessRknn::Init() {
     }
     printf("model input num: %d, output num: %d\n", io_num.n_input, io_num.n_output);
 
-    rknn_tensor_attr input_attrs[io_num.n_input];
     memset(input_attrs, 0, sizeof(input_attrs));
     for (int i = 0; i < io_num.n_input; i++)
     {
-    input_attrs[i].index = i;
-    ret = rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, &(input_attrs[i]), sizeof(rknn_tensor_attr));
-    if (ret < 0)
-    {
-        printf("rknn_init error ret=%d\n", ret);
-        return -1;
-    }
-    dump_tensor_attr(&(input_attrs[i]));
+        input_attrs[i].index = i;
+        ret = rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, &(input_attrs[i]), sizeof(rknn_tensor_attr));
+        if (ret < 0)
+        {
+            printf("rknn_init error ret=%d\n", ret);
+            return -1;
+        }
+        dump_tensor_attr(&(input_attrs[i]));
     }
 
-    rknn_tensor_attr output_attrs[io_num.n_output];
     memset(output_attrs, 0, sizeof(output_attrs));
     for (int i = 0; i < io_num.n_output; i++)
     {
-    output_attrs[i].index = i;
-    ret = rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, &(output_attrs[i]), sizeof(rknn_tensor_attr));
-    dump_tensor_attr(&(output_attrs[i]));
+        output_attrs[i].index = i;
+        ret = rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, &(output_attrs[i]), sizeof(rknn_tensor_attr));
+        dump_tensor_attr(&(output_attrs[i]));
     }
 
-    int channel = 3;
-    int width = 0;
-    int height = 0;
     if (input_attrs[0].fmt == RKNN_TENSOR_NCHW)
     {
-    printf("model is NCHW input fmt\n");
-    channel = input_attrs[0].dims[1];
-    height = input_attrs[0].dims[2];
-    width = input_attrs[0].dims[3];
-    }
-    else
-    {
-    printf("model is NHWC input fmt\n");
-    height = input_attrs[0].dims[1];
-    width = input_attrs[0].dims[2];
-    channel = input_attrs[0].dims[3];
+        printf("model is NCHW input fmt\n");
+        channel = input_attrs[0].dims[1];
+        height = input_attrs[0].dims[2];
+        width = input_attrs[0].dims[3];
+    } else {
+        printf("model is NHWC input fmt\n");
+        height = input_attrs[0].dims[1];
+        width = input_attrs[0].dims[2];
+        channel = input_attrs[0].dims[3];
     }
 
     printf("model input height=%d, width=%d, channel=%d\n", height, width, channel);
+    return true;
 }
+
+bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
+    int ret = 0;
+    rga_buffer_t src;
+    rga_buffer_t dst;
+    const float nms_threshold = NMS_THRESH;      // 默认的NMS阈值
+    const float box_conf_threshold = BOX_THRESH; // 默认的置信度阈值
+    memset(&src, 0, sizeof(src));
+    memset(&dst, 0, sizeof(dst));
+
+    cv::Size target_size(width, height);
+    cv::Mat resized_img(target_size.height, target_size.width, CV_8UC3);
+    float scale_w = (float)target_size.width / img.cols;
+    float scale_h = (float)target_size.height / img.rows;
+
+    // 直接缩放采用RGA加速
+    printf("resize image by rga\n");
+    ret = resize_rga(src, dst, img, resized_img, target_size);
+    memset(inputs, 0, sizeof(inputs));
+    inputs[0].index = 0;
+    inputs[0].type = RKNN_TENSOR_UINT8;
+    inputs[0].size = width * height * channel;
+    inputs[0].fmt = RKNN_TENSOR_NHWC;
+    inputs[0].pass_through = 0;
+    if (ret != 0)
+    {
+      fprintf(stderr, "resize with rga error\n");
+      return false;
+    }
+    inputs[0].buf = resized_img.data;
+
+    rknn_inputs_set(ctx, io_num.n_input, inputs);
+    memset(outputs, 0, sizeof(outputs));
+    for (int i = 0; i < io_num.n_output; i++)
+    {
+        outputs[i].want_float = 0;
+    }
+
+    ret = rknn_run(ctx, NULL);
+    ret = rknn_outputs_get(ctx, io_num.n_output, outputs, NULL);
+
+    detect_result_group_t detect_result_group;
+    std::vector<float> out_scales;
+    std::vector<int32_t> out_zps;
+    for (int i = 0; i < io_num.n_output; ++i)
+    {
+        out_scales.push_back(output_attrs[i].scale);
+        out_zps.push_back(output_attrs[i].zp);
+    }
+
+  post_process((int8_t *)outputs[0].buf, (int8_t *)outputs[1].buf, (int8_t *)outputs[2].buf, height, width,
+                   box_conf_threshold, nms_threshold, pads, scale_w, scale_h, out_zps, out_scales, &detect_result_group);
+
+      // 画框和概率
+      char text[256];
+      for (int i = 0; i < detect_result_group.count; i++)
+      {
+        detect_result_t *det_result = &(detect_result_group.results[i]);
+        sprintf(text, "%s %.1f%%", det_result->name, det_result->prop * 100);
+        printf("%s @ (%d %d %d %d) %f\n", det_result->name, det_result->box.left, det_result->box.top,
+               det_result->box.right, det_result->box.bottom, det_result->prop);
+        int x1 = det_result->box.left;
+        int y1 = det_result->box.top;
+        int x2 = det_result->box.right;
+        int y2 = det_result->box.bottom;
+        rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(256, 0, 0, 256), 3);
+        putText(img, text, cv::Point(x1, y1 + 12), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255));
+      }
+}
+
+

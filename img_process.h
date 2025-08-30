@@ -15,6 +15,10 @@
 #include "comdata.h"
 #include "port/port.h"
 #include "rknn_api.h"
+#include "postprocess.h"
+#include "preprocess.h"
+#include "im2d.h"
+#include "rga.h"
 
 extern std::vector<Lines> g_lines;
 float getDist_P2L(cv::Point pointP, cv::Point pointA, cv::Point pointB);
@@ -113,22 +117,32 @@ private:
     volatile bool trigger_status = false;
 };
 
-
-class ImgProcessRknn : public ImgProcess
+class RknnProcess : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ImgProcessRknn(QString model_name);
-    ~ImgProcessRknn();
+    explicit RknnProcess(QString model_name);
+    ~RknnProcess();
 
     bool Init();
     bool Deinit();
-    bool PreProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
-    bool Process(cv::Mat &edge_img, std::vector<cv::Vec2f> & lines_found, bool up = true);
-    bool PostProcess(cv::Mat &img, cv::Mat &edge_up, cv::Mat &edge_down);
+    bool Process(cv::Mat & img, std::vector<cv::Vec2f> & lines_found);
 
+private:
+
+private:
+    QString m_name;
     rknn_context ctx;
+    rknn_input_output_num io_num;
+    rknn_tensor_attr input_attrs[5];
+    rknn_tensor_attr output_attrs[5];
+    rknn_input inputs[1];
+    rknn_output outputs[3];
+    int channel = 3;
+    int width = 0;
+    int height = 0;
+    BOX_RECT pads;
 };
 
 #endif // IMGPROCESS_H

@@ -41,7 +41,10 @@ SOURCES += main.cpp\
     img_process.cpp \
     img_process_cam.cpp \
     img_process_img.cpp \
-    img_rknn.cpp
+    img_rknn.cpp \
+    rknn_yolov5/src/postprocess.cc \
+    rknn_yolov5/src/preprocess.cc
+
 
 HEADERS  += maindialog.h \
     MvCamera.h \
@@ -103,7 +106,9 @@ HEADERS  += maindialog.h \
     spdlog/spdlog.h \
     spdlog/tweakme.h \
     spdlog/version.h \
-    img_process.h
+    img_process.h \
+    postprocess.h \
+    preprocess.h
 
 FORMS    += maindialog.ui \
     imgwindow.ui
