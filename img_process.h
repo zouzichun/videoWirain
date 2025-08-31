@@ -60,6 +60,35 @@ typedef struct LineSegment_ {
     cv::Point2f end;
 } LineSegment;
 
+
+class RknnProcess : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit RknnProcess(QString model_name);
+    ~RknnProcess();
+
+    bool Init();
+    bool Deinit();
+    bool Process(cv::Mat & img, std::vector<cv::Vec2f> & lines_found);
+
+private:
+
+private:
+    QString m_name;
+    rknn_context ctx;
+    rknn_input_output_num io_num;
+    rknn_tensor_attr input_attrs[5];
+    rknn_tensor_attr output_attrs[5];
+    rknn_input inputs[1];
+    rknn_output outputs[3];
+    int channel = 3;
+    int width = 2048;
+    int height = 2048;
+    BOX_RECT pads;
+};
+
 class ImgProcess : public QObject
 {
     Q_OBJECT
@@ -115,34 +144,7 @@ private:
     int cal_img_mode = 1;
     volatile bool auto_run_status = false;
     volatile bool trigger_status = false;
-};
-
-class RknnProcess : public QObject
-{
-    Q_OBJECT
-
-public:
-    explicit RknnProcess(QString model_name);
-    ~RknnProcess();
-
-    bool Init();
-    bool Deinit();
-    bool Process(cv::Mat & img, std::vector<cv::Vec2f> & lines_found);
-
-private:
-
-private:
-    QString m_name;
-    rknn_context ctx;
-    rknn_input_output_num io_num;
-    rknn_tensor_attr input_attrs[5];
-    rknn_tensor_attr output_attrs[5];
-    rknn_input inputs[1];
-    rknn_output outputs[3];
-    int channel = 3;
-    int width = 0;
-    int height = 0;
-    BOX_RECT pads;
+    RknnProcess * rknn_ptr;
 };
 
 #endif // IMGPROCESS_H

@@ -24,6 +24,7 @@ contains(QT_ARCH, arm64){
 message("arm64") #在这里处理arm64所需
 LIBS += /opt/MVS/lib/aarch64/libMvCameraControl.so
 LIBS += /home/leon/tt/videoWirain/rknn_yolov5/librknnrt.so
+LIBS += /home/leon/tt/videoWirain/3rdparty/rga/libs/Linux/gcc-aarch64/librga.so
 }else{
 message("x86")
 LIBS += /opt/MVS/lib/64/libMvCameraControl.so
@@ -107,8 +108,8 @@ HEADERS  += maindialog.h \
     spdlog/tweakme.h \
     spdlog/version.h \
     img_process.h \
-    postprocess.h \
-    preprocess.h
+    rknn_yolov5/include/postprocess.h \
+    rknn_yolov5/include/preprocess.h
 
 FORMS    += maindialog.ui \
     imgwindow.ui

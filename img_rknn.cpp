@@ -17,6 +17,7 @@ using namespace cv;
 #include "RgaUtils.h"
 #include "rknn_api.h"
 #include "im2d.h"
+#include "im2d_buffer.h"
 #include "rga.h"
 
 static void dump_tensor_attr(rknn_tensor_attr *attr)
@@ -164,6 +165,14 @@ bool RknnProcess::Init() {
     return true;
 }
 
+
+bool RknnProcess::Deinit() {
+    int ret = 0;
+    spdlog::info("destroy context");
+    ret = rknn_destroy(ctx);
+    return true;
+}
+
 bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
     int ret = 0;
     rga_buffer_t src;
@@ -178,20 +187,23 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
     float scale_w = (float)target_size.width / img.cols;
     float scale_h = (float)target_size.height / img.rows;
 
-    // 直接缩放采用RGA加速
-    printf("resize image by rga\n");
-    ret = resize_rga(src, dst, img, resized_img, target_size);
+//    // 直接缩放采用RGA加速
+//    printf("resize image by rga\n");
+//    ret = resize_rga(src, dst, img, resized_img, target_size);
+//    if (ret != 0)
+//    {
+//      fprintf(stderr, "resize with rga error\n");
+//      return false;
+//    }
+
+    cv::resize(img, resized_img, target_size);
+
     memset(inputs, 0, sizeof(inputs));
     inputs[0].index = 0;
     inputs[0].type = RKNN_TENSOR_UINT8;
     inputs[0].size = width * height * channel;
     inputs[0].fmt = RKNN_TENSOR_NHWC;
     inputs[0].pass_through = 0;
-    if (ret != 0)
-    {
-      fprintf(stderr, "resize with rga error\n");
-      return false;
-    }
     inputs[0].buf = resized_img.data;
 
     rknn_inputs_set(ctx, io_num.n_input, inputs);
@@ -213,24 +225,30 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
         out_zps.push_back(output_attrs[i].zp);
     }
 
-  post_process((int8_t *)outputs[0].buf, (int8_t *)outputs[1].buf, (int8_t *)outputs[2].buf, height, width,
+    post_process((int8_t *)outputs[0].buf, (int8_t *)outputs[1].buf, (int8_t *)outputs[2].buf, height, width,
                    box_conf_threshold, nms_threshold, pads, scale_w, scale_h, out_zps, out_scales, &detect_result_group);
 
-      // 画框和概率
-      char text[256];
-      for (int i = 0; i < detect_result_group.count; i++)
-      {
+    // 画框和概率
+    char text[256];
+    for (int i = 0; i < detect_result_group.count; i++)
+    {
         detect_result_t *det_result = &(detect_result_group.results[i]);
-        sprintf(text, "%s %.1f%%", det_result->name, det_result->prop * 100);
+        // sprintf(text, "%s %.1f%%", det_result->name, det_result->prop * 100);
         printf("%s @ (%d %d %d %d) %f\n", det_result->name, det_result->box.left, det_result->box.top,
                det_result->box.right, det_result->box.bottom, det_result->prop);
         int x1 = det_result->box.left;
         int y1 = det_result->box.top;
         int x2 = det_result->box.right;
         int y2 = det_result->box.bottom;
-        rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(256, 0, 0, 256), 3);
-        putText(img, text, cv::Point(x1, y1 + 12), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255));
-      }
+        //        rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(256, 0, 0, 256), 3);
+        cv::circle(img, cv::Point2i((x1 + x2)/2, (y1+y2)/2), 100, (255, 0,0), 10);
+        putText(img, text, cv::Point((x1 + x2)/2, (y1+y2)/2 + 12), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 0, 0),10);
+    }
+
+    ret = rknn_outputs_release(ctx, io_num.n_output, outputs);
+    deinitPostProcess();
+
+    return ret == 0 ? true : false;
 }
 
 

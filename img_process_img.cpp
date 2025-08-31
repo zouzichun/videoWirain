@@ -25,7 +25,7 @@ extern std::pair<double, double> X2_MACH;
 extern std::pair<double, double> X1_MACH;
 DataPkt data_pkt;
 
-std::string vdname("/home/leon/Videos/2.mp4");
+std::string vdname("/home/leon/1.mp4");
 
 void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
     qDebug() << "image test";
@@ -75,83 +75,85 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
             std::vector<std::vector<std::pair<double, double>>> lines_filtered;
 
             cv::cvtColor(color_img, color_img, COLOR_BGR2RGB);
-            PreProcess(color_img, edge_up, edge_down);
-            bool valid_flag = true;
-            // Process(edge_up, lines_found_up, true);
-            // if (!AdaptLines(lines_found_up, lines_filtered)) {
-            //     valid_flag = false;
-            // }
-            // Process(edge_down, lines_found_down, false);
-            // if (!AdaptLines(lines_found_down, lines_filtered)) {
-            //     valid_flag = false;
-            // }
-            ProcessCountor(edge_up, lines_filtered);
+//            PreProcess(color_img, edge_up, edge_down);
+//            bool valid_flag = true;
+//            // Process(edge_up, lines_found_up, true);
+//            // if (!AdaptLines(lines_found_up, lines_filtered)) {
+//            //     valid_flag = false;
+//            // }
+//            // Process(edge_down, lines_found_down, false);
+//            // if (!AdaptLines(lines_found_down, lines_filtered)) {
+//            //     valid_flag = false;
+//            // }
+//            ProcessCountor(edge_up, lines_filtered);
 
-            if (!valid_flag) {
-                frame_cnt++;
-                continue;
-            }
+//            if (!valid_flag) {
+//                frame_cnt++;
+//                continue;
+//            }
 
-            std::vector<cv::Point2f> line1;
-            std::vector<cv::Point2f> line2;
-            if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
-                frame_cnt++;
-                continue;
-            }
-            cv::Point2f p1 = line1[0];
-            cv::Point2f p_mid = line1[1];
-            cv::Point2f p2 = line1[2];
+            rknn_ptr->Process(color_img, lines_found_up);
 
-            cv::Point2f p21 = line2[0];
-            cv::Point2f p_mid2 = line2[1];
-            cv::Point2f p22 = line2[2];
+//            std::vector<cv::Point2f> line1;
+//            std::vector<cv::Point2f> line2;
+//            if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
+//                frame_cnt++;
+//                continue;
+//            }
+//            cv::Point2f p1 = line1[0];
+//            cv::Point2f p_mid = line1[1];
+//            cv::Point2f p2 = line1[2];
 
-            // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
-            cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p_mid, cv::Scalar(0,255,255), 3, 20, 8);
+//            cv::Point2f p21 = line2[0];
+//            cv::Point2f p_mid2 = line2[1];
+//            cv::Point2f p22 = line2[2];
 
-            cv::drawMarker(color_img, p21, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p22, cv::Scalar(0,255,0), 3, 20, 8);
-            cv::drawMarker(color_img, p_mid2, cv::Scalar(255,255,0), 3, 20, 8);
+//            // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
+//            cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);
+//            cv::drawMarker(color_img, p2, cv::Scalar(0,255,0), 3, 20, 8);
+//            cv::drawMarker(color_img, p_mid, cv::Scalar(0,255,255), 3, 20, 8);
 
-            cv::line(color_img, p1, p2, cv::Scalar(0,255,255), 4);
-            cv::line(color_img, p21, p22, cv::Scalar(255,255,0), 4);
-            cv::line(color_img, p_mid, p_mid2, cv::Scalar(0,255,255), 4);
+//            cv::drawMarker(color_img, p21, cv::Scalar(0,255,0), 3, 20, 8);
+//            cv::drawMarker(color_img, p22, cv::Scalar(0,255,0), 3, 20, 8);
+//            cv::drawMarker(color_img, p_mid2, cv::Scalar(255,255,0), 3, 20, 8);
 
-            auto mach_p_up = PointsImg2Mach(p1, p2);
-            auto mach_p_down = PointsImg2Mach(p21, p22);
+//            cv::line(color_img, p1, p2, cv::Scalar(0,255,255), 4);
+//            cv::line(color_img, p21, p22, cv::Scalar(255,255,0), 4);
+//            cv::line(color_img, p_mid, p_mid2, cv::Scalar(0,255,255), 4);
 
-            auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
-            auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
+//            auto mach_p_up = PointsImg2Mach(p1, p2);
+//            auto mach_p_down = PointsImg2Mach(p21, p22);
 
-            mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
-            mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
-    //        qDebug("up roh %f, down rho %f", mach_hline_up.first, mach_hline_down.first);
+//            auto mach_hline_up = PointsToHoughParams(mach_p_up.first, mach_p_up.second);
+//            auto mach_hline_down = PointsToHoughParams(mach_p_down.first, mach_p_down.second);
 
-            std::pair<double, double> x2_corss_up = getCrossPoint(mach_hline_up, X2_MACH);
-            std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
-            std::pair<double, double> x1_corss_up = getCrossPoint(mach_hline_up, X1_MACH);
-            std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
+//            mach_hline_up.first = mach_hline_up.first + configData.motor_rho;
+//            mach_hline_down.first = mach_hline_down.first + configData.motor_rho;
+//    //        qDebug("up roh %f, down rho %f", mach_hline_up.first, mach_hline_down.first);
 
-            double zero_y = configData.y1_start - (185 - configData.x2_rho);
-            double y_down = sqrtf(pow((x2_corss_down.first - (mach_p_down.first.x + mach_p_down.second.x) / 2),2) +
-                                pow((x2_corss_down.second - (mach_p_down.first.y + mach_p_down.second.y) / 2),2)) + zero_y;
-            double y_up = sqrtf(pow((x2_corss_up.first - (mach_p_up.first.x + mach_p_up.second.x) / 2),2) +
-                                pow((x2_corss_up.second - (mach_p_up.first.y + mach_p_up.second.y) / 2),2)) + zero_y;
+//            std::pair<double, double> x2_corss_up = getCrossPoint(mach_hline_up, X2_MACH);
+//            std::pair<double, double> x2_corss_down = getCrossPoint(mach_hline_down, X2_MACH);
+//            std::pair<double, double> x1_corss_up = getCrossPoint(mach_hline_up, X1_MACH);
+//            std::pair<double, double> x1_corss_down = getCrossPoint(mach_hline_down, X1_MACH);
 
-            data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.fetch_delta;
-            data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.target_delta;
-            data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.fetch_delta;
-            data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.target_delta;
-            data_pkt.y1_fetch = y_down + configData.y_fetch_delta;
-            data_pkt.y1_target = y_up + configData.y_target_delta;
-            data_pkt.frames = frame_cnt;
-            data_pkt.valid = true;
+//            double zero_y = configData.y1_start - (185 - configData.x2_rho);
+//            double y_down = sqrtf(pow((x2_corss_down.first - (mach_p_down.first.x + mach_p_down.second.x) / 2),2) +
+//                                pow((x2_corss_down.second - (mach_p_down.first.y + mach_p_down.second.y) / 2),2)) + zero_y;
+//            double y_up = sqrtf(pow((x2_corss_up.first - (mach_p_up.first.x + mach_p_up.second.x) / 2),2) +
+//                                pow((x2_corss_up.second - (mach_p_up.first.y + mach_p_up.second.y) / 2),2)) + zero_y;
+
+//            data_pkt.x1_fetch = configData.x1_start + configData.motor_rho - x1_corss_down.second + configData.fetch_delta;
+//            data_pkt.x1_target = configData.x1_start +  configData.motor_rho - x1_corss_up.second + configData.target_delta;
+//            data_pkt.x2_fetch = configData.x2_start + configData.motor_rho - x2_corss_down.second + configData.fetch_delta;
+//            data_pkt.x2_target = configData.x2_start + configData.motor_rho - x2_corss_up.second + configData.target_delta;
+//            data_pkt.y1_fetch = y_down + configData.y_fetch_delta;
+//            data_pkt.y1_target = y_up + configData.y_target_delta;
+//            data_pkt.frames = frame_cnt;
+//            data_pkt.valid = true;
 
             emit signal_refresh_img(color_img);
 
-            emit signal_refresh_delta();
+//            emit signal_refresh_delta();
 
             // qDebug() << "video, frames " <<  frame_cnt;
             frame_cnt++;

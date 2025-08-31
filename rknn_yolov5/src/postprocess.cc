@@ -23,9 +23,9 @@
 
 #include <set>
 #include <vector>
-#define LABEL_NALE_TXT_PATH "./model/coco_80_labels_list.txt"
+#define LABEL_NALE_TXT_PATH "./my_yolo_label.txt"
 
-static char *labels[OBJ_CLASS_NUM];
+static char *labels[OBJ_CLASS_NUM] = {"0", "1"};
 
 const int anchor0[6] = {10, 13, 16, 30, 33, 23};
 const int anchor1[6] = {30, 61, 62, 45, 59, 119};
@@ -95,8 +95,8 @@ int readLines(const char *fileName, char *lines[], int max_line)
 
 int loadLabelName(const char *locationFilename, char *label[])
 {
-  printf("loadLabelName %s\n", locationFilename);
-  readLines(locationFilename, label, OBJ_CLASS_NUM);
+//  printf("loadLabelName %s\n", locationFilename);
+//  readLines(locationFilename, label, OBJ_CLASS_NUM);
   return 0;
 }
 
@@ -265,7 +265,7 @@ int post_process(int8_t *input0, int8_t *input1, int8_t *input2, int model_in_h,
   if (init == -1)
   {
     int ret = 0;
-    ret = loadLabelName(LABEL_NALE_TXT_PATH, labels);
+    // ret = loadLabelName(LABEL_NALE_TXT_PATH, labels);
     if (ret < 0)
     {
       return -1;
@@ -349,6 +349,7 @@ int post_process(int8_t *input0, int8_t *input1, int8_t *input2, int model_in_h,
     group->results[last_count].box.bottom = (int)(clamp(y2, 0, model_in_h) / scale_h);
     group->results[last_count].prop = obj_conf;
     char *label = labels[id];
+    group->results[last_count].id = id;
     strncpy(group->results[last_count].name, label, OBJ_NAME_MAX_SIZE);
 
     // printf("result %2d: (%4d, %4d, %4d, %4d), %s\n", i, group->results[last_count].box.left,
@@ -365,10 +366,10 @@ void deinitPostProcess()
 {
   for (int i = 0; i < OBJ_CLASS_NUM; i++)
   {
-    if (labels[i] != nullptr)
-    {
-      free(labels[i]);
-      labels[i] = nullptr;
-    }
+//    if (labels[i] != nullptr)
+//    {
+////      free(labels[i]);
+//      labels[i] = nullptr;
+//    }
   }
 }

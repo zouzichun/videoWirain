@@ -19,9 +19,15 @@ IMG_HEIGHT(img_height),
 IMG_WIDTH(img_width),
 color_img(color_img),
 m_name(dev_name) {
+    rknn_ptr = new RknnProcess("/home/leon/best.rknn");
+    rknn_ptr->Init();
 }
 
 ImgProcess::~ImgProcess() {
+    if (rknn_ptr) {
+        rknn_ptr->Deinit();
+        delete rknn_ptr;
+    }
 }
 
 bool ImgProcess::Init() {
