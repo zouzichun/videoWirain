@@ -91,8 +91,46 @@ void ImgProcess::ImageTest(CMvCamera* p_cam, Port * p_port) {
 //                frame_cnt++;
 //                continue;
 //            }
-
+            static int idx = 0;
             rknn_ptr->Process(color_img, lines_found_up);
+
+            if (lines_found_up.size() == 4) {
+               cv::Point2f p1 = lines_found_up[0];
+               cv::Point2f p2 = lines_found_up[1];
+               cv::Point2f p_mid = cv::Point2f((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+
+               cv::Point2f p11 = lines_found_up[2];
+               cv::Point2f p12 = lines_found_up[3];
+               cv::Point2f p1_mid = cv::Point2f((p11.x + p12.x)/2, (p11.y + p12.y)/2);
+               int x_cross = p1_mid.x;
+               int y_cross = p1_mid.y;
+               const int length = 60;
+
+                cv::circle(color_img, p1, length, (255, 255,0), 10);
+                cv::circle(color_img, p2, length, (255, 255,0), 10);
+                cv::circle(color_img, p_mid, length, (255, 255,0), 10);
+
+                x_cross = p11.x;
+                y_cross = p11.y;
+                cv::line(color_img, cv::Point2i(x_cross - length / 2, y_cross), cv::Point2i(x_cross + length / 2, y_cross),
+                    cv::Scalar(0, 255, 255), 10);
+                cv::line(color_img, cv::Point2i(x_cross, y_cross - length / 2), cv::Point2i(x_cross, y_cross + length / 2),
+                        cv::Scalar(0, 255, 255), 10);
+
+                x_cross = p12.x;
+                y_cross = p12.y;
+                cv::line(color_img, cv::Point2i(x_cross - length / 2, y_cross), cv::Point2i(x_cross + length / 2, y_cross),
+                        cv::Scalar(0, 255, 255), 10);
+                cv::line(color_img, cv::Point2i(x_cross, y_cross - length / 2), cv::Point2i(x_cross, y_cross + length / 2),
+                        cv::Scalar(0, 255, 255), 10);
+
+                x_cross = p1_mid.x;
+                y_cross = p1_mid.y;
+                cv::line(color_img, cv::Point2i(x_cross - length / 2, y_cross), cv::Point2i(x_cross + length / 2, y_cross),
+                        cv::Scalar(0, 255, 255), 10);
+                cv::line(color_img, cv::Point2i(x_cross, y_cross - length / 2), cv::Point2i(x_cross, y_cross + length / 2),
+                        cv::Scalar(0, 255, 255), 10);
+            }
 
 //            std::vector<cv::Point2f> line1;
 //            std::vector<cv::Point2f> line2;

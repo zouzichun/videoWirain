@@ -72,17 +72,19 @@ public:
     bool Init();
     bool Deinit();
     bool Process(cv::Mat & img, std::vector<cv::Vec2f> & lines_found);
+    bool PreProcess(cv::Mat & img);
+    bool PostProcess(cv::Mat & img);
 
 private:
 
 private:
     QString m_name;
+    unsigned char *model_data;
     rknn_context ctx;
     rknn_input_output_num io_num;
     rknn_tensor_attr input_attrs[5];
     rknn_tensor_attr output_attrs[5];
     rknn_input inputs[1];
-    rknn_output outputs[3];
     int channel = 3;
     int width = 2048;
     int height = 2048;

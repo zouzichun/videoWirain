@@ -102,7 +102,7 @@ bool RknnProcess::Init() {
     /* Create the neural network */
     spdlog::info("Loading model: {}", m_name.toStdString());
     int model_data_size = 0;
-    unsigned char *model_data = load_model(m_name.toStdString().c_str(), &model_data_size);
+    model_data = load_model(m_name.toStdString().c_str(), &model_data_size);
     ret = rknn_init(&ctx, model_data, model_data_size, 0, NULL);
     if (ret < 0)
     {
@@ -170,8 +170,13 @@ bool RknnProcess::Deinit() {
     int ret = 0;
     spdlog::info("destroy context");
     ret = rknn_destroy(ctx);
+
+    if (model_data)
+      free(model_data);
     return true;
 }
+
+extern std::vector<cv::Point> roi_points;
 
 bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
     int ret = 0;
@@ -205,8 +210,9 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
     inputs[0].fmt = RKNN_TENSOR_NHWC;
     inputs[0].pass_through = 0;
     inputs[0].buf = resized_img.data;
-
     rknn_inputs_set(ctx, io_num.n_input, inputs);
+
+    rknn_output outputs[io_num.n_output];
     memset(outputs, 0, sizeof(outputs));
     for (int i = 0; i < io_num.n_output; i++)
     {
@@ -230,6 +236,8 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
 
     // 画框和概率
     char text[256];
+    std::vector<cv::Vec2f> line1;
+    std::vector<cv::Vec2f> line2;
     for (int i = 0; i < detect_result_group.count; i++)
     {
         detect_result_t *det_result = &(detect_result_group.results[i]);
@@ -240,9 +248,35 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
         int y1 = det_result->box.top;
         int x2 = det_result->box.right;
         int y2 = det_result->box.bottom;
+        int x_cross = (x1 + x2)/2;
+        int y_cross = (y1 + y2)/2;
+        const int length = 60;
         //        rectangle(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(256, 0, 0, 256), 3);
-        cv::circle(img, cv::Point2i((x1 + x2)/2, (y1+y2)/2), 100, (255, 0,0), 10);
-        putText(img, text, cv::Point((x1 + x2)/2, (y1+y2)/2 + 12), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 0, 0),10);
+
+        if (cv::pointPolygonTest(roi_points, cv::Point(x_cross, y_cross), false) < 0) {
+          continue;
+        }
+
+        if (det_result->id == 0) {
+          // cv::circle(img, cv::Point2i(x_cross, y_cross), length, (255, 255,0), 10);
+          line1.push_back(cv::Vec2f(x_cross, y_cross));
+        } else {
+          // cv::line(img, cv::Point2i(x_cross - length / 2, y_cross), cv::Point2i(x_cross + length / 2, y_cross),
+          //       cv::Scalar(0, 255, 255), 10);
+          // cv::line(img, cv::Point2i(x_cross, y_cross - length / 2), cv::Point2i(x_cross, y_cross + length / 2),
+          //       cv::Scalar(0, 255, 255), 10);
+          line2.push_back(cv::Vec2f(x_cross, y_cross));
+        }
+        // putText(img, text, cv::Point((x1 + x2)/2, (y1+y2)/2 + 12), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 0, 0),10);
+    }
+
+    if (line1.size() == 2 && line2.size() == 2) {
+      for (auto v : line1) {
+        lines_found.push_back(v);
+      }
+      for (auto v : line2) {
+        lines_found.push_back(v);
+      }
     }
 
     ret = rknn_outputs_release(ctx, io_num.n_output, outputs);
