@@ -231,6 +231,7 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
         out_zps.push_back(output_attrs[i].zp);
     }
 
+    memset(&pads, 0, sizeof(BOX_RECT));
     post_process((int8_t *)outputs[0].buf, (int8_t *)outputs[1].buf, (int8_t *)outputs[2].buf, height, width,
                    box_conf_threshold, nms_threshold, pads, scale_w, scale_h, out_zps, out_scales, &detect_result_group);
 
@@ -242,8 +243,8 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
     {
         detect_result_t *det_result = &(detect_result_group.results[i]);
         // sprintf(text, "%s %.1f%%", det_result->name, det_result->prop * 100);
-        printf("%s @ (%d %d %d %d) %f\n", det_result->name, det_result->box.left, det_result->box.top,
-               det_result->box.right, det_result->box.bottom, det_result->prop);
+        // printf("%s @ (%d %d %d %d) %f\n", det_result->name, det_result->box.left, det_result->box.top,
+        //        det_result->box.right, det_result->box.bottom, det_result->prop);
         int x1 = det_result->box.left;
         int y1 = det_result->box.top;
         int x2 = det_result->box.right;
@@ -259,25 +260,26 @@ bool RknnProcess::Process(cv::Mat &img, std::vector<cv::Vec2f> &lines_found) {
 
         if (det_result->id == 0) {
           // cv::circle(img, cv::Point2i(x_cross, y_cross), length, (255, 255,0), 10);
+          cv::circle(img, cv::Point2i(x_cross, y_cross), length, (255, 255,0), 10);
           line1.push_back(cv::Vec2f(x_cross, y_cross));
         } else {
-          // cv::line(img, cv::Point2i(x_cross - length / 2, y_cross), cv::Point2i(x_cross + length / 2, y_cross),
-          //       cv::Scalar(0, 255, 255), 10);
-          // cv::line(img, cv::Point2i(x_cross, y_cross - length / 2), cv::Point2i(x_cross, y_cross + length / 2),
-          //       cv::Scalar(0, 255, 255), 10);
+          cv::line(img, cv::Point2i(x_cross - length / 2, y_cross), cv::Point2i(x_cross + length / 2, y_cross),
+                cv::Scalar(0, 255, 255), 10);
+          cv::line(img, cv::Point2i(x_cross, y_cross - length / 2), cv::Point2i(x_cross, y_cross + length / 2),
+                cv::Scalar(0, 255, 255), 10);
           line2.push_back(cv::Vec2f(x_cross, y_cross));
         }
         // putText(img, text, cv::Point((x1 + x2)/2, (y1+y2)/2 + 12), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 0, 0),10);
     }
 
-    if (line1.size() == 2 && line2.size() == 2) {
+    // if (line1.size() == 2 && line2.size() == 2) {
       for (auto v : line1) {
         lines_found.push_back(v);
       }
       for (auto v : line2) {
         lines_found.push_back(v);
       }
-    }
+    // }
 
     ret = rknn_outputs_release(ctx, io_num.n_output, outputs);
     deinitPostProcess();

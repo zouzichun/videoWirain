@@ -38,7 +38,7 @@ extern bool img_sw_status;
 
 std::vector<cv::Point> roi_points;
 
-#define TEST_CAMERA 0
+#define TEST_CAMERA 1
 
 MainDialog::MainDialog(QWidget *parent) :
     QDialog(parent),
@@ -77,7 +77,7 @@ MainDialog::MainDialog(QWidget *parent) :
     // connect(this->m_monitor_timer,SIGNAL(timeout()),this,SLOT(monitor_thread()));
     m_monitor_timer->stop();
 
-    m_imgproc = new ImgProcess("image", 2048, 2048, true);
+    m_imgproc = new ImgProcess("image", 1400, 1400, true);
     m_imgproc->moveToThread(&mWorkerThread); //把数据处理类移到线程
     connect(&mWorkerThread, &QThread::finished, m_imgproc, &QObject::deleteLater);
 

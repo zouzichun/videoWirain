@@ -118,7 +118,7 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         std::vector<cv::Vec2f> lines_found_down;
         std::vector<std::vector<std::pair<double, double>>> lines_filtered;
 
-        PreProcess(color_img, edge_up, edge_down);
+        /// PreProcess(color_img, edge_up, edge_down);
         bool valid_flag = true;
         // Process(edge_up, lines_found_up, true);
         // if (!AdaptLines(lines_found_up, lines_filtered)) {
@@ -129,31 +129,45 @@ void ImgProcess::CameraTest(CMvCamera* p_cam, Port * p_port) {
         //     valid_flag = false;
         // }
 
-        ProcessCountor(edge_up, lines_filtered);
+        // ProcessCountor(edge_up, lines_filtered);
         // ProcessCountor(edge_down, lines_filtered);
+
+        rknn_ptr->Process(color_img, lines_found_up);
+        valid_flag = lines_found_up.size() == 4;
 
         if (!valid_flag) {
             frame_cnt++;
             if (run_sync)
                 run_sync = false;
+            spdlog::debug("valid lines not found @{}, found {}", frame_cnt, lines_found_up.size());
+            emit signal_refresh_img(color_img);
             continue;
         }
 
-        std::vector<cv::Point2f> line1;
-        std::vector<cv::Point2f> line2;
-        if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
-            frame_cnt++;
-            if (run_sync)
-                run_sync = false;
-            continue;
-        }
-        cv::Point2f p1 = line1[0];
-        cv::Point2f p_mid = line1[1];
-        cv::Point2f p2 = line1[2];
+        // std::vector<cv::Point2f> line1;
+        // std::vector<cv::Point2f> line2;
+        // if (!GetCentralLinesCountor(lines_filtered, line1, line2)) {
+        //     frame_cnt++;
+        //     if (run_sync)
+        //         run_sync = false;
+        //     continue;
+        // }
 
-        cv::Point2f p21 = line2[0];
-        cv::Point2f p_mid2 = line2[1];
-        cv::Point2f p22 = line2[2];
+        cv::Point2f p1 = lines_found_up[0];
+        cv::Point2f p2 = lines_found_up[1];
+        cv::Point2f p_mid = cv::Point2f((p1.x + p2.x)/2, (p1.y + p2.y)/2);
+
+        cv::Point2f p21 = lines_found_up[2];
+        cv::Point2f p22 = lines_found_up[3];
+        cv::Point2f p_mid2 = cv::Point2f((p21.x + p22.x)/2, (p21.y + p22.y)/2);
+
+        // cv::Point2f p1 = line1[0];
+        // cv::Point2f p_mid = line1[1];
+        // cv::Point2f p2 = line1[2];
+
+        // cv::Point2f p21 = line2[0];
+        // cv::Point2f p_mid2 = line2[1];
+        // cv::Point2f p22 = line2[2];
 
         // spdlog::debug("  find point {}:{}", p_int.x, p_int.y);
         cv::drawMarker(color_img, p1, cv::Scalar(0,255,0), 3, 20, 8);

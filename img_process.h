@@ -86,8 +86,8 @@ private:
     rknn_tensor_attr output_attrs[5];
     rknn_input inputs[1];
     int channel = 3;
-    int width = 2048;
-    int height = 2048;
+    int width = 1400;
+    int height = 1400;
     BOX_RECT pads;
 };
 

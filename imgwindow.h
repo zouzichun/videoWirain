@@ -53,7 +53,8 @@ private slots:
 
 private:
     Ui::imgWindow *ui;
-    const float SCALE = (2048.0f / 600.0f);
+    // const float SCALE = (2048.0f / 600.0f);
+    const float SCALE = (1400.0f / 600.0f);
 };
 
 #endif // IMGWINDOW_H

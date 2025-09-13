@@ -19,7 +19,7 @@ IMG_HEIGHT(img_height),
 IMG_WIDTH(img_width),
 color_img(color_img),
 m_name(dev_name) {
-    rknn_ptr = new RknnProcess("/home/leon/best.rknn");
+    rknn_ptr = new RknnProcess("/home/wirain/wkww/videoWirain/best.rknn");
     rknn_ptr->Init();
 }
 
